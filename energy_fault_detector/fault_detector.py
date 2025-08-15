@@ -15,7 +15,7 @@ from energy_fault_detector.data_preprocessing.data_preprocessor import DataPrepr
 from energy_fault_detector.data_preprocessing.data_clipper import DataClipper
 from energy_fault_detector.root_cause_analysis import Arcana
 from energy_fault_detector.config import Config
-from energy_fault_detector.logs import setup_logging
+from energy_fault_detector._logs import setup_logging
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
 
 setup_logging(os.path.join(os.path.dirname(__file__), 'logging.yaml'))

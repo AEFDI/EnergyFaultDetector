@@ -1,12 +1,12 @@
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./img/2025_Logo_Energy-Fault-Detector_white-green.png">
-  <source media="(prefers-color-scheme: light)" srcset="./img/Logo_Energy-Fault-Detector.png">
-  <img alt="EnergyFaultDetector Logo" src="./img/Logo_Energy-Fault-Detector.png" height="100">
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/AEFDI/EnergyFaultDetector/blob/main/img/2025_Logo_Energy-Fault-Detector_white-green.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/AEFDI/EnergyFaultDetector/blob/main/img/Logo_Energy-Fault-Detector.png">
+  <img alt="EnergyFaultDetector Logo" src="https://github.com/AEFDI/EnergyFaultDetector/blob/main/img/Logo_Energy-Fault-Detector.png" height="100">
 </picture>
 
 
-# Energy Fault Detectior - Autoencoder-based Fault Detection for the Future Energy System
+# Energy Fault Detector - Autoencoder-based Fault Detection for the Future Energy System
 
 **Energy Fault Detector** is an open-source Python package designed for the automated detection of anomalies in
 operational data from renewable energy systems as well as power grids. It uses autoencoder-based normal behaviour
@@ -19,10 +19,10 @@ these methods, which can be adapted to the respective use case via a single conf
 The software is particularly valuable in the context of the future energy system, optimizing the monitoring and enabling
 predictive maintenance of renewable energy assets.
 
-<img src="img/OSS-Grafical_abstract2.png" alt="drawing" width="600" style="display: block; margin: 0 auto" />
+<img src="https://github.com/AEFDI/EnergyFaultDetector/blob/main/img/OSS-Grafical_abstract2.png" alt="drawing" width="600" style="display: block; margin: 0 auto" />
 
 ## Main Features
-- **User-friendly interface**: Easy to use and quick to demo using the [command line interface](#Easy-fault-detection).
+- **User-friendly interface**: Easy to use and quick to demo using the [command line interface](#Quick-fault-detection).
 - **Data Preprocessing Module**: Prepares numerical operational data for analysis with the `EnergyFaultDetector`, 
   with many options such as data clipping, imputation, signal hangers and column selection based on variance and
   missing values. 
@@ -35,7 +35,7 @@ predictive maintenance of renewable energy assets.
 To install the `energy-fault-detector` package, run: `pip install energy-fault-detector`
 
 
-## Easy fault detection
+## Quick fault detection
 For a quick demo on a specific dataset, run:
 
 ```quick_fault_detector <path_to_your_dataset.csv>```
@@ -45,7 +45,7 @@ For more options, run ```quick_fault_detector -h```.
 For an example using one of the CARE2Compare datasets, run:
 ```quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example```
 
-For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%Quick%20Failure%20Detection.ipynb)
+For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%20Quick%20Failure%20Detection.ipynb)
 
 
 ## Fault detection in 5 lines of code

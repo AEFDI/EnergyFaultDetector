@@ -60,7 +60,6 @@ class AngleTransformer(DataTransformer):
                                     'Thus it will be dropped.' % col)
                         angle_features.extend([col])  # add it to angle_features so that it can be removed in transform
                         invalid_range_features.extend([col])
-                        self.feature_names_in_.remove(col)  # TODO: Correct? It is part of the input features?
                         continue
 
                 features_out.extend([f'{col}_sine', f'{col}_cosine'])
@@ -106,7 +105,11 @@ class AngleTransformer(DataTransformer):
 
             x = x.drop([f'{col}_sine', f'{col}_cosine'], axis=1)
 
-        return x[self.feature_names_in_]
+        if self.trust_bad_angles:
+            x_inv = x[self.feature_names_in_]
+        else:
+            x_inv = x[[feature for feature in self.feature_names_in_ if feature not in self.invalid_range_features_]]
+        return x_inv
 
     def _convert_angles(self, data: pd.DataFrame, angle_columns: List[str], invalid_range_features: List[str],
                         degrees: bool = True):

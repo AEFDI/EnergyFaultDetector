@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "energy-fault-detector"
 dynamic = ["version", "dependencies", "optional-dependencies"]
 authors = [
-  { name="AEFDI", email="aefdi@iee.fraunaefdi@iee.fraunhofer.d" },
+  { name="AEFDI", email="aefdi@iee.fraunhofer.de" },
 ]
 description = "Automated fault detection in renewable energy assets and power grids."
 readme = "README.md"
@@ -27,10 +27,10 @@ repository = "https://github.com/AEFDI/EnergyFaultDetector"
 documentation = "https://aefdi.github.io/EnergyFaultDetector/"
 
 [project.scripts]
-quick_fault_detector = "energy_fault_detection.main:main"
+quick_fault_detector = "energy_fault_detector.main:main"
 
 [tool.setuptools.package-data]
-"energy_fault_detection" = [
+"energy_fault_detector" = [
     "logging.yaml",
     "VERSION",
     "ABOUT",

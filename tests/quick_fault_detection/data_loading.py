@@ -2,13 +2,13 @@ import os
 import unittest
 import numpy as np
 import pandas as pd
-from energy_fault_detector.simple_failure_detection_modules.data_loading import detect_encoding, detect_separator, \
+from energy_fault_detector.quick_fault_detection.data_loading import detect_encoding, detect_separator, \
     read_csv_file, get_sensor_data, get_boolean_feature, load_data, load_train_test_data
 
 PROJECT_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..')
 
 
-class TestSimpleFailureDetectionDataLoading(unittest.TestCase):
+class TestQuickFaultDetectionDataLoading(unittest.TestCase):
 
     def setUp(self) -> None:
         self.num_data = 100
@@ -20,6 +20,7 @@ class TestSimpleFailureDetectionDataLoading(unittest.TestCase):
         self.csv_path_2 = os.path.join(PROJECT_ROOT, 'tests/test_data/dummy_csv_2.csv')
         df = pd.DataFrame(data=np.zeros(shape=(self.num_data, 100)),
                           index=time_index)
+        df['string_feature'] = len(df) * ["€"]  # use this column to test encoding detection
         df_2 = pd.DataFrame(data=np.zeros(shape=(self.num_data, 100)),
                             index=time_index)
 
@@ -38,8 +39,7 @@ class TestSimpleFailureDetectionDataLoading(unittest.TestCase):
     def test_detect_encoding(self):
         encoding_1 = detect_encoding(self.csv_path_1)
         encoding_2 = detect_encoding(self.csv_path_2)
-        # TODO: figure out why utf-8 encoding can not be detected
-        # self.assertEqual(encoding_1, 'utf-8')
+        self.assertEqual(encoding_1, 'utf-8')
         self.assertEqual(encoding_2, 'ascii')
 
     def test_detect_separator(self):

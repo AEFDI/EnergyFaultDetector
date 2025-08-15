@@ -16,7 +16,7 @@ from energy_fault_detector.core import Autoencoder, AnomalyScore, ThresholdSelec
 from energy_fault_detector.core.model_factory import ModelFactory
 from energy_fault_detector.core.fault_detection_result import ModelMetadata, FaultDetectionResult
 from energy_fault_detector.data_preprocessing import DataPreprocessor
-from energy_fault_detector.logs import setup_logging
+from energy_fault_detector._logs import setup_logging
 from energy_fault_detector.data_splitting.data_splitter import BlockDataSplitter
 
 setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))

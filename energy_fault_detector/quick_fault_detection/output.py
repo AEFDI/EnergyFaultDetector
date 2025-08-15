@@ -1,4 +1,3 @@
-
 import os
 from typing import Union, List, Optional
 
@@ -7,6 +6,11 @@ from matplotlib import pyplot as plt
 
 from energy_fault_detector.fault_detector import FaultDetector
 import energy_fault_detector.utils.visualisation as viz
+
+output_info = """The QuickFaultDetector’s output may include features that were transformed during the 
+anomaly-detection process. To avoid false anomalies, any given angle features are first converted into continuous 
+representations via sine and cosine transformations. These transformed features can appear as 'feature_sine' and 
+'feature_cosine' in the ARCANA Importance plots."""
 
 
 def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFrame,
@@ -74,6 +78,13 @@ def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFr
         if len(arcana_losses) > 0:
             # If Arcana losses are given, do loss plots for debugging
             viz.plot_arcana_losses(losses=arcana_losses[longest_event_index])
+    else:
+        axs[1, 1].text(0.5, 0.5, "No anomaly events detected.",
+                       ha='center', va='center', fontsize=14, bbox=dict(boxstyle='round,pad=0.5',
+                                                                        facecolor='white',
+                                                                        edgecolor='black',
+                                                                        linewidth=1.5)
+                       )
     plt.tight_layout()
 
     if save_dir is not None:

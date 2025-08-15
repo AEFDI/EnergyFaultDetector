@@ -2,10 +2,10 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from energy_fault_detector.simple_failure_detection_modules.configuration import select_config
+from energy_fault_detector.quick_fault_detection.configuration import select_config
 
 
-class TestSimpleFailureDetectionConfiguration(unittest.TestCase):
+class TestQuickFaultDetectionConfiguration(unittest.TestCase):
     def setUp(self) -> None:
         np.random.seed(42)
 
