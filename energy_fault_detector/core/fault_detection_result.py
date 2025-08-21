@@ -32,30 +32,31 @@ class FaultDetectionResult:
     tracked_bias: Optional[List[pd.DataFrame]] = None
     """List of DataFrames containing the ARCANA bias every 50th iteration. None if ARCANA was not run."""
 
-    def save(self, directory: str) -> None:
+    def save(self, directory: str, **kwargs) -> None:
         """Saves the results to CSV files in the specified directory.
 
         Args:
             directory (str): The directory where the CSV files will be saved.
+            kwargs: other keywords args for `pd.DataFrame.to_csv`
         """
         # Ensure the directory exists
         os.makedirs(directory, exist_ok=True)
 
         # Save each DataFrame as a CSV file
-        self.predicted_anomalies.to_csv(os.path.join(directory, 'predicted_anomalies.csv'), index=False)
-        self.reconstruction.to_csv(os.path.join(directory, 'reconstruction.csv'))
-        self.recon_error.to_csv(os.path.join(directory, 'reconstruction_errors.csv'))
-        self.anomaly_score.to_csv(os.path.join(directory, 'anomaly_scores.csv'))
+        self.predicted_anomalies.to_csv(os.path.join(directory, 'predicted_anomalies.csv'), **kwargs)
+        self.reconstruction.to_csv(os.path.join(directory, 'reconstruction.csv'), **kwargs)
+        self.recon_error.to_csv(os.path.join(directory, 'reconstruction_errors.csv'), **kwargs)
+        self.anomaly_score.to_csv(os.path.join(directory, 'anomaly_scores.csv'), **kwargs)
 
         if self.bias_data is not None:
-            self.bias_data.to_csv(os.path.join(directory, 'bias_data.csv'))
+            self.bias_data.to_csv(os.path.join(directory, 'bias_data.csv'), **kwargs)
 
         if self.arcana_losses is not None:
-            self.arcana_losses.to_csv(os.path.join(directory, 'arcana_losses.csv'))
+            self.arcana_losses.to_csv(os.path.join(directory, 'arcana_losses.csv'), **kwargs)
 
-        if self.tracked_bias is not None:
+        if self.tracked_bias is not None and len(self.tracked_bias) > 0:
             for idx, bias_df in enumerate(self.tracked_bias):
-                bias_df.to_csv(os.path.join(directory, f'tracked_bias_{idx}.csv'))
+                bias_df.to_csv(os.path.join(directory, f'tracked_bias_{idx}.csv'), **kwargs)
 
 
 @dataclass
