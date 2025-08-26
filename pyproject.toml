@@ -18,9 +18,10 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
 ]
-license = "MIT"
-license-files = ["LICENSE"]
+license = { file = "LICENSE" }
+
 
 [project.urls]
 repository = "https://github.com/AEFDI/EnergyFaultDetector"
