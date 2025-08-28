@@ -10,7 +10,11 @@ from energy_fault_detector.registration import registry, register
 # autoencoders
 register(module_path='energy_fault_detector.autoencoders.MultilayerAutoencoder',
          class_type='autoencoder',
-         class_names=['MultilayerAutoencoder', 'KerasAutoencoder', 'keras_autoencoder', 'default', 'dense'])
+         class_names=['MultilayerAutoencoder', 'multilayer_ae', 'multilayer_autoencoder', 'default', 'dense'])
+register(module_path='energy_fault_detector.autoencoders.ConditionalAE',
+         class_type='autoencoder',
+         class_names=['ConditionalAE', 'ConditionalAutoencoder', 'conditional_ae', 'conditional',
+                      'conditional_autoencoder'])
 
 # scores
 register(module_path='energy_fault_detector.anomaly_scores.MahalanobisScore',

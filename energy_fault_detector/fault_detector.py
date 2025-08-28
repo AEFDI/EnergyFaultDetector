@@ -267,15 +267,16 @@ class FaultDetector(FaultDetectionModel):
         x_prepped = self.data_preprocessor.transform(x).sort_index()
         column_order = x_prepped.columns
 
-        if hasattr(self.autoencoder, 'conditional_features'):
+        if self.autoencoder.is_conditional:
             x_predicted = self.autoencoder.predict(x_prepped, return_conditions=True, verbose=self.config.verbose)
             x_predicted = x_predicted[column_order]
         else:
             x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
+
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
 
-        # inverse transform predictions so they are comparable to the raw data
-        df_inverse_scaled_pred = self.data_preprocessor.inverse_transform(x_predicted)
+        # inverse transform predictions, so they are comparable to the raw data
+        reconstruction = self.data_preprocessor.inverse_transform(x_predicted)
 
         scores = self.anomaly_score.transform(recon_error)
         predicted_anomalies = self.predict_anomalies(scores, x_prepped)
@@ -293,7 +294,7 @@ class FaultDetector(FaultDetectionModel):
 
         return FaultDetectionResult(
             predicted_anomalies=predicted_anomalies,
-            reconstruction=df_inverse_scaled_pred,
+            reconstruction=reconstruction,
             recon_error=recon_error,
             anomaly_score=pd.DataFrame(data=scores, index=x_predicted.index, columns=['value']),
             bias_data=df_arcana_bias,
