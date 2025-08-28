@@ -124,14 +124,16 @@ class Arcana:
         x = x[selection]
         timestamps = timestamps[selection]
 
-        x_bias = self.initialize_x_bias(x, conditions)
-        x_bias = tf.Variable(x_bias, dtype=tf.float32)
         if self.keras_model.is_conditional:
+            conditions = conditions.values[selection]
             conditions = tf.constant(conditions, dtype=tf.float32)
 
+        x_bias = self.initialize_x_bias(x, conditions)
+        x_bias = tf.Variable(x_bias, dtype=tf.float32)
+
         tracked_losses = {'Combined Loss': [], 'Reconstruction Loss': [], 'Regularization Loss': [], 'Iteration': []}
-        bias = x_bias.numpy()
-        tracked_bias = []
+        tracked_bias = [x_bias.numpy()] if track_bias else []
+
         for i in range(self.num_iter):
             x_bias, losses, _ = self.update_x_bias(x, x_bias, conditions)
 

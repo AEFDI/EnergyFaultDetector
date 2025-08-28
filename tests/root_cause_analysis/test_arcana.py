@@ -111,7 +111,7 @@ class TestArcana(TestCase):
         self.assertTupleEqual(self.data[:-1].shape, self.data[selection].shape)
 
     def test_conditional_ae(self):
-        arcana = Arcana(model=self.cond_ae, num_iter=10, init_x_bias='recon')
+        arcana = Arcana(model=self.cond_ae, num_iter=10, init_x_bias='recon', max_sample_threshold=100)
         inputs = self.cond_data.drop(['a'], axis=1)
         conditions = self.cond_data[['a']]
 
