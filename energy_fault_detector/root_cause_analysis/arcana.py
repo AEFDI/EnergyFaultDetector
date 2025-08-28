@@ -130,12 +130,11 @@ class Arcana:
             conditions = tf.constant(conditions, dtype=tf.float32)
 
         tracked_losses = {'Combined Loss': [], 'Reconstruction Loss': [], 'Regularization Loss': [], 'Iteration': []}
-
         bias = x_bias.numpy()
-
-        tracked_bias = [bias]
+        tracked_bias = []
         for i in range(self.num_iter):
             x_bias, losses, _ = self.update_x_bias(x, x_bias, conditions)
+
             if i % 50 == 0:
                 loss_1, loss_2, combined_loss = losses[0].numpy(), losses[1].numpy(), losses[2].numpy()
                 if track_losses:
