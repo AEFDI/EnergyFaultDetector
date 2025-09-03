@@ -1,10 +1,9 @@
 """Main fault detection class"""
 
 import logging
-from typing import Optional, Tuple, List
+from typing import Optional, Any, Tuple, List
 from datetime import datetime
 import os
-import warnings
 
 import pandas as pd
 import numpy as np
@@ -27,34 +26,28 @@ class FaultDetector(FaultDetectionModel):
     """Main class for fault detection in renewable energy assets and power grids.
 
     Args:
-        config (Optional[Config]):  Config object with fault detection configuration. Defaults to None.
+        config (Optional[Config]): a Config object with fault detection configuration. Defaults to None.
             If None, the models need to be loaded from a path using the `load_models` method.
-        model_directory (str, optional): Directory to save models to. Defaults to 'fault_detector_model'.
-        model_subdir (Optional[Any], optional): Deprecated. This argument will be removed in future versions.
-            Defaults to None.
+        model_directory (str, optional): directory with models. Defaults to 'output'.
+        model_subdir (Optional[Any], optional): if given, the subdirectory of the model objects. Defaults to None.
+            If None, the current datetime (formatted yyyyMMdd_HHmmSS) is used.
+            Complete path to models:
+
+                - train method: model_directory/model_subdir/trained_model
+                - tune method: model_directory/model_subdir/tune_method
 
     Attributes:
-        anomaly_score: AnomalyScore object.
-        autoencoder: Autoencoder object.
-        threshold_selector: ThresholdSelector object.
-        data_preprocessor: DataPreprocessorPipeline object.
-        save_timestamps: a list of string timestamps indicating when the model was saved.
+        anomaly_score: AnomalyScore object
+        autoencoder: Autoencoder object
+        threshold_selector: ThresholdSelector object
+        data_preprocessor: DataPreprocessorPipeline object
     """
 
-    def __init__(self, config: Optional[Config] = None, model_directory: str = 'fault_detector_model',
-                 model_subdir: Optional[str] = None):
-        if model_subdir is not None:
-            warnings.warn(
-                '`model_subdir`is deprecated and will be removed in future versions. '
-                'Please append the subdirectory to the `model_directory` argument if you need a complex path.',
-                DeprecationWarning,
-                stacklevel=2
-            )
-
-        super().__init__(config=config, model_directory=model_directory)
+    def __init__(self, config: Optional[Config] = None, model_directory: str = 'output',
+                 model_subdir: Optional[Any] = None):
+        super().__init__(config=config, model_directory=model_directory, model_subdir=model_subdir)
         if config is None:
-            logger.debug('No configuration set. Load models and config from path with the `FaultDetector.load_models`'
-                         ' method.')
+            logger.info('No configuration set - load models and config from path with the `load_models` method.')
         else:
             self._init_models()
 
@@ -68,14 +61,11 @@ class FaultDetector(FaultDetectionModel):
             fit_preprocessor (bool, optional): if True the preprocessor is fitted. If False the preprocessor is not
                 fitted and the user has to provide a ready-to-use preprocessor by loading models before calling this
                 function.
-
         Returns: tuple of (pd.Dataframe, pd.Dataframe, pd.Series)
             x_prepped (pd.DataFrame): preprocessed normal training data
             x: ordered training data (unprocessed)  # needed for _fit_threshold
             y: ordered normal_index (unprocessed)  # needed for _fit_threshold
-
         """
-
         x = sensor_data.sort_index()
         if normal_index is not None:
             y = normal_index.sort_index()
@@ -83,12 +73,8 @@ class FaultDetector(FaultDetectionModel):
             # assume only 'normal behaviour' in x
             y = pd.Series(np.full(len(x), True), index=x.index)
 
-        if not x.loc[x.index.duplicated()].empty or not y.loc[y.index.duplicated()].empty:
-            raise ValueError('There are duplicated indices in the input dataframe `sensor_data` and/or in the '
-                             '`normal_index`, please check your input data.')
-
         if self.config.data_clipping:
-            logger.debug('Clip data before scaling.')
+            logger.info('Clip data before scaling.')
             data_clipper = DataClipper(**self.config.data_clipping_params)
             data_clipper.fit(x=x)
             x = data_clipper.transform(x)
@@ -132,17 +118,17 @@ class FaultDetector(FaultDetectionModel):
         logger.info('Train autoencoder.')
         self.autoencoder.fit(x=x_train, x_val=x_val, verbose=self.config.verbose)
 
-        train_recon_error = self.autoencoder.get_reconstruction_error(x_train, verbose=self.config.verbose)
+        train_recon_error = self.autoencoder.get_reconstruction_error(x_train)
         if x_val is not None:
             if len(x_val) > 0:
-                val_recon_error = self.autoencoder.get_reconstruction_error(x_val, verbose=self.config.verbose)
+                val_recon_error = self.autoencoder.get_reconstruction_error(x_val)
 
         if not fit_autoencoder_only:
             self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=self.config.fit_threshold_on_val)
 
         # save the models
         if save_models:
-            model_path, model_date = self.save_models(overwrite=overwrite_models)
+            model_path, model_date = self.save_models(model_name='trained_model', overwrite=overwrite_models)
         else:
             model_date = datetime.now().strftime("%Y%m%d_%H%M%S")
         return ModelMetadata(
@@ -152,10 +138,10 @@ class FaultDetector(FaultDetectionModel):
             val_recon_error=val_recon_error
         )
 
-    def tune(self, sensor_data: pd.DataFrame, normal_index: Optional[pd.Series] = None,
-             pretrained_model_path: Optional[str] = None, new_learning_rate: float = 0.0001, tune_epochs: int = 10,
+    def tune(self, sensor_data: pd.DataFrame, normal_index: pd.Series,
+             pretrained_model_path: str = None, new_learning_rate: float = 0.0001, tune_epochs: int = 10,
              tune_method: str = 'full', save_models: bool = True, overwrite_models: bool = False,
-             data_preprocessor: Optional[DataPreprocessor] = None) -> ModelMetadata:
+             data_preprocessor: DataPreprocessor = None) -> ModelMetadata:
         """FaultDetector finetuning via the following methods:
             'full' (all autoencoder weights + threshold and anomaly-score scaling will be adapted),
             'decoder' (only decoder weights + threshold will be adapted),
@@ -167,9 +153,7 @@ class FaultDetector(FaultDetectionModel):
         Args:
             sensor_data (pd.DataFrame): DataFrame with the sensor data of one asset for a specific time window.
                 The timestamp should be the index and the sensor values as columns.
-            normal_index (pd.Series, optional): Series indicating normal behavior as boolean with the timestamp as
-                index. If not provided, it is assumed all data in `sensor_data` represents normal behaviour.
-                Defaults to None.
+            normal_index (pd.Series): Series indicating normal behavior as boolean with the timestamp as index.
             pretrained_model_path (Optional[str], optional): Path to pretrained model. If None, assumes attributes
                 data_preprocessor, autoencoder, anomaly_score, and threshold_selector contain fitted instances.
             tune_epochs (int, optional): Number of epochs to fine-tune. Defaults to 10.
@@ -199,7 +183,7 @@ class FaultDetector(FaultDetectionModel):
             self.config['train']['threshold_selector']['fit_on_val'] = False
 
         if pretrained_model_path is not None:
-            self.load_models(model_path=pretrained_model_path)
+            self.load_models(model_path=pretrained_model_path, load_threshold=True)
         else:
             if self.autoencoder is None:
                 raise ValueError('No models loaded and no pretrained_model_path provided!')
@@ -221,7 +205,6 @@ class FaultDetector(FaultDetectionModel):
         x_prepped = self.data_preprocessor.transform(x_normal)
         x_train, x_val = self.train_val_split(x_prepped)
         if tune_method != 'threshold':
-            logger.info('Tune autoencoder.')
             if tune_method == 'full':
                 self.autoencoder.tune(x=x_train, x_val=x_val, learning_rate=new_learning_rate, tune_epochs=tune_epochs,
                                       verbose=self.config.verbose)
@@ -229,10 +212,8 @@ class FaultDetector(FaultDetectionModel):
                 self.autoencoder.tune_decoder(x=x_train, x_val=x_val, learning_rate=new_learning_rate,
                                               tune_epochs=tune_epochs, verbose=self.config.verbose)
 
-            train_recon_error = self.autoencoder.get_reconstruction_error(x_train, verbose=self.config.verbose)
-            val_recon_error = (
-                self.autoencoder.get_reconstruction_error(x_val, verbose=self.config.verbose) if len(x_val) > 0 else None
-            )
+            train_recon_error = self.autoencoder.get_reconstruction_error(x_train)
+            val_recon_error = self.autoencoder.get_reconstruction_error(x_val) if len(x_val) > 0 else None
 
         # tune/fit threshold
         self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=self.config.fit_threshold_on_val)
@@ -261,10 +242,8 @@ class FaultDetector(FaultDetectionModel):
             model_path (Optional[str], optional): Path to the models to be applied. If None, assumes the attributes
                 data_preprocessor, autoencoder, anomaly_score, and threshold_selector contain fitted instances.
             root_cause_analysis (bool, optional): Whether to run ARCANA. Defaults to False.
-            track_losses (bool, optional): Optional; if True, ARCANA losses will be tracked over the iterations.
-                Defaults to False.
-            track_bias (bool, optional): Optional; if True, ARCANA bias will be tracked over the iterations.
-                Defaults to False.
+            track_losses (bool, optional): Optional; if True, ARCANA losses will be tracked over the iterations. Defaults to False.
+            track_bias (bool, optional): Optional; if True, ARCANA bias will be tracked over the iterations. Defaults to False.
 
         Returns:
             FaultDetectionResult: with the following DataFrames:
@@ -280,11 +259,10 @@ class FaultDetector(FaultDetectionModel):
         x = sensor_data.sort_index()
 
         if model_path is not None:
-            self.load_models(model_path=model_path)
+            self.load_models(model_path=model_path, load_threshold=True)
         else:
             if self.data_preprocessor is None:
                 raise ValueError('No models loaded and no model_path provided!')
-            logger.debug('No model_path provided; using existing model instances.')
 
         x_prepped = self.data_preprocessor.transform(x).sort_index()
         column_order = x_prepped.columns
@@ -295,7 +273,7 @@ class FaultDetector(FaultDetectionModel):
         else:
             x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
 
-        recon_error = self.autoencoder.get_reconstruction_error(x_prepped, verbose=self.config.verbose)
+        recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
 
         # inverse transform predictions, so they are comparable to the raw data
         reconstruction = self.data_preprocessor.inverse_transform(x_predicted)
@@ -304,7 +282,7 @@ class FaultDetector(FaultDetectionModel):
         predicted_anomalies = self.predict_anomalies(scores, x_prepped)
 
         if root_cause_analysis:
-            logger.info('Run root cause analysis..')
+            logger.info('Run root cause analysis.')
             df_arcana_bias, arcana_losses, tracked_bias = self.run_root_cause_analysis(sensor_data=sensor_data,
                                                                                        track_losses=track_losses,
                                                                                        track_bias=track_bias)
@@ -327,7 +305,7 @@ class FaultDetector(FaultDetectionModel):
         """Predict the anomaly score."""
 
         x_prepped = self.data_preprocessor.transform(sensor_data)
-        recon_error = self.autoencoder.get_reconstruction_error(x_prepped, verbose=self.config.verbose)
+        recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
         scores = self.anomaly_score.transform(recon_error)
         return scores
 
@@ -377,19 +355,19 @@ class FaultDetector(FaultDetectionModel):
 
         # Fit score object only on normal data (all training + validation data)
         x_prepped_all = self.data_preprocessor.transform(x)
-        deviations = self.autoencoder.get_reconstruction_error(x_prepped_all, verbose=self.config.verbose)
+        deviations = self.autoencoder.get_reconstruction_error(x_prepped_all)
         y_ = y.loc[deviations.index]
         self.anomaly_score.fit(deviations[y_.values])  # use series values for compatibility with a multi-index
 
         scores = self.anomaly_score.transform(deviations)
         if fit_on_validation:
-            logger.debug('Fit threshold on validation data')
+            logger.info('Fit threshold on validation data')
             if x_val is None:
                 logger.warning('No validation data available, fit threshold on full training data.')
                 x_val = x
 
             x_val_all = x_prepped_all.sort_index().loc[x_val.index.min():]  # including known anomalies
-            re_val = self.autoencoder.get_reconstruction_error(x_val_all, verbose=self.config.verbose)
+            re_val = self.autoencoder.get_reconstruction_error(x_val_all)
             scores = self.anomaly_score.transform(re_val)
 
         logger.info('Fit threshold.')
