@@ -1,4 +1,4 @@
-
+import os
 import shutil
 from unittest import TestCase
 
@@ -72,8 +72,15 @@ class TestFDRSelector(TestCase):
 
     def test_overwrite(self) -> None:
         self.threshold_selector.save(self.save_location)
-        with self.assertRaises(FileExistsError):
+        self.assertListEqual(os.listdir(self.save_location), ['FDRSelector.pkl'])
+
+        with self.assertRaises(FileExistsError):  # overwrite = False
             self.threshold_selector.save(self.save_location)
 
         # does not raise error
         self.threshold_selector.save(self.save_location, overwrite=True)
+        self.assertListEqual(os.listdir(self.save_location), ['FDRSelector.pkl'])
+        # save with a different file name
+        self.threshold_selector.save(self.save_location, file_name='another_threshold_selector.pkl')
+        self.assertListEqual(sorted(os.listdir(self.save_location)),
+                             sorted(['another_threshold_selector.pkl', 'FDRSelector.pkl']))

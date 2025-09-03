@@ -16,6 +16,7 @@ class SaveLoadMixin:
 
     def save(self, directory: str, overwrite: bool = False, file_name: str = None, create_dir: bool = True):
         """Save the model object in given directory, filename is the class name.
+        Note: override when using Keras/Tensorflow, as those models cannot be pickled.
 
         Args:
             directory: directory to save the object in.
@@ -23,40 +24,44 @@ class SaveLoadMixin:
             file_name: name of the file to save the object in, if none, take the class name.
             create_dir: whether to create the directory, default True.
         """
-        # Note: override when using Keras/Tensorflow, as those models cannot be pickled.
-        if create_dir:
-            self._create_empty_dir(directory, overwrite)
 
-        if file_name is None:
-            path = os.path.join(directory, self.__class__.__name__ + '.pkl')
-        else:
-            path = os.path.join(directory, file_name)
+        file_name = self.__class__.__name__ + '.pkl' if file_name is None else file_name
+        path = os.path.join(directory, file_name)
+
+        self._create_empty_dir(directory, overwrite, file_name)
+
         with open(path, 'wb') as f:
             f.write(pickle.dumps(self.__dict__))
 
     def load(self, directory: str, file_name: str = None):
-        """Load the model object from given directory."""
-        # Note: override when using Keras/Tensorflow, as those models cannot be pickled.
-        if file_name is None:
-            path = os.path.join(directory, self.__class__.__name__ + '.pkl')
-        else:
-            path = os.path.join(directory, file_name)
+        """Load the model object from given directory.
+        Note: override when using Keras/Tensorflow, as those models cannot be pickled.
+        """
+
+        file_name = self.__class__.__name__ + '.pkl' if file_name is None else file_name
+        path = os.path.join(directory, file_name)
+
         with open(path, 'rb') as f:
             class_data = f.read()
 
         self.__dict__ = pickle.loads(class_data)
 
     @staticmethod
-    def _create_empty_dir(directory: str, overwrite: bool):
-        """Create new directory and empty if it already exists
+    def _create_empty_dir(directory: str, overwrite: bool, file_name: str = None):
+        """Create a new directory or, when overwrite=True, replace an existing one with a new empty directory if it
+        already exists.
 
         Args:
             directory: directory to create.
             overwrite: whether to overwrite existing data, default False.
+            file_name: (optional) Name of the file to save the object in. Defaults to None.
         """
 
-        if os.path.exists(directory) and overwrite:
+        file_path = directory if file_name is None else os.path.join(directory, file_name)
+
+        if os.path.exists(file_path) and overwrite:
             shutil.rmtree(directory)
-        elif os.path.exists(directory) and not overwrite:
-            raise FileExistsError(f'Directory {directory} already exists!')
-        os.makedirs(directory)
+        elif os.path.exists(file_path) and not overwrite:
+            raise FileExistsError(f'File {file_path} already exists!')
+
+        os.makedirs(directory, exist_ok=True)
