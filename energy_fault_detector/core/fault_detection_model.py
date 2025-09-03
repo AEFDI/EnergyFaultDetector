@@ -38,18 +38,19 @@ class FaultDetectionModel(ABC):
     """Template for fault detection models. Train and predicts should be implemented.
 
     Args:
-        config: a Config object with anomaly detection configuration.
-        model_directory: directory with models.
-        model_subdir: if given, the subdirectory of the model objects. If None,
-            the current datetime (formatted yyyyMMdd_HHmmSS) is used.
-            Complete path to models:
+        config (Optional[Config]):  Config object with fault detection configuration. Defaults to None.
+            If None, the models need to be loaded from a path using the `load_models` method.
+        model_directory (str, optional): Directory to save models to. Defaults to 'output'.
 
-                - train method: model_directory/model_subdir/asset_id
-                - tune method: model_directory/model_subdir/asset_id_tune_method
+    Attributes:
+        anomaly_score: AnomalyScore object.
+        autoencoder: Autoencoder object.
+        threshold_selector: ThresholdSelector object.
+        data_preprocessor: DataPreprocessorPipeline object.
+        save_timestamps: a list of string timestamps, indicating when the model was saved.
     """
 
-    def __init__(self, config: Optional[Config] = None, model_directory: str = 'models',
-                 model_subdir: Optional[Any] = None):
+    def __init__(self, config: Optional[Config] = None, model_directory: str = 'models'):
         self.config: Optional[Config] = config
         self.model_directory: str = model_directory
 
@@ -61,7 +62,6 @@ class FaultDetectionModel(ABC):
         # add timestamps at which models were saved to a list in order to be able to identify which model was created
         # by this instance
         self.save_timestamps: List[str] = []
-        self.model_subdir_name: str = str(model_subdir) if model_subdir is not None else None
 
         # build models
         self._model_factory: Optional[ModelFactory] = ModelFactory(config) if config else None
@@ -142,52 +142,45 @@ class FaultDetectionModel(ABC):
         return train_data, val_data
 
     def save_models(self, model_name: Union[str, int] = None, overwrite: bool = False) -> Tuple[str, str]:
-        """Save the model objects.
+        """Save the model objects. Model files are saved in self.model_directory/model_name/datetime if overwrite is set
+        to False, otherwise, they are saved in self.model_directory/model_name
 
         Args:
             model_name (optional str): model name, will be the directory in which the model files are saved.
-                If not provided, the model files will be saved in self.model_directory / self.model_subdir
+                Changes model path to self.model_directory/model_name. Defaults to None.
             overwrite (optional bool): If True existing folders can be overwritten. Default: False
 
         Returns:
             The full path to the saved models and the timestamp of the function call in string format.
         """
-        if not os.path.isdir(self.model_directory):
-            os.mkdir(self.model_directory)
 
         current_datetime: str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.save_timestamps.append(current_datetime)
-        if self.model_subdir_name is None:
-            model_subdir = current_datetime
-        else:
-            model_subdir = self.model_subdir_name
 
-        sub_dir_path = os.path.join(self.model_directory, model_subdir)
-        os.makedirs(sub_dir_path, exist_ok=True)
+        model_dir = self.model_directory if model_name is None else os.path.join(self.model_directory, model_name)
 
-        model_dir = sub_dir_path if model_name is None else os.path.join(sub_dir_path, str(model_name))
+        if not overwrite:
+            # if models are saved more than once the original save would be overwritten or FileExistsError is raised
+            # This is prevented by adding the current datetime as unique identifier to the path
+            model_dir = os.path.join(model_dir, current_datetime)
+
         os.makedirs(model_dir, exist_ok=True)
-
-        if self.model_subdir_name is not None and not overwrite:
-            # if subdir is set by the user and models are saved more than once the original save would be overwritten
-            # in case of overwrite = False this must be prevented by adding the current datetime as unique identifier to
-            # the path
-            model_dir = os.path.join(sub_dir_path, current_datetime)
-            os.makedirs(model_dir, exist_ok=True)
 
         self.data_preprocessor.save(os.path.join(model_dir, DATA_PREP_DIR), overwrite=overwrite)
         self.autoencoder.save(os.path.join(model_dir, AUTOENCODER_DIR), overwrite=overwrite)
         self.threshold_selector.save(os.path.join(model_dir, THRESHOLD_DIR), overwrite=overwrite)
         self.anomaly_score.save(os.path.join(model_dir, SCORE_DIR), overwrite=overwrite)
         self.config.write_config(os.path.join(model_dir, 'config.yaml'), overwrite=overwrite)
+
+        # After successfully saving the model objects, add the timestamp to the list
+        self.save_timestamps.append(current_datetime)
+
         return os.path.abspath(model_dir), current_datetime
 
-    def load_models(self, model_path: str, load_threshold: bool = True) -> None:
+    def load_models(self, model_path: str) -> None:
         """Load saved models given the model path.
 
         Args:
             model_path: Path to the model files.
-            load_threshold: if True, then the threshold model will be loaded
         """
 
         data_prep_dir = os.path.join(model_path, DATA_PREP_DIR)
@@ -199,11 +192,10 @@ class FaultDetectionModel(ABC):
             model_type='autoencoder',
             model_directory=os.path.join(model_path, AUTOENCODER_DIR)
         )
-        if load_threshold:
-            self.threshold_selector = self._load_pickled_model(
-                model_type='threshold_selector',
-                model_directory=os.path.join(model_path, THRESHOLD_DIR)
-            )
+        self.threshold_selector = self._load_pickled_model(
+            model_type='threshold_selector',
+            model_directory=os.path.join(model_path, THRESHOLD_DIR)
+        )
         self.anomaly_score = self._load_pickled_model(
             model_type='anomaly_score',
             model_directory=os.path.join(model_path, SCORE_DIR)
