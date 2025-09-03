@@ -45,7 +45,7 @@ For more options, run ```quick_fault_detector -h```.
 For an example using one of the CARE2Compare datasets, run:
 ```quick_fault_detector <path_to_c2c_dataset.csv> --c2c_example```
 
-For more information, have a look at the notebook [Quick Failure Detection](./notebooks/Example%20-%20Quick%20Failure%20Detection.ipynb)
+For more information, have a look at the notebook [Quick Fault Detection](./notebooks/Example%20-%20Quick%20Fault%20Detection.ipynb)
 
 
 ## Fault detection in 5 lines of code
