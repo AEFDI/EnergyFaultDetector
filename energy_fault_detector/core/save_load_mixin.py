@@ -14,7 +14,7 @@ class SaveLoadMixin:
         # **kwargs to ensure this class works fine in multiple inheritance cases.
         pass
 
-    def save(self, directory: str, overwrite: bool = False, file_name: str = None, create_dir: bool = True):
+    def save(self, directory: str, overwrite: bool = False, file_name: str = None):
         """Save the model object in given directory, filename is the class name.
         Note: override when using Keras/Tensorflow, as those models cannot be pickled.
 
@@ -22,7 +22,6 @@ class SaveLoadMixin:
             directory: directory to save the object in.
             overwrite: whether to overwrite existing data, default False.
             file_name: name of the file to save the object in, if none, take the class name.
-            create_dir: whether to create the directory, default True.
         """
 
         file_name = self.__class__.__name__ + '.pkl' if file_name is None else file_name
