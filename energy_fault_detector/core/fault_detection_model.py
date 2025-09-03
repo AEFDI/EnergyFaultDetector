@@ -156,7 +156,7 @@ class FaultDetectionModel(ABC):
 
         current_datetime: str = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        model_dir = self.model_directory if model_name is None else os.path.join(self.model_directory, model_name)
+        model_dir = self.model_directory if model_name is None else os.path.join(self.model_directory, str(model_name))
 
         if not overwrite:
             # if models are saved more than once the original save would be overwritten or FileExistsError is raised

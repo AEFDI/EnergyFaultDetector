@@ -48,6 +48,10 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         results = self.fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index)
         model_path = results.model_path
 
+        # Check model path
+        expected_path = os.path.join(self.test_dir, self.fault_detector.save_timestamps[0])
+        self.assertEqual(expected_path, model_path)
+
         # Create a new FaultDetector instance and load the saved models
         loaded_fault_detector = FaultDetector(config=self.conf, model_directory=self.test_dir)
         loaded_fault_detector.load_models(model_path=model_path)
@@ -75,6 +79,18 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         self.assertDictEqual(self.fault_detector.config.config_dict,
                              loaded_fault_detector.config.config_dict)
 
+        # Check path when overwrite = True
+        results = self.fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index,
+                                          overwrite_models=True)
+        self.assertEqual(self.test_dir, results.model_path)
+        # Check path with a model name
+        model_path, _ = self.fault_detector.save_models('my_model', overwrite=False)
+        expected_path = os.path.join(self.test_dir, 'my_model', self.fault_detector.save_timestamps[-1])
+        self.assertEqual(expected_path, model_path)
+        # and when overwrite = True
+        model_path, _ = self.fault_detector.save_models('my_model', overwrite=True)
+        expected_path = os.path.join(self.test_dir, 'my_model')
+        self.assertEqual(expected_path, model_path)
 
 @patch("energy_fault_detector.core.model_factory.Autoencoder", new=mock_autoencoder)
 @patch("energy_fault_detector.core.model_factory.AnomalyScore", new=mock_score)
@@ -120,11 +136,11 @@ class TestFaultDetector(unittest.TestCase):
         self.assertEqual(fault_detector.config, self.conf)
 
     def test_missing_config(self):
-        with self.assertLogs('energy_fault_detector', level='INFO') as cm:
+        with self.assertLogs('energy_fault_detector', level='DEBUG') as cm:
             ad = FaultDetector(model_directory=self.test_model_dir)
             self.assertEqual(cm.output,
                              [
-                                 'INFO:energy_fault_detector:No configuration set - load models and config from path with the `load_models` method.'])
+                                 'DEBUG:energy_fault_detector:No configuration set. Load models and config from path with the `load_models` method.'])
 
     def test_save_models(self):
         self.conf.write_config = MagicMock()
@@ -138,11 +154,11 @@ class TestFaultDetector(unittest.TestCase):
         for model_object, name in zip(model_objects, names):
             model_object.save.assert_called_once()
             self.assertEqual(model_object.save.call_args[0][0],
-                             os.path.join(fault_detector.model_directory, dt, str(asset_id), name))
+                             os.path.join(fault_detector.model_directory, str(asset_id), dt, name))
 
         fault_detector.config.write_config.assert_called_once()
         self.assertEqual(fault_detector.config.write_config.call_args[0][0],
-                         os.path.join(fault_detector.model_directory, dt, str(asset_id), 'config.yaml'))
+                         os.path.join(fault_detector.model_directory, str(asset_id), dt, 'config.yaml'))
 
     def test_load_models(self):
         fault_detector = self._create_fault_detector(self.conf)
@@ -183,7 +199,7 @@ class TestFaultDetector(unittest.TestCase):
         mock_score.save.assert_called_once()
         self.conf.write_config.assert_called_once()
 
-        model_dir = os.path.join(fault_detector.model_directory, fault_detector.save_timestamps[0], 'trained_model')
+        model_dir = os.path.join(fault_detector.model_directory, fault_detector.save_timestamps[0])
         model_date = results.model_date
         self.assertIsInstance(model_date, str)
         self.assertEqual(results.model_date, fault_detector.save_timestamps[0])
