@@ -88,12 +88,10 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
    3. Download method for the Care2Compare class.
    3. Unify default value settings. 
    4. No or low configuration
+   5. Upgrade to Keras 3.0
 
-3. Conditions and dependency updates
-   1. Conditional autoencoder 
-   2. Upgrade to Keras 3.0
-
-4. Root cause analysis expansion: integrate SHAP and possibly other XAI-methods.
+3. Root cause analysis expansion
+   1. integrate SHAP and possibly other XAI-methods.
 
 ## License
 This project is licensed under the [MIT License](./LICENSE).

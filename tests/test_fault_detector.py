@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 
 from energy_fault_detector.fault_detector import FaultDetector, Config
+from energy_fault_detector.autoencoders import ConditionalAE
 
 mock_autoencoder = MagicMock()
 mock_data_preprocessor = MagicMock()
@@ -281,3 +282,15 @@ class TestFaultDetector(unittest.TestCase):
             fault_detector.threshold_selector.fit.call_args.kwargs['y'],
             self.normal_index.iloc[-1:]
         )
+
+
+class TestFaultDetectorModelCreation(unittest.TestCase):
+
+    def setUp(self):
+        self.test_model_dir = 'fd_test_models'
+
+    def test_models_created(self):
+        config = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_conditional_ae_config.yaml'))
+        model = FaultDetector(config, model_directory=self.test_model_dir)
+        self.assertIsInstance(model.autoencoder, ConditionalAE)
+        self.assertListEqual(model.autoencoder.conditional_features, ['feature_a', 'feature_b'])

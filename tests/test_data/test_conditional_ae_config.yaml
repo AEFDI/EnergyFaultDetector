@@ -13,7 +13,7 @@ train:
         - feature2
       include_duplicate_value_to_nan: false
   autoencoder:
-    name: 'MultilayerAutoencoder'
+    name: 'ConditionalAE'
     verbose: 0
     params:
       layers: [300]
@@ -24,6 +24,9 @@ train:
       batch_size: 144
       epochs: 10
       loss_name: 'mean_squared_error'
+      conditional_features:
+        - feature_a
+        - feature_b
   threshold_selector:
     name: 'FDR'
     params:

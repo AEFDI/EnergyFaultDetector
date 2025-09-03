@@ -6,12 +6,12 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_almost_equal
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, LSTM, RepeatVector, TimeDistributed
+from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Input
 import tensorflow as tf
 
 from energy_fault_detector.root_cause_analysis.arcana import Arcana
-from energy_fault_detector.autoencoders import MultilayerAutoencoder
+from energy_fault_detector.autoencoders import MultilayerAutoencoder, ConditionalAE
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -42,6 +42,12 @@ class TestArcana(TestCase):
         ml_model.load_weights(os.path.join(PROJECT_ROOT, 'test_data/ml_model_weights.h5'))
         self.ml_ae.model = ml_model
         self.ml_ae.history = 0  # ml_ae._is_fitted() will now return True so predict can be used without fit
+
+        self.cond_ae = ConditionalAE(conditional_features=['a'])
+        cond_data = self.data_frame.copy()
+        cond_data['a'] = [1]*500 + [2]*500
+        self.cond_data = cond_data
+        self.cond_ae.fit(self.cond_data, verbose=0)
 
     def test_find_arcana_bias(self):
         with open(os.path.join(PROJECT_ROOT, 'test_data/arcana_bias.pkl'), 'rb') as file:
@@ -104,3 +110,28 @@ class TestArcana(TestCase):
         selection = arcana.draw_samples(x=self.data)
         self.assertTupleEqual(self.data[:-1].shape, self.data[selection].shape)
 
+    def test_conditional_ae(self):
+        arcana = Arcana(model=self.cond_ae, num_iter=10, init_x_bias='recon', max_sample_threshold=100)
+        inputs = self.cond_data.drop(['a'], axis=1)
+        conditions = self.cond_data[['a']]
+
+        # Test initialization
+        bias_init = arcana.initialize_x_bias(inputs.values, conditions.values)
+        self.assertTupleEqual(inputs.shape, bias_init.numpy().shape)
+
+        # Test one update
+        inputs = tf.Variable(inputs.values, dtype=tf.float32)
+        bias = tf.Variable(bias_init, dtype=tf.float32)
+        conditions = tf.constant(conditions, dtype=tf.float32)
+        bias, _, _ = arcana.update_x_bias(x=inputs, x_bias=bias, conditions=conditions)
+        self.assertTupleEqual(inputs.numpy().shape, bias.numpy().shape)
+
+        bias, _, _ = arcana.update_x_bias(x=inputs, x_bias=bias, conditions=conditions)
+        bias, _, _ = arcana.update_x_bias(x=inputs, x_bias=bias, conditions=conditions)
+
+        # Test 10 iterations
+        arcana = Arcana(model=self.cond_ae, num_iter=10, init_x_bias='recon')
+        x_bias, tracked_losses, tracked_bias_dfs = arcana.find_arcana_bias(self.cond_data, track_bias=True)
+        self.assertTupleEqual(inputs.numpy().shape, x_bias.shape)
+        self.assertTupleEqual((0, 3), tracked_losses.shape)
+        self.assertEqual(len(tracked_bias_dfs), 2)  # init bias + first iteration

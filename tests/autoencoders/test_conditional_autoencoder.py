@@ -1,3 +1,5 @@
+"""Conditional AE tests"""
+
 import os.path
 import shutil
 from typing import Dict
@@ -7,10 +9,10 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_almost_equal
 
-from energy_fault_detector.autoencoders.multilayer_autoencoder import MultilayerAutoencoder
+from energy_fault_detector.autoencoders.conditional_autoencoder import ConditionalAE
 
 
-class TestMultilayerAutoencoder(TestCase):
+class TestConditionalAutoencoder(TestCase):
     def setUp(self) -> None:
         params: Dict = {
             'layers': [20],
@@ -22,15 +24,35 @@ class TestMultilayerAutoencoder(TestCase):
             'epochs': 33,
             'loss_name': 'mean_squared_error'
         }
-        self.autoencoder = MultilayerAutoencoder(**params)
+        self.conditional_features = ['cond1', 'cond2']
+        self.autoencoder = ConditionalAE(self.conditional_features, **params)
         np.random.seed(42)
+        # Create training data with conditional features
         self.train_data = pd.DataFrame(
-            np.random.random(size=(1000, 10))
+            np.random.random(size=(1000, 10)),
+            columns=[f'feature_{i}' for i in range(10)]
         )
-        self.fitted_autoencoder = MultilayerAutoencoder(**params).fit(self.train_data, verbose=0)
+        for cond in self.conditional_features[::-1]:
+            # conditional features
+            self.train_data.insert(
+                loc=0, column=cond, value=np.random.random(size=(1000,))
+            )
+
+        self.fitted_autoencoder = ConditionalAE(self.conditional_features, **params).fit(
+            self.train_data, verbose=0
+        )
         self.test_data = pd.DataFrame(
-            np.random.random(size=(10, 10))
+            np.random.random(size=(10, 10)),
+            columns=[f'feature_{i}' for i in range(10)]
         )
+        for cond in self.conditional_features[::-1]:
+            self.test_data.insert(
+                loc=0, column=cond, value=np.random.random(size=(10,))
+            )
+
+        self.test_inputs = self.test_data[[f'feature_{i}' for i in range(10)]]
+        self.test_conditions = self.test_data[self.conditional_features]
+
         self.saved_models = './test_models'
 
     def tearDown(self) -> None:
@@ -38,19 +60,24 @@ class TestMultilayerAutoencoder(TestCase):
         shutil.rmtree(self.saved_models, ignore_errors=True)
 
     def test_init(self) -> None:
+        # test init without arguments
+        _ = ConditionalAE()
+
         self.assertEqual(self.autoencoder.layers, [20])
         self.assertEqual(self.autoencoder.batch_size, 144)
         self.assertEqual(self.autoencoder.loss_name, 'mean_squared_error')
+        self.assertEqual(self.autoencoder.conditional_features, self.conditional_features)
 
     def test_call(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
-        output = self.autoencoder(self.test_data.values)
-        output_predict = self.autoencoder.predict(self.test_data)
+        output = self.fitted_autoencoder(self.test_inputs.values, self.test_conditions.values)
+        output_predict = self.fitted_autoencoder.predict(self.test_data)
+
         assert_array_almost_equal(output.numpy(), output_predict)
 
     def test_fit(self) -> None:
         self.autoencoder.fit(self.train_data, verbose=0)
-        self.assertEqual(len(self.autoencoder.model.layers), 8)  # input, 20, prelu, 5, prelu, 20, prelu, output
+        print(self.autoencoder.model.summary())
+        self.assertEqual(len(self.autoencoder.model.layers), 11)  # Adjust based on your model structure
         self.assertIsNotNone(self.autoencoder.model)
         self.assertEqual(len(self.autoencoder.history['loss']), 33)
 
@@ -63,13 +90,23 @@ class TestMultilayerAutoencoder(TestCase):
         self.autoencoder.fit(self.train_data, x_val=self.test_data, verbose=0)
 
         encoded = self.autoencoder.encode(self.test_data)
-        # note: weak test
         self.assertEqual(encoded.shape, (10, 5))
 
     def test_predict(self) -> None:
         self.autoencoder.fit(self.train_data, verbose=0)
         output = self.autoencoder.predict(self.test_data)
-        self.assertEqual(self.test_data.shape, output.shape)
+        self.assertEqual(self.test_data.shape[0], output.shape[0])  # Check number of rows
+        self.assertEqual(self.test_inputs.shape[1], output.shape[1])  # Check number of columns
+
+        output = self.autoencoder.predict(self.test_data, return_conditions=True)
+        self.assertEqual(self.test_data.shape[0], output.shape[0])  # Check number of rows
+        self.assertEqual(self.test_data.shape[1], output.shape[1])  # Check number of columns
+
+    def test_recon_error(self):
+        self.autoencoder.fit(self.train_data, verbose=0)
+        recon_error = self.autoencoder.get_reconstruction_error(self.test_data)
+        self.assertEqual(self.test_data.shape[0], recon_error.shape[0])
+        self.assertEqual(self.test_inputs.shape[1], recon_error.shape[1])  # columns should be input data only
 
     def test_predict_not_fitted(self) -> None:
         with self.assertRaises(ValueError):
@@ -77,23 +114,13 @@ class TestMultilayerAutoencoder(TestCase):
 
     def test_tune(self) -> None:
         self.autoencoder.fit(self.train_data, verbose=0)
-        self.autoencoder.tune(self.train_data, tune_epochs=5, verbose=0, learning_rate=0.001)
+        self.autoencoder.tune(self.train_data, tune_epochs=5, learning_rate=0.001)
         self.assertEqual(len(self.autoencoder.history['loss']), 5 + 33)
-
-    def test_tune_decoder(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
-        encoder_weights = self.autoencoder.encoder.get_weights()
-        self.autoencoder.tune_decoder(self.train_data, tune_epochs=5, verbose=0, learning_rate=0.001)
-        encoder_weights_tuned = self.autoencoder.encoder.get_weights()
-        self.assertEqual(len(self.autoencoder.history['loss']), 5 + 33)
-        for w1, w2 in zip(encoder_weights, encoder_weights_tuned):
-            assert_array_almost_equal(w1, w2)
 
     def test_save_and_load(self) -> None:
-
         self.autoencoder.save(self.saved_models)
 
-        new_model = MultilayerAutoencoder()
+        new_model = ConditionalAE(self.conditional_features)
         with self.assertWarns(UserWarning):
             new_model.load(self.saved_models)
 
@@ -107,7 +134,7 @@ class TestMultilayerAutoencoder(TestCase):
         self.autoencoder.fit(self.train_data, verbose=0)
         self.autoencoder.save(self.saved_models, overwrite=True)
 
-        new_model = MultilayerAutoencoder()
+        new_model = ConditionalAE(self.conditional_features)
         new_model.load(self.saved_models)
         self.assertEqual(new_model.layers, self.autoencoder.layers)
         self.assertEqual(new_model.code_size, self.autoencoder.code_size)

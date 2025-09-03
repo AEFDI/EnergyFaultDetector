@@ -22,8 +22,7 @@ class TestConfig(unittest.TestCase):
         self.assertDictEqual(conf.config_dict['train'], {
             'anomaly_score': {'name': 'mahalanobis',
                               'params': {'pca': True, 'pca_min_var': 0.85}},
-            'data_preprocessor': {'name': 'standard_preprocessor',
-                                  'params': {'max_nan_frac_per_col': 0.05,
+            'data_preprocessor': {'params': {'max_nan_frac_per_col': 0.05,
                                              'imputer_strategy': 'mean',
                                              'features_to_exclude': ['feature1', 'feature2'],
                                              'include_duplicate_value_to_nan': False}},

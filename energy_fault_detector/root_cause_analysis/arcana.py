@@ -110,23 +110,33 @@ class Arcana:
             tracked_bias: A List of dataframes representing x_bias
         """
 
+        conditions = None
+        if self.keras_model.is_conditional:
+            # split inputs for conditional models
+            conditions = x[self.keras_model.conditional_features]
+            x = x.drop(self.keras_model.conditional_features, axis=1)
+
         feature_names = x.columns
         timestamps = x.index
         x = x.values.astype('float32')
 
-        selection = self.draw_samples(x=x)
+        selection = self.draw_samples(x, conditions)
         x = x[selection]
         timestamps = timestamps[selection]
 
-        x_bias = self.initialize_x_bias(x)
+        if self.keras_model.is_conditional:
+            conditions = conditions.values[selection]
+            conditions = tf.constant(conditions, dtype=tf.float32)
+
+        x_bias = self.initialize_x_bias(x, conditions)
         x_bias = tf.Variable(x_bias, dtype=tf.float32)
+
         tracked_losses = {'Combined Loss': [], 'Reconstruction Loss': [], 'Regularization Loss': [], 'Iteration': []}
+        tracked_bias = [x_bias.numpy()] if track_bias else []
 
-        bias = x_bias.numpy()
-
-        tracked_bias = [bias]
         for i in range(self.num_iter):
-            x_bias, losses, _ = self.update_x_bias(x, x_bias)
+            x_bias, losses, _ = self.update_x_bias(x, x_bias, conditions)
+
             if i % 50 == 0:
                 loss_1, loss_2, combined_loss = losses[0].numpy(), losses[1].numpy(), losses[2].numpy()
                 if track_losses:
@@ -148,18 +158,19 @@ class Arcana:
         tracked_bias_dfs = [pd.DataFrame(data=bias, columns=feature_names, index=timestamps) for bias in tracked_bias]
         return x_bias, tracked_losses, tracked_bias_dfs
 
-    def draw_samples(self, x: np.array) -> np.array:
+    def draw_samples(self, x: np.ndarray, conditions: np.ndarray = None) -> np.ndarray:
         """ Selects index values from 0 to data_length by choosing the indexes with the highest anomaly score,
         for defining the ARCANA samples.
 
         Args:
-            x (np.array): Data of which samples should be drawn
+            x (np.ndarray): Data of which samples should be drawn
+            conditions (np.ndarray): (optional) Array of conditional features values
 
         Returns:
             array of booleans defining the selected samples.
         """
         if len(x) > self.max_sample_threshold:
-            recon_error = np.abs(self.keras_model(x) - x)
+            recon_error = np.abs(self.keras_model(x, conditions) - x)
             anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=1))
             threshold_index = np.argsort(anomaly_score)[-self.max_sample_threshold]
             selection = anomaly_score >= anomaly_score[threshold_index]
@@ -167,34 +178,37 @@ class Arcana:
             selection = np.full(fill_value=True, shape=(len(x),))
         return selection
 
-    def initialize_x_bias(self, x: np.array) -> tf.Tensor:
+    def initialize_x_bias(self, x: np.ndarray, conditions: np.ndarray = None) -> tf.Tensor:
         """Initialize the ARCANA bias vector.
 
         Args:
-            x: numpy array containing data.
+            x: numpy array containing input data.
+            conditions: numpy array containing conditional data - for conditional autoencoders.
+                Defaults to None.
 
         Returns:
             initial x_bias values
         """
         x_bias = None
         if self.init_x_bias == 'recon':
-            x_bias = self.keras_model(x) - x
+            x_bias = self.keras_model(x, conditions) - x
         elif self.init_x_bias == 'zero':
             x_bias = 0 * x
         elif self.init_x_bias == 'weightedA':
-            x_bias = self.alpha * (0 * x) + (1 - self.alpha) * (self.keras_model(x) - x)
+            x_bias = self.alpha * (0 * x) + (1 - self.alpha) * (self.keras_model(x, conditions) - x)
         elif self.init_x_bias == 'weightedB':
-            x_bias = (1 - self.alpha) * (0 * x) + self.alpha * (self.keras_model(x) - x)
+            x_bias = (1 - self.alpha) * (0 * x) + self.alpha * (self.keras_model(x, conditions) - x)
 
         return x_bias
 
-    def update_x_bias(self, x: tf.Variable, x_bias: tf.Variable) -> BIAS_RETURN_TYPE:
+    def update_x_bias(self, x: tf.Variable, x_bias: tf.Variable, conditions: tf.Tensor = None) -> BIAS_RETURN_TYPE:
         """This function builds a tensor which can calculate the ARCANA loss (full_loss) and computes the gradient
         of that loss with respect to the Variable x + x_bias using tensorflow GradientTape.
 
         Args:
-            x: numpy array containing data
-            x_bias: numpy array containing the current ARCANA bias.
+            x: tensorflow variable containing input data
+            x_bias: tensorflow variable containing the current ARCANA bias.
+            conditions: (optional) tensor containing the conditional feature values.
 
         Returns:
             x_corrected (x_bias-x): tf.Variable
@@ -203,7 +217,7 @@ class Arcana:
         """
         with tf.GradientTape() as grad_tape:
             # no need to watch x_corrected (we do everything with x_bias)
-            x_sim = self.keras_model(x + x_bias)  # predict the corrected value of x
+            x_sim = self.keras_model(x + x_bias, conditions)  # predict the corrected value of x
 
             # loss part 1: measures the degree of anomaly of the ARCANA-corrected x_corrected
             loss_1 = 0.5 * tf.reduce_mean((x_sim - x - x_bias) ** 2)

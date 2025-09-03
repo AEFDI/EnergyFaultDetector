@@ -45,18 +45,32 @@ class Autoencoder(ABC, SaveLoadMixin):
         noise: float value that determines the influence of the noise term on the training input. High values mean
             highly noisy input. 0 means no noise at all. If noise >0 is used validation metrics will not be
             affected by it. Thus training loss and validation loss can differ depending on the magnitude of noise.
+        conditional_features: (optional) List of features to use as conditions for the conditional autoencoder.
+
+
+    Attributes:
+        is_conditional: Indicates whether the autoencoder is a conditional autoencoder or not.
+        model: Keras Model created by the `self.create_model()` method.
+        encoder: Keras Model created by the `self.create_model()` method.
+        history: Dictionary with the loss, val_loss and metrics, if the model was fitted.
+        callbacks: List of callbacks applied every epoch when fitting the model. If early stopping is enabled,
+            contains at least the `keras.callbacks.early_stopping` callback.
+
     """
 
     def __init__(self, learning_rate: float, batch_size: int, epochs: int,
                  loss_name: str, metrics: List[str], decay_rate: float, decay_steps: float,
                  early_stopping: bool, patience: int, min_delta: float, noise: float,
-                 **kwargs):
+                 conditional_features: Optional[List[str]] = None, **kwargs):
         super().__init__()
 
         self.learning_rate = (
             ExponentialDecay(initial_learning_rate=learning_rate, decay_rate=decay_rate, decay_steps=decay_steps)
             if decay_rate and decay_steps else learning_rate
         )
+
+        self.conditional_features: Optional[List[str]] = conditional_features
+        self.is_conditional: bool = conditional_features is not None
 
         self.batch_size: int = batch_size
         self.epochs: int = epochs
@@ -72,8 +86,14 @@ class Autoencoder(ABC, SaveLoadMixin):
             EarlyStopping(monitor='val_loss', min_delta=min_delta, patience=patience, restore_best_weights=True)
         ] if early_stopping else []
 
-    def __call__(self, x: Union[np.ndarray, tf.Tensor]) -> tf.Tensor:
+    def __call__(self, x: Union[np.ndarray, tf.Tensor], conditions: Union[np.ndarray, tf.Tensor] = None) -> tf.Tensor:
         """Calls the model on new inputs."""
+        if self.is_conditional:
+            if conditions is None:
+                raise ValueError('To call an conditional autoencoder on new input, the conditions need to be provided'
+                                 ' as well.')
+            return self.model([x, conditions])
+
         return self.model(x)
 
     @abstractmethod
@@ -82,6 +102,7 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         Args:
             input_dimension: number of features in input data.
+            condition_dimension: number of features in conditional data. Only used if self.is_conditional = True.
 
         Returns:
             A Keras model.
@@ -111,32 +132,59 @@ class Autoencoder(ABC, SaveLoadMixin):
             Fitted model.
         """
 
+        if self.is_conditional and (self.conditional_features is None or len(self.conditional_features) == 0):
+            raise ValueError('A list of conditional features must be provided for conditional autoencoders!')
+
+
         if self.model is None:
-            self.create_model(input_dimension=x.shape[1])
+            self.create_model(
+                input_dimension=x.shape[1] - len(self.conditional_features) if self.is_conditional else x.shape[1],
+                condition_dimension=len(self.conditional_features) if self.is_conditional else None
+            )
 
         self.compile_model()
+
         if 'callbacks' in kwargs:
             self.callbacks += kwargs['callbacks']
             kwargs.pop('callbacks')
 
-        self._fit_model(x, x_val, batch_size=self.batch_size, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
+        self._fit_model(x, x_val, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
         return self
 
-    def _fit_model(self, x: DataType, x_val: DataType, batch_size, epochs: int, callbacks: List[Callback],
-                   **kwargs) -> None:
+    def _fit_model(self, x: DataType, x_val: DataType, epochs: int, callbacks: List[Callback], **kwargs) -> None:
+        """Fit the keras model on provided training data.
+
+        Args:
+            x: training data
+            x_val: validation data
+            epochs: number of epochs to run.
+            callbacks: List of callbacks applied every epoch when fitting the model.
+            kwargs: Additional arguments passed to the `fit` method.
+        """
+
+        if self.is_conditional:
+            input_data, conditions, val_input_data, val_conditions = split_inputs(self.conditional_features, x, x_val)
+            ae_input = (self._apply_noise(input_data), conditions)
+            ae_target = input_data
+            val_ae_input = (val_input_data, val_conditions)
+            val_ae_target = val_input_data
+        else:
+            ae_input = self._apply_noise(x)
+            ae_target = x
+            val_ae_input = val_ae_target = x_val
 
         fit_history = self.model.fit(
-            self._apply_noise(x), x,
-            batch_size=batch_size,
+            ae_input, ae_target,
+            batch_size=self.batch_size,
             epochs=epochs,
-            validation_data=None if x_val is None else (x_val, x_val),
+            validation_data=None if x_val is None else (val_ae_input, val_ae_target),
             callbacks=callbacks,
             **kwargs
         )
 
         self._extend_fit_history(fit_history.history)
 
-    def tune(self, x: DataType, x_val: DataType = None, learning_rate: float = 0.001, tune_epochs: int = 5,
+    def tune(self, x: DataType, learning_rate: float, tune_epochs: int, x_val: DataType = None,
              **kwargs) -> 'Autoencoder':
         """Tune full autoencoder by extending the model fitting process by tune_epochs.
 
@@ -154,7 +202,6 @@ class Autoencoder(ABC, SaveLoadMixin):
         self.compile_model(learning_rate)  # sets new learning rate
         self._fit_model(
             x, x_val,
-            batch_size=self.batch_size,
             epochs=tune_epochs + self.epochs,
             callbacks=self.callbacks,
             initial_epoch=self.epochs,
@@ -162,33 +209,41 @@ class Autoencoder(ABC, SaveLoadMixin):
         )
         return self
 
-    def tune_decoder(self, x: pd.DataFrame, x_val: pd.DataFrame = None, learning_rate: float = None,
-                     tune_epochs: int = 5, **kwargs) -> 'Autoencoder':
+    def tune_decoder(self, x: pd.DataFrame, learning_rate: float, tune_epochs: int, x_val: pd.DataFrame = None,
+                     **kwargs) -> 'Autoencoder':
         """Tune decoder only - weights of the encoder are unchanged. Weight tuning is done by extending the model
         fitting process by tune_epochs.
 
         Args:
-            x: training data
-            x_val: validation data
-            learning_rate: learning rate to use during tuning. Default original learning rate.
-            tune_epochs: number of epochs to tune.
-            kwargs: other keyword args for the keras `Model.fit` method.
+            x: Training data
+            x_val: Validation data
+            learning_rate: Learning rate to use during tuning. Default original learning rate.
+            tune_epochs: Number of epochs to tune.
+            kwargs: Other keyword args for the keras `Model.fit` method.
 
         Returns:
             Tuned model.
         """
 
         if self.encoder is None:
-            raise ValueError("Encoder is not created.")
+            raise ValueError("Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
+                             " attribute.")
 
         self.encoder.trainable = False
         self.tune(x=x, x_val=x_val, learning_rate=learning_rate, tune_epochs=tune_epochs, **kwargs)
         return self
 
-    def encode(self, x: DataType) -> np.ndarray:
+    def encode(self, x: DataType, conditions: DataType = None) -> np.ndarray:
         """Return latent representation using autoencoder."""
+
         if self.encoder is None:
-            raise ValueError("Encoder is not created.")
+            raise ValueError("Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
+                             " attribute.")
+
+        if self.is_conditional:
+            if conditions is None:
+                input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
+            return self.encoder.predict([input_data, conditions])
 
         return self.encoder.predict(x)
 
@@ -204,19 +259,31 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         return self._predict(x, **kwargs)
 
-    def _predict(self, x: DataType, **kwargs) -> DataType:
+    def _predict(self, x: DataType, return_conditions: bool = False, **kwargs) -> DataType:
         """Predict with fitted model.
 
         Args:
             x: input data
+            return_conditions: Whether to return conditional data or not. Defaults to False.
             kwargs: other keyword args for the keras `Model.predict` method.
 
         Returns:
             AE reconstruction of the input data.
         """
-        if isinstance(x, pd.DataFrame):
-            return pd.DataFrame(self.model.predict(x, **kwargs), index=x.index, columns=x.columns)
-        return self.model.predict(x, **kwargs)
+        if not self.is_conditional:
+            if isinstance(x, pd.DataFrame):
+                return pd.DataFrame(self.model.predict(x, **kwargs), index=x.index, columns=x.columns)
+            return self.model.predict(x, **kwargs)
+
+        input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
+        predictions = self.model.predict([input_data, conditions], **kwargs)
+        prediction_df = pd.DataFrame(predictions, index=input_data.index, columns=input_data.columns)
+
+        if return_conditions:
+            input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
+            return conditions.join(prediction_df)
+
+        return prediction_df
 
     def get_reconstruction_error(self, x: DataType) -> DataType:
         """Get the reconstruction error: output - input.
@@ -227,6 +294,14 @@ class Autoencoder(ABC, SaveLoadMixin):
         Returns:
             AE reconstruction error of the input data.
         """
+
+        if self.is_conditional:
+            prediction = self.predict(x)
+            input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
+            recon_error = prediction - input_data
+            if isinstance(x, pd.DataFrame):
+                recon_error = pd.DataFrame(recon_error, index=input_data.index, columns=input_data.columns)
+            return recon_error
 
         if isinstance(x, pd.DataFrame):
             return pd.DataFrame(self.predict(x) - x, index=x.index, columns=x.columns)
@@ -321,3 +396,34 @@ class Autoencoder(ABC, SaveLoadMixin):
                 noisy_input.append(noisy_seq)
 
             yield np.array(noisy_input), batch_output
+
+
+def split_inputs(conditional_features: List[str], x: pd.DataFrame, x_val: pd.DataFrame = None) -> Tuple:
+    """Prepare the input and conditional data.
+
+    Args:
+        conditional_features (List[str]): List of features names that are used as condition.
+        x (pd.DataFrame): Data to split.
+        x_val (pd.DataFrame, optional): Validation data to split. Defaults to None.
+
+    Returns:
+        Tuple: Tuple of input and conditional data.
+            input_data, conditions, val_input_data, val_conditions
+    """
+
+    def _split(data):
+        if isinstance(data, pd.DataFrame):
+            conditions = data[conditional_features]
+            inputs = data.drop(conditional_features, axis=1)
+        elif isinstance(data, (np.ndarray, tf.Tensor)):
+            # Assume the first columns are the conditional features
+            inputs = data[:, len(conditional_features):]
+            conditions = data[:, :len(conditional_features)]
+        else:
+            raise ValueError("Input must be a pandas DataFrame, NumPy array, or TensorFlow Tensor.")
+        return inputs, conditions
+
+    input_data, conditions = _split(x)
+    val_input_data, val_conditions = _split(x_val) if x_val is not None else (None, None)
+
+    return input_data, conditions, val_input_data, val_conditions
