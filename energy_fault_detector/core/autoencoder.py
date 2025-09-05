@@ -285,18 +285,21 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         return prediction_df
 
-    def get_reconstruction_error(self, x: DataType) -> DataType:
+    def get_reconstruction_error(self, x: DataType, **kwargs) -> DataType:
         """Get the reconstruction error: output - input.
 
         Args:
             x: input data
+            kwargs: other keyword args for the keras `Model.predict` method.
 
         Returns:
             AE reconstruction error of the input data.
         """
 
+        x_predicted = self.predict(x, **kwargs)
+
         if self.is_conditional:
-            prediction = self.predict(x)
+            prediction = x_predicted
             input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
             recon_error = prediction - input_data
             if isinstance(x, pd.DataFrame):
@@ -304,8 +307,9 @@ class Autoencoder(ABC, SaveLoadMixin):
             return recon_error
 
         if isinstance(x, pd.DataFrame):
-            return pd.DataFrame(self.predict(x) - x, index=x.index, columns=x.columns)
-        return self.predict(x) - x
+            return pd.DataFrame(x_predicted - x, index=x.index, columns=x.columns)
+
+        return x_predicted - x
 
     def save(self, directory: str, overwrite: bool = False, **kwargs):  # pylint: disable=W0221,W0613
         """Save the model object in given directory, filename is the class name.

@@ -76,7 +76,6 @@ class TestConditionalAutoencoder(TestCase):
 
     def test_fit(self) -> None:
         self.autoencoder.fit(self.train_data, verbose=0)
-        print(self.autoencoder.model.summary())
         self.assertEqual(len(self.autoencoder.model.layers), 11)  # Adjust based on your model structure
         self.assertIsNotNone(self.autoencoder.model)
         self.assertEqual(len(self.autoencoder.history['loss']), 33)
