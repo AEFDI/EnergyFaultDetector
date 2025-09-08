@@ -19,25 +19,25 @@ class TestCARE(unittest.TestCase):
         self.beta = 0.5
         self.test_good_prediction_df = pd.DataFrame(
             data=[
-                [1, 'anomaly', 0.5, 0.869565, 0.9, True, 8, 1, 2, "Wind Farm A"],
-                [2, 'anomaly', 0.8, 0.625000, 0.5, True, 5, 3, 3, "Wind Farm B"],
-                [3, 'normal', np.nan, np.nan, 0.8, True, 0, 1, 0, "Wind Farm A"],
-                [4, 'normal', np.nan, np.nan, 0.5, True, 0, 4, 0, "Wind Farm B"],
+                [1, 'anomaly', 0.5, 0.869565, 0.9, 73, 8, 1, 2, "Wind Farm A"],
+                [2, 'anomaly', 0.8, 0.625000, 0.5, 73, 5, 3, 3, "Wind Farm B"],
+                [3, 'normal', np.nan, np.nan, 0.8, 77, 0, 1, 0, "Wind Farm A"],
+                [4, 'normal', np.nan, np.nan, 0.5, 100, 0, 4, 0, "Wind Farm B"],
             ],
             columns=['event_id', 'event_label', 'weighted_score', 'f_beta_score', 'accuracy',
-                     'anomaly_detected_by_criticality', 'tp', 'fp', 'fn', 'park']
+                     'max_criticality', 'tp', 'fp', 'fn', 'park']
         )
         self.expected_scores_good = [0.650567632850241, 0.705024154589372, 0.5]
 
         self.test_bad_prediction_df = pd.DataFrame(
             data=[
-                [1, 'anomaly', 0.5, 0.625000, 0.7, True, 5, 3, 3, "Wind Farm A"],
-                [2, 'anomaly', 0.8, 0.731707, 0.5, True, 6, 2, 3, "Wind Farm B"],
-                [3, 'normal', np.nan, np.nan, 0.1, True, 0, 10, 1, "Wind Farm A"],
-                [4, 'normal', np.nan, np.nan, 0.0, True, 0, 11, 0, "Wind Farm B"],
+                [1, 'anomaly', 0.5, 0.625000, 0.7, 73, 5, 3, 3, "Wind Farm A"],
+                [2, 'anomaly', 0.8, 0.731707, 0.5, 73, 6, 2, 3, "Wind Farm B"],
+                [3, 'normal', np.nan, np.nan, 0.1, 77, 0, 10, 1, "Wind Farm A"],
+                [4, 'normal', np.nan, np.nan, 0.0, 90, 0, 11, 0, "Wind Farm B"],
             ],
             columns=['event_id', 'event_label', 'weighted_score', 'f_beta_score', 'accuracy',
-                     'anomaly_detected_by_criticality', 'tp', 'fp', 'fn', 'park']
+                     'max_criticality', 'tp', 'fp', 'fn', 'park']
         )
         self.expected_scores_bad = [0.05, 0.1, 0.0]
 
@@ -65,7 +65,7 @@ class TestCARE(unittest.TestCase):
         predicted_anomalies = pd.Series([False, True, True])
         evaluation = self.care.evaluate_event(0, 2, 'anomaly', normal_index, predicted_anomalies)
         self.assertIn('event_id', evaluation)
-        self.assertTrue(evaluation['anomaly_event_detected_by_fraction'])
+        self.assertEqual(evaluation['max_criticality'], 1)
         self.assertEqual(evaluation['tp'], 1)
         self.assertEqual(evaluation['fn'], 1)
 
@@ -81,34 +81,34 @@ class TestCARE(unittest.TestCase):
 
         # Check if the evaluation contains the expected keys
         self.assertIn('event_id', evaluation)
-        self.assertIn('anomaly_event_detected_by_fraction', evaluation)
+        self.assertIn('max_criticality', evaluation)
         self.assertEqual(evaluation['event_label'], 'anomaly')
 
         # Check that the evaluation metrics are calculated correctly
         # Adjust the expected values as necessary based on your specific logic
-        self.assertTrue(evaluation['anomaly_event_detected_by_fraction'])  # Expecting at least one anomaly detected
         self.assertEqual(evaluation['tp'], 3)
         self.assertEqual(evaluation['fn'], 2)
 
     def test_get_final_score_with_no_anomalies(self):
         """Test get_final_score returns 0 when no anomalies are detected."""
         self.care._evaluated_events = [{'event_id': 0, 'event_label': 'normal',
-                                        'anomaly_event_detected_by_fraction': False,
-                                        'anomaly_detected_by_criticality': False, }]
+                                        'max_criticality': 50}]
         score = self.care.get_final_score()
         self.assertEqual(score, 0.0)
+        self.assertEqual(self.care.calculate_eventwise_f_score(), 0.0)
 
     def test_get_final_score_with_low_accuracy(self):
         """Test get_final_score returns 0 when no anomalies are detected."""
         self.care._evaluated_events = [{'event_id': 0, 'event_label': 'normal',
-                                        'anomaly_detected_by_criticality': True, 'accuracy': 0.5}]
+                                        'max_criticality': 73, 'accuracy': 0.5}]
         score = self.care.get_final_score()
         self.assertEqual(score, 0.5)
+        self.assertEqual(self.care.calculate_avg_accuracy(), 0.5)
 
     def test_save_and_load_evaluated_events(self):
         """Test saving and loading evaluated events."""
         # Create a sample evaluated event
-        sample_event = {'event_id': 0, 'event_label': 'anomaly', 'anomaly_event_detected_by_fraction': True}
+        sample_event = {'event_id': 0, 'event_label': 'anomaly', 'max_criticality': 20}
         self.care._evaluated_events.append(sample_event)
 
         # Save to a temporary file
@@ -127,14 +127,23 @@ class TestCARE(unittest.TestCase):
         self.care._evaluated_events = self.test_good_prediction_df.to_dict(orient='records')
         self.care.eventwise_f_score_beta = 0.5
         self.care.coverage_beta = 0.5
+        self.care.criticality_threshold = 72
+
+        self.assertAlmostEqual(self.care.calculate_avg_f_score(), 0.7472825)
+        self.assertAlmostEqual(self.care.calculate_avg_weighted_score(), 0.65)
+        self.assertAlmostEqual(self.care.calculate_eventwise_f_score(), 0.55555556)
+        self.assertAlmostEqual(self.care.calculate_avg_accuracy(), 0.65)
 
         self.assertAlmostEqual(self.care.get_final_score(), self.expected_scores_good[0])
         self.assertAlmostEqual(self.care.get_final_score([1, 3]), self.expected_scores_good[1])  # A
         self.assertAlmostEqual(self.care.get_final_score([2, 4]), self.expected_scores_good[2])  # B
 
+        self.assertAlmostEqual(self.care.get_final_score(criticality_threshold=100), 0.5394565)
+
         self.care._evaluated_events = self.test_bad_prediction_df.to_dict(orient='records')
         self.care.eventwise_f_score_beta = 0.5
         self.care.coverage_beta = 0.5
+        self.care.criticality_threshold = 72
 
         self.assertAlmostEqual(self.care.get_final_score(), self.expected_scores_bad[0])
         self.assertAlmostEqual(self.care.get_final_score([1, 3]), self.expected_scores_bad[1])  # A
