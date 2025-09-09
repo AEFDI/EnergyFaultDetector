@@ -91,7 +91,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         if self.is_conditional:
             if conditions is None:
                 raise ValueError('To call an conditional autoencoder on new input, the conditions need to be provided'
-                                 ' as well.')
+                                 ' as well: `Autoencoder(inputs, conditions)`.')
             return self.model([x, conditions])
 
         return self.model(x)

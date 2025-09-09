@@ -53,7 +53,8 @@ class FaultDetector(FaultDetectionModel):
 
         super().__init__(config=config, model_directory=model_directory)
         if config is None:
-            logger.debug('No configuration set. Load models and config from path with the `load_models` method.')
+            logger.debug('No configuration set. Load models and config from path with the `FaultDetector.load_models`'
+                         ' method.')
         else:
             self._init_models()
 

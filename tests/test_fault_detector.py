@@ -140,7 +140,7 @@ class TestFaultDetector(unittest.TestCase):
             ad = FaultDetector(model_directory=self.test_model_dir)
             self.assertEqual(cm.output,
                              [
-                                 'DEBUG:energy_fault_detector:No configuration set. Load models and config from path with the `load_models` method.'])
+                                 'DEBUG:energy_fault_detector:No configuration set. Load models and config from path with the `FaultDetector.load_models` method.'])
 
     def test_save_models(self):
         self.conf.write_config = MagicMock()
