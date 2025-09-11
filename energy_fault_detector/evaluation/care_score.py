@@ -14,48 +14,83 @@ logger = logging.getLogger('energy_fault_detector')
 
 
 class CAREScore:
-    """Calculate CARE Score (coverage, accuracy, reliability, and earliness) for an anomaly detection algorithm, as
-    described in the paper 'CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in Wind Turbine
-    Data' (https://doi.org/10.3390/data9120138).
+    """Calculate the CARE-score (`Coverage`, `Accuracy`, `Reliability`, and `Earliness`) for anomaly detection
+    algorithms, as described in the paper `CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in
+    Wind Turbine Data` (https://doi.org/10.3390/data9120138). The goal of the CARE-Score is to evaluate the ability of
+    a given model to separate `normal behavior` from `actionable anomalies` (see glossary for definitions).
 
-    For each normal and anomalous event in your dataset call `evaluate_event`. Afterward, call `get_final_score`
-    to calculate the CARE score of your model.
+    Usage: For each event in the dataset call `evaluate_event`. Afterward, call `get_final_score` to calculate the
+        CARE-score of your model.
 
-    Coverage is measured by the pointwise F-Score of anomalous events, the accuracy measured as the accuracy of normal
-    events, the reliability by the eventwise F-score over all events and the earliness as weighted score over anomalous
-    events.
+    Requirements: For calculating the CARE-Score presence of at least one evaluated `anomaly-event` and at least one
+        evaluated `normal event` (see glossary) is required.
 
-    The method `evaluate_event` calculates the coverage, accuracy and weighted score for a specific event, as well as
-    whether the event was detected as anomaly or not. It collects this information in a dataframe, which can be
-    accessed through the `evaluated_events` property.
+    Glossary:
+        `normal behavior`: Data points representing expected system behavior.
+        `actionable anomaly`: Data points that represent unknown or unexpected system behavior where maintenance
+            actions could prevent an upcoming fault.
+        `non-actionable anomaly`: Data points that represent neither `normal behavior``nor `actionable anomalies`.
+            Example: A wind turbine that is shut down due to regular service actions.
+        `anomaly-event`: A dataset that contains a section with labeled `actionable anomalies` within the
+            prediction data.
+        `normal-event`: A dataset that contains a section with `normal behavior` within the prediction data.
+        `normal_index`: A boolean time series that is used to separate `normal behavior` and `non-actionable anomalies`.
+            normal_index is True if the data point represents `normal behavior` and False if the data point is a
+            `non-actionable anomaly`.
+        `Coverage`: Measured by the pointwise F-Score of the prediction data for `anomaly-events`.
+        `Accuracy`: Measured as the accuracy of the prediction data for `normal-events`.
+        `Reliability`: Measured by the eventwise F-score over all evaluated  events.
+        `Earliness`: Measured as weighted score over the event time frame of `anomaly-events`.
+        `criticality`: A counting measure applied to the prediction of anomaly detection models. For a detailed
+            explanation see Algorithm 1 in the paper (https://doi.org/10.3390/data9120138).
 
-    Finally, the `get_final_score` is called to calculate the CARE score over all (or a part of the) evaluated events.
+    Methods:
+        evaluate_event: Calculates the `Coverage`, `Accuracy` and `Earliness` for a specific event, as well as
+            whether the event was detected as anomaly (see `anomaly_detection_method`) or not. It collects this
+            information in a dataframe, which can be accessed through the `evaluated_events` property.
+        get_final_score: Is called to calculate `Reliability` and the CARE-score based on the `Coverage`, `Accuracy`,
+            `Reliability` and `Earliness` of all selected evaluated events.
+        calculate_avg_coverage: Calculated the average `Coverage` for all selected evaluated `anomaly-events`.
+            Mainly used in get_final_score.
+        calculate_avg_accuracy: Calculates the average`Accuracy` for all selected evaluated `normal-events`.
+            Mainly used in get_final_score.
+        calculate_reliability: Calculates `Reliability`for all selected events.
+            Mainly used in get_final_score.
+        calculate_avg_earliness: Calculates the average `Earliness` for all selected `anomaly-events`.
+            Mainly used in get_final_score.
+        create_ground_truth: Creates a boolean array where True represents data points of the type `actionable anomaly`
+            and False represents data points of type `normal behavior` or `non-actionable anomaly`.
+        save_evaluated_events: Saves evaluated_events.
+        load_evaluated_events: Loads evaluated_events.
 
     Args:
-        coverage_beta (float): Beta parameter for coverage F-score calculation. Default is 0.5.
-        eventwise_f_score_beta (float): Beta parameter for event-wise F-score calculation. Default is 0.5.
-        coverage_w (float): Weight for coverage in the final CARE score calculation. Default is 1.0.
-        accuracy_w (float): Weight for accuracy in the final CARE score calculation. Default is 2.0.
-        weighted_score_w (float): Weight for the weighted score in the final CARE score calculation. Default is 1.0.
-        eventwise_f_score_w (float): Weight for the event-wise F-score in the final CARE score calculation.
+        coverage_beta (float): Beta parameter for `Coverage` (pointwise F-score) calculation. Default is 0.5.
+        reliability_beta (float): Beta parameter for `Reliability` (event-wise F-score) calculation. Default is 0.5.
+        coverage_w (float): Weight for `Coverage` in the final CARE-score calculation. Default is 1.0.
+        accuracy_w (float): Weight for `Accuracy` in the final CARE-score calculation. Default is 2.0.
+        reliability_w (float): Weight for the event-wise F-score in the final CARE-score calculation.
             Default is 1.0.
-        anomaly_detection_method (str): Method used to calculate anomaly detection score. Either criticality or
-            fraction. Default is 'criticality'. If fraction is used, an event is detected as anomaly if at least
-            `min_fraction_anomalous_timestamps` of the data points are detected as anomaly. If criticality is
-            used, an event is detected as anomaly if the maximum criticality exceed criticality_threshold.
-        criticality_threshold (int): Threshold for criticality. If criticality exceeds this threshold, the event will be
-            detected as an anomaly, if `anomaly_detection_method` == 'criticality'. Default is 72.
+        earliness_w (float): Weight for `Earliness` in the final CARE-score calculation. Default is 1.0.
+        anomaly_detection_method (str): Method used to calculate anomaly detection score. Either `criticality` or
+            `fraction`. Default is `criticality`. If `criticality` is used, an event is detected as anomaly if the
+            maximum `criticality` exceed criticality_threshold. If fraction is used, an event is detected as anomaly if
+            at least `min_fraction_anomalous_timestamps` of the data points within event_start and event_end are
+            detected as anomaly.
+        criticality_threshold (int): Threshold for `criticality`. If `criticality` exceeds this threshold, the event
+            will be detected as an anomaly, if `anomaly_detection_method` == `criticality`. Default is 72. The threshold
+            value should be chosen based on the application context of the used dataset. Key questions for identifying
+            this threshold can be: How many data points do I need know about a fault possibility in advance for the
+            information to be useful? After how many anomalous data points is an anomaly significant?
         min_fraction_anomalous (float): Minimum fraction of anomalous data points to consider an event
-            detected anomaly, if `anomaly_detection_method` == 'fraction'. Default is 0.1.
-        ws_start_of_descend (Tuple[int, int]): Must be a fraction (tuple with numerator and denominator) between 0
-            and 1. It determines the point after which the scoring weights for the weighted score decrease.
+            detected anomaly, if `anomaly_detection_method` == `fraction`. Default is 0.1.
+        ws_start_of_descend (Tuple[int, int]): Determines the point after which the scoring weights decay in the
+            `weighted score`. Must be a fraction (tuple with numerator and denominator) between 0 and 1.
             Default is (1, 4).
         min_fraction_anomalous_timestamps: deprecated, use min_fraction_anomalous instead.
-
     """
 
-    def __init__(self, coverage_beta: float = 0.5, eventwise_f_score_beta: float = 0.5, coverage_w: float = 1.,
-                 accuracy_w: float = 2., weighted_score_w: float = 1., eventwise_f_score_w: float = 1.,
+    def __init__(self, coverage_beta: float = 0.5, reliability_beta: float = 0.5, coverage_w: float = 1.,
+                 accuracy_w: float = 2., earliness_w: float = 1., reliability_w: float = 1.,
                  criticality_threshold: int = 72, min_fraction_anomalous: float = 0.1,
                  ws_start_of_descend: Tuple[int, int] = (1, 4), anomaly_detection_method: str = 'criticality',
                  min_fraction_anomalous_timestamps: float = None):
@@ -73,12 +108,12 @@ class CAREScore:
             raise ValueError("Anomaly detection method must be either 'criticality' or 'fraction'")
 
         self.coverage_beta = coverage_beta
-        self.eventwise_f_score_beta = eventwise_f_score_beta
+        self.eventwise_f_score_beta = reliability_beta
 
         self.coverage_w = coverage_w
         self.accuracy_w = accuracy_w
-        self.weighted_score_w = weighted_score_w
-        self.eventwise_f_score_w = eventwise_f_score_w
+        self.weighted_score_w = earliness_w
+        self.eventwise_f_score_w = reliability_w
 
         self.min_fraction_anomalous = min_fraction_anomalous
         self.criticality_threshold = criticality_threshold
@@ -195,7 +230,7 @@ class CAREScore:
         )
 
         # We only evaluate predicted anomalies during expected normal operation
-        metrics = self._calculate_metrics(
+        metrics = self._calculate_basic_metrics(
             ground_truth=ground_truth[normal_index],  # What if an event only has anomaly as ground truth label?
             predicted_anomalies=predicted_anomalies[normal_index],
             event_label=event_label
@@ -219,12 +254,12 @@ class CAREScore:
 
     def get_final_score(self, event_selection: Optional[List[int]] = None, criticality_threshold: Optional[int] = None,
                         min_fraction_anomalous: Optional[float] = None) -> float:
-        """Calculate the CARE score over all events in self.evaluated_events or a selection of the events.
+        """Calculate the CARE-score over all events in self.evaluated_events or a selection of the events.
 
-        If the average accuracy over all normal events < 0.5, CARE score = average accuracy over all normal events
+        If the average accuracy over all normal events < 0.5, CARE-score = average accuracy over all normal events
             (worse than random guessing).
-        If no anomalies were detected, the CARE score = 0.
-        Else, the CARE score is calculated as:
+        If no anomalies were detected, the CARE-score = 0.
+        Else, the CARE-score is calculated as:
 
             ( (average F-score over all anomaly events) * coverage_w
              + (average weighted score over all anomaly events) * weighted_score_w
@@ -234,14 +269,15 @@ class CAREScore:
         where `sum_of_weights` = coverage_w + weighted_score_w + accuracy_w + eventwise_f_score_w.
 
         Args:
-            event_selection: list of event IDs to calculate the CARE score for.
-            criticality_threshold: Reset the criticality threshold, if `anomaly_detection_method` == 'criticality'.
+            event_selection (List[int]): list of event IDs to calculate the CARE-score for.
+            criticality_threshold (int): Reset the criticality threshold, if `anomaly_detection_method` == 'criticality'.
                 Useful to test different alert thresholds.
-            min_fraction_anomalous: Reset the minimum fraction of anomalies, `anomaly_detection_method` == 'fraction'.
-                Useful to test different alert thresholds.
+            min_fraction_anomalous (float): Reset the minimum fraction of anomalies,
+                `anomaly_detection_method` == 'fraction'. Useful for testing different model parameters, especially
+                 for threshold based models.
 
         Returns:
-            float: CARE score
+            float: CARE-score
         """
 
         if self.anomaly_detection_method == 'criticality' and criticality_threshold:
@@ -264,7 +300,7 @@ class CAREScore:
 
         avg_f_score = events_to_evaluate.loc[is_anomaly_event, 'f_beta_score'].mean()
         avg_weighted_score = events_to_evaluate.loc[is_anomaly_event, 'weighted_score'].mean()
-        eventwise_fscore = self.calculate_eventwise_f_score(event_selection)
+        eventwise_fscore = self.calculate_reliability(event_selection)
 
         care_score = (avg_accuracy * self.accuracy_w
                       + avg_weighted_score * self.weighted_score_w
@@ -276,53 +312,40 @@ class CAREScore:
 
         return care_score
 
-    def calculate_avg_accuracy(self, event_selection: Optional[List[int]] = None) -> float:
-        """Calculate the avg accuracy across all normal events or selected normal events.
+    def calculate_avg_coverage(self, event_selection: Optional[List[int]] = None) -> float:
+        """Calculate average `Coverage` (pointwise F-score) for all anomaly events or selected anomaly events.
 
         Args:
-            event_selection: list of event IDs to calculate the score for.
+            event_selection (List[int]): list of event IDs to calculate the score for.
 
         Returns:
-            Average accuracy for normal events.
-        """
-        events_to_evaluate = self._select_events(event_selection)
-        is_anomaly_event = events_to_evaluate['event_label'] == 'anomaly'
-        return events_to_evaluate.loc[~is_anomaly_event, 'accuracy'].mean()
-
-    def calculate_avg_weighted_score(self, event_selection: Optional[List[int]] = None) -> float:
-        """Calculate average weighted score (earliness score) for all anomaly events or selected anomaly events.
-
-        Args:
-            event_selection: list of event IDs to calculate the score for.
-
-        Returns:
-            Average weighted score for all anomaly events.
-        """
-        events_to_evaluate = self._select_events(event_selection)
-        is_anomaly_event = events_to_evaluate['event_label'] == 'anomaly'
-        return events_to_evaluate.loc[is_anomaly_event, 'weighted_score'].mean()
-
-    def calculate_avg_f_score(self, event_selection: Optional[List[int]] = None) -> float:
-        """Calculate average F-score (coverage score) for all anomaly events or selected anomaly events.
-
-        Args:
-            event_selection: list of event IDs to calculate the score for.
-
-        Returns:
-            Average weighted score for all anomaly events.
+            float: Average weighted score for all anomaly events.
         """
         events_to_evaluate = self._select_events(event_selection)
         is_anomaly_event = events_to_evaluate['event_label'] == 'anomaly'
         return events_to_evaluate.loc[is_anomaly_event, 'f_beta_score'].mean()
 
-    def calculate_eventwise_f_score(self, event_selection: Optional[List[int]] = None) -> float:
-        """Calculate the eventwise F-Score (reliability score) across all events or selected events.
+    def calculate_avg_accuracy(self, event_selection: Optional[List[int]] = None) -> float:
+        """Calculate the avg `Accuracy` across all normal events or selected normal events.
 
         Args:
-            event_selection: list of event IDs to calculate the score for.
+            event_selection (List[int]): list of event IDs to calculate the score for.
 
         Returns:
-            Eventwise F-Score.
+            float: Average `Accuracy` for normal events.
+        """
+        events_to_evaluate = self._select_events(event_selection)
+        is_anomaly_event = events_to_evaluate['event_label'] == 'anomaly'
+        return events_to_evaluate.loc[~is_anomaly_event, 'accuracy'].mean()
+
+    def calculate_reliability(self, event_selection: Optional[List[int]] = None) -> float:
+        """Calculate the `Reliability` (eventwise F-Score) across all events or selected events.
+
+        Args:
+            event_selection (List[int]): list of event IDs to calculate the score for.
+
+        Returns:
+            float: `Reliability` (eventwise F-Score).
         """
         events_to_evaluate = self._select_events(event_selection)
 
@@ -332,15 +355,30 @@ class CAREScore:
             beta=self.eventwise_f_score_beta
         )
 
+    def calculate_avg_earliness(self, event_selection: Optional[List[int]] = None) -> float:
+        """Calculate average `Earliness` (weighted score) for all anomaly events or selected anomaly events.
+
+        Args:
+            event_selection (List[int]): list of event IDs to calculate the score for.
+
+        Returns:
+            float: Average `Earliness` (weighted score).
+        """
+        events_to_evaluate = self._select_events(event_selection)
+        is_anomaly_event = events_to_evaluate['event_label'] == 'anomaly'
+        return events_to_evaluate.loc[is_anomaly_event, 'weighted_score'].mean()
+
     @staticmethod
     def create_ground_truth(event_start: Union[int, pd.Timestamp], event_end: Union[int, pd.Timestamp],
                             normal_index: pd.Series, event_label: str) -> pd.Series:
-        """Create the ground truth labels based on the provided inputs.
+        """Create the ground truth labels for a given dataset based on the provided input event_start, event_end,
+        normal_index and event_label.
 
         Args:
             event_start (int, pd.Timestamp): Start index/timestamp of the event.
             event_end (int, pd.Timestamp): End index/timestamp of the event.
-            normal_index (pd.Series): Boolean mask indicating normal samples.
+            normal_index (pd.Series): Boolean mask indicating normal samples. Mainly used for filtering out already
+                known not-normal behavior
             event_label (str): True label indicating the type of the event (anomaly or normal).
 
         Returns:
@@ -353,14 +391,16 @@ class CAREScore:
             ground_truth.loc[event_start:event_end] = True
         return ground_truth
 
-    def _calculate_metrics(self, ground_truth: pd.Series, predicted_anomalies: pd.Series,
-                           event_label: str) -> Dict[str, float]:
-        """Calculate various metrics for the given labels and scores.
+    def _calculate_basic_metrics(self, ground_truth: pd.Series, predicted_anomalies: pd.Series,
+                                 event_label: str) -> Dict[str, float]:
+        """Calculates F-Score, Accuracy and the confusion matrix for the given labels and scores.
 
         Args:
-            ground_truth (pd.Series): Ground truth labels.
-            predicted_anomalies (pd.Series): Predicted labels.
-            event_label (str): normal or anomaly, indicates whether F-beta-Score can be calculated.
+            ground_truth (pd.Series): Ground truth labels (True=`actionable anomaly`, False=`normal behavior` or
+                `non-actionable anomaly`).
+            predicted_anomalies (pd.Series): Predicted labels (True=detected anomaly, False=no detection).
+            event_label (str): normal or anomaly, indicates which type of event must be evaluated and determines which
+                metrics are calculated (Fbeta-Score for `Coverage` or accuracy for `Accuracy`).
 
         Returns:
             Dict[str, float]: Dictionary containing the calculated metrics.
@@ -370,7 +410,9 @@ class CAREScore:
         if event_label == 'anomaly':
             # When only the event is evaluated, the precision is either 0 (none of the data points detected
             # or 1 (at least 1 point detected as anomaly). The recall is the same as accuracy.
-            # TODO: UserWarning
+            if all(ground_truth):
+                warnings.warn('UserWarning: Ill defined anomaly-event, ground truth contains only True values. This can'
+                              'lead to degenerated F-Score values.')
             f_score = fbeta_score(y_true=ground_truth, y_pred=predicted_anomalies, beta=self.coverage_beta)
 
         accuracy = accuracy_score(y_true=ground_truth, y_pred=predicted_anomalies)
@@ -386,7 +428,7 @@ class CAREScore:
         }
 
     def _calculate_weighted_score(self, event_prediction: pd.Series) -> float:
-        """Calculate the weighted score based on a modification of the linear weighting function.
+        """Calculate the `weighted score` based on a modification of the linear weighting function.
 
         For each element of event_prediction, this function computes a weight between 0 and 1 which is then multiplied
         with the anomaly prediction of the element. In the end, the weighted score is the normalized sum of weights *
@@ -422,7 +464,7 @@ class CAREScore:
         return np.sum(event_prediction * weights) / np.sum(weights)
 
     def save_evaluated_events(self, file_path: Union[Path, str]) -> None:
-        """Save the evaluated events to a CSV file.
+        """Write the evaluated events to a CSV file.
 
         Args:
             file_path (Path): The file path where the evaluated events will be saved.
