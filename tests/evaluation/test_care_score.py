@@ -95,7 +95,7 @@ class TestCARE(unittest.TestCase):
                                         'max_criticality': 50}]
         score = self.care.get_final_score()
         self.assertEqual(score, 0.0)
-        self.assertEqual(self.care.calculate_eventwise_f_score(), 0.0)
+        self.assertEqual(self.care.calculate_reliability(), 0.0)
 
     def test_get_final_score_with_low_accuracy(self):
         """Test get_final_score returns 0 when no anomalies are detected."""
@@ -129,9 +129,9 @@ class TestCARE(unittest.TestCase):
         self.care.coverage_beta = 0.5
         self.care.criticality_threshold = 72
 
-        self.assertAlmostEqual(self.care.calculate_avg_f_score(), 0.7472825)
+        self.assertAlmostEqual(self.care.calculate_avg_coverage(), 0.7472825)
         self.assertAlmostEqual(self.care.calculate_avg_weighted_score(), 0.65)
-        self.assertAlmostEqual(self.care.calculate_eventwise_f_score(), 0.55555556)
+        self.assertAlmostEqual(self.care.calculate_reliability(), 0.55555556)
         self.assertAlmostEqual(self.care.calculate_avg_accuracy(), 0.65)
 
         self.assertAlmostEqual(self.care.get_final_score(), self.expected_scores_good[0])
