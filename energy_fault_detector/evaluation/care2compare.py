@@ -24,7 +24,7 @@ class Care2CompareDataset:
     By default, only the averages are read. See statistics argument of the data loading methods.
 
     Methods:
-        get_event_info: Returns event info for a given event ID
+        get_event_info: Returns event info for a given envent ID
         iter_datasets: Reads datasets and yields the resulting training and test DataFrames while iterating over
             event IDs.
         format_event_dataset: Extracts normal_index from a loaded dataset and returns normal_index and sensor_data.
@@ -48,7 +48,7 @@ class Care2CompareDataset:
             logger.info("Downloading CARE to Compare dataset (~5 GB) from zenodo. Depending on your internet "
                         "connection this can take some time. Additionally the downloaded zip-file will be unzipped "
                         "(~20 GB) which can also take longer.")
-            path = download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=True)
+            download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=True)
         self.path: Path = Path(path)
 
         self.wind_farms: Dict[str, Path] = {
@@ -65,16 +65,15 @@ class Care2CompareDataset:
         return self.event_info_all[self.event_info_all['event_id'] == event_id].iloc[0]
 
     def iter_datasets(self, wind_farm: str = None, test_only: bool = False, statistics: List[str] = None,
-                      index_column: str = 'id', use_readable_columns: bool = True) -> Iterator[Tuple]:
+                      index_column: str = 'id') -> Iterator[Tuple]:
         """Iterate over all datasets, optionally for a specific wind farm.
 
         Args:
             wind_farm (str, optional): Wind farm name. If not provided, all datasets will be loaded.
             test_only (bool, optional): If true, only test dataset will be returned.
-            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
-                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (list[str], optional): List of statistics to extract.
+                If not provided, only averages are selected.
             index_column (str): The name of the index column, either 'time_stamp' or 'id'. Defaults to 'id'.
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
 
         Yields:
             Iterator[Tuple]: If test_only=False, yields a tuple of train and test data and event id.
@@ -94,28 +93,26 @@ class Care2CompareDataset:
                 yield self.load_event_dataset(event_id=event_id,
                                               statistics=statistics,
                                               test_only=test_only,
-                                              index_column=index_column,
-                                              use_readable_columns=use_readable_columns), event_id
+                                              index_column=index_column), event_id
 
     @staticmethod
     def format_event_dataset(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
-        """Splits a given dataset into normal_index and numerical sensor data"""
+        """ Splits a given dataset into normal_index and numerical sensor data"""
         normal_index = data['status_type_id'] == 0
         sensor_data = data.drop(['asset_id', 'id', 'time_stamp', 'status_type_id'], axis=1, errors='ignore')
         return sensor_data, normal_index
 
     def iter_formatted_datasets(self, wind_farm: str = None, test_only: bool = False, statistics: List[str] = None,
-                                index_column: str = 'id', use_readable_columns: bool = True) -> Iterator[Tuple]:
+                                index_column: str = 'id') -> Iterator[Tuple]:
         """Iterate over all datasets, optionally for a specific wind farm and format the dataset by splitting it into
         boolean normal_index and numerical sensor data.
 
         Args:
             wind_farm (str, optional): Wind farm name. If not provided, all datasets will be loaded.
             test_only (bool, optional): If true, only test dataset will be returned.
-            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
-                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (list[str], optional): List of statistics to extract.
+                If not provided, only averages are selected.
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
 
         Yields:
             Iterator[Tuple]: If test_only=False, yields a tuple of train_sensor_data, train_normal_index,
@@ -124,8 +121,7 @@ class Care2CompareDataset:
         """
 
         for tup in self.iter_datasets(wind_farm=wind_farm, test_only=test_only,
-                                      statistics=statistics, index_column=index_column,
-                                      use_readable_columns=use_readable_columns):
+                                      statistics=statistics, index_column=index_column):
             if not test_only:
                 train_sensor_data, train_normal_index = self.format_event_dataset(tup[0])
                 test_sensor_data, test_normal_index = self.format_event_dataset(tup[1])
@@ -135,17 +131,15 @@ class Care2CompareDataset:
                 yield test_sensor_data, test_normal_index, tup[1]
 
     def load_event_dataset(self, event_id: int, test_only: bool = False, statistics: List[str] = None,
-                           index_column: str = 'id', use_readable_columns: bool = True
-                           ) -> Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:
+                           index_column: str = 'id') -> Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:
         """Load train and test datasets for a specific event ID.
 
         Args:
             event_id (int): The event ID for which to retrieve datasets.
             test_only (bool, optional): If true, only the test dataset will be returned.
-            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
-                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (list[str], optional): List of statistics to extract.
+                If not provided, only averages are selected.
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
 
         Returns:
             Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:
@@ -153,8 +147,7 @@ class Care2CompareDataset:
                 If test_only is True, returns only the test dataset.
         """
         # Load the dataset for the specific event ID
-        dataset = self._load_event_dataset(event_id, statistics, index_column=index_column,
-                                           use_readable_columns=use_readable_columns)
+        dataset = self._load_dataset_for_event(event_id, statistics, index_column=index_column)
         # Separate test data
         x_test = dataset[dataset['train_test'] == 'prediction'].drop('train_test', axis=1)
         if test_only:
@@ -164,7 +157,7 @@ class Care2CompareDataset:
         return x_train, x_test
 
     def load_and_format_event_dataset(self, event_id: int, statistics: List[str] = None, test_only: bool = False,
-                                      index_column: str = 'id', use_readable_columns: bool = True
+                                      index_column: str = 'id'
                                       ) -> Union[Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series], Tuple[pd.DataFrame, pd.Series]]:
         """Load train and test datasets for a specific event ID and split them up into boolean normal index and
         numerical sensordata
@@ -172,10 +165,9 @@ class Care2CompareDataset:
         Args:
             event_id (int): The event ID for which to retrieve datasets.
             test_only (bool, optional): If true, only the test dataset will be returned.
-            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
-                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (list[str], optional): List of statistics to extract.
+                If not provided, only averages are selected.
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
 
         Returns:
             Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
@@ -184,7 +176,7 @@ class Care2CompareDataset:
                 If test_only=True, yields a tuple of test_sensor_data and test_status.
         """
         tup = self.load_event_dataset(event_id=event_id, test_only=test_only, statistics=statistics,
-                                      index_column=index_column, use_readable_columns=use_readable_columns)
+                                      index_column=index_column)
         if not test_only:
             train_sensor_data, train_status = self.format_event_dataset(data=tup[0])
             test_sensor_data, test_status = self.format_event_dataset(data=tup[1])
@@ -194,16 +186,14 @@ class Care2CompareDataset:
             return test_sensor_data, test_status
 
     def iter_train_datasets_per_asset(self, wind_farm: str = None, statistics: List[str] = None,
-                                      index_column: str = 'id', use_readable_columns: bool = True
-                                      ) -> Iterator[Tuple[pd.DataFrame, int, List[int]]]:
+                                      index_column: str = 'id') -> Iterator[Tuple[pd.DataFrame, int, List[int]]]:
         """Iterate over all asset IDs to generate a training dataset, optionally for a specific wind farm.
 
         Args:
             wind_farm (str, optional): Wind farm name. If not provided, all assets will be considered.
-            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
-                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (list[str], optional): List of statistics to extract.
+                If not provided, only averages are selected.
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
 
         Yields:
             Iterator[Tuple[pd.DataFrame, int, List[int]]]: Yields a tuple containing the training dataset, asset ID,
@@ -228,8 +218,7 @@ class Care2CompareDataset:
                 data = []
                 for event_id in event_ids:
                     # Load the dataset for the current event ID
-                    dataset = self._load_event_dataset(event_id, statistics, index_column=index_column,
-                                                       use_readable_columns=use_readable_columns).reset_index()
+                    dataset = self._load_dataset_for_event(event_id, statistics, index_column=index_column).reset_index()
                     # Separate training data
                     x_train = dataset[dataset['train_test'] == 'train'].drop('train_test', axis=1)
                     data.append(x_train)
@@ -237,32 +226,29 @@ class Care2CompareDataset:
                 # Yield the concatenated training data along with asset ID and event IDs
                 yield pd.concat(data), asset_id, event_ids
 
-    def update_c2c_config(self, config: Config, wind_farm: str, use_readable_columns: bool = True) -> None:
+    def update_c2c_config(self, config: Config, wind_farm: str) -> None:
         """Update config based on provided feature descriptions.
         Updates the feature to exclude and angle lists of the data preprocessor steps.
 
         Args:
             config (Config): Configuration object.
             wind_farm (str): name of wind farm (A, B or C)
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
         """
 
-        column_map = self._get_column_map(wind_farm)
-
         def get_columns(feature_description_selection: pd.DataFrame) -> List[str]:
+            col_suffix = {
+                'average': 'avg',
+                'minimum': 'min',
+                'maximum': 'max',
+                'std_dev': 'std'
+            }
             columns = []
             for _, row in feature_description_selection.iterrows():
                 if row.statistics_type == 'average':
                     # in this case the column can be either sensor_i or sensor_i_avg, so we add both
-                    if use_readable_columns:
-                        columns.append(column_map[row.sensor_name])
-                    else:
-                        columns.append(row.sensor_name)
-                for stat in self._map_statistic_names(stat_names=row['statistics_type'].split(',')):
-                    if use_readable_columns:
-                        columns.append(column_map[f'{row.sensor_name}_{stat}'])
-                    else:
-                        columns.append(f'{row.sensor_name}_{stat}')
+                    columns.append(row.sensor_name)
+                for stat in row.statistics_type.split(','):
+                    columns.append(f'{row.sensor_name}_{col_suffix[stat]}')
             return columns
 
         feature_descriptions = self.feature_descriptions[wind_farm]
@@ -280,20 +266,6 @@ class Care2CompareDataset:
         )
 
         config.update_config(config.config_dict)
-
-    def _get_column_map(self, wind_farm: str) -> Dict[str, str]:
-        """Maps anonymized columns to human-readable format using feature descriptions"""
-
-        # base columns
-        column_name_map = {c: c for c in ['time_stamp', 'asset_id', 'id', 'status_type_id', 'train_test']}
-        for _, row in self.feature_descriptions[wind_farm].iterrows():
-            stats = self._map_statistic_names(stat_names=row['statistics_type'].split(','))
-
-            for stat in stats:
-                column_name_map[row.sensor_name + '_' + stat] = row.description + ' (' + stat + ')'
-            if stats == ['avg']:
-                column_name_map[row.sensor_name] = row.description
-        return column_name_map
 
     def _load_event_info(self) -> pd.DataFrame:
         """Load event information from CSV files and add asset ID and wind farm name as columns.
@@ -342,10 +314,20 @@ class Care2CompareDataset:
             List of columns names
         """
 
+        # stat name to col_suffix
+        col_suffix = {
+            'average': 'avg',
+            'minimum': 'min',
+            'maximum': 'max',
+            'std_dev': 'std'
+        }
+
         if selected_statistics is None:
             selected_statistics = ['average']
 
-        selected_statistics = self._map_statistic_names(stat_names=selected_statistics)
+        if not all(selected_stat in col_suffix for selected_stat in selected_statistics):
+            raise ValueError('Selected statistics not valid, selected are %s, must be one of %s.',
+                             selected_statistics, list(col_suffix.keys()))
 
         # read 1 row to get existing columns
         dataset_columns = pd.read_csv(dataset_path, sep=';', nrows=1).columns
@@ -358,54 +340,27 @@ class Care2CompareDataset:
         for _, row in self.feature_descriptions[wind_farm].iterrows():
             sensor_name = row['sensor_name']
             for stat in selected_statistics:
-                if stat in self._map_statistic_names(stat_names=row['statistics_type'].split(',')):
+                if stat in row['statistics_type'].split(','):
                     # Include the sensor column if only average is selected
-                    if stat == 'avg' and sensor_name in dataset_columns:
+                    if stat == 'average' and sensor_name in dataset_columns:
                         selected_columns.append(sensor_name)
 
                     # Include the statistic-specific column if it exists
-                    stat_col_name = f"{sensor_name}_{stat}"
+                    stat_col_name = f"{sensor_name}_{col_suffix[stat]}"
                     if stat_col_name in dataset_columns:
                         selected_columns.append(stat_col_name)
 
         return selected_columns
 
-    @staticmethod
-    def _map_statistic_names(stat_names: Union[List[str], str]) -> List[str]:
-        """ Maps given statistic_names to a unified stat name, for internal comparisons.
-
-        Args:
-            stat_names (Union[List[str], str]): List of statistic names or a single statistic name.
-
-        Returns:
-            List[str]: List of unified stat_names
-        """
-        valid_statistic_mapping = {
-            'average': 'avg', 'avg': 'avg',
-            'minimum': 'min', 'min': 'min',
-            'maximum': 'max', 'max': 'max',
-            'std_dev': 'std', 'std': 'std', 'standard_deviation': 'std'
-        }
-        if isinstance(stat_names, str):
-            stat_names = [stat_names]
-        try:
-            unified_stat_names = [valid_statistic_mapping[stat_name.lower()] for stat_name in stat_names]
-        except KeyError:
-            raise ValueError('Selected statistics not valid, selected are %s, must be one of %s.',
-                             stat_names, list(valid_statistic_mapping.keys()))
-        return unified_stat_names
-
-    def _load_event_dataset(self, event_id: int, statistics: List[str] = None, index_column: str = 'id',
-                            use_readable_columns: bool = True) -> pd.DataFrame:
+    def _load_dataset_for_event(self, event_id: int, statistics: List[str] = None, index_column: str = 'id'
+                                ) -> pd.DataFrame:
         """Returns the dataset for the provided event_id
 
         Args:
             event_id (int): ID of the event dataset
-            statistics (List[str], optional): describes which statistic features will be selected. Possible statistics
-                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (List[str], optional): describes which statistic features will be selected. Possible statistics are 'avg',
+                'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str, optional): Name of the index column. Default is 'id'
-            use_readable_columns (bool): Use human-readable columns based on the feature descriptions. Default: True.
-
         """
         if index_column not in ['id', 'time_stamp']:
             raise ValueError('Index column must be one of [`id`, `time_stamp`].')
@@ -419,8 +374,4 @@ class Care2CompareDataset:
         numeric_columns = [col for col in dataset.columns
                            if col not in ['time_stamp', 'asset_id', 'id', 'status_type_id', 'train_test']]
         dataset[numeric_columns] = dataset[numeric_columns].astype(float)
-
-        if use_readable_columns:
-            dataset.columns = dataset.columns.map(self._get_column_map(wf))
-
         return dataset
