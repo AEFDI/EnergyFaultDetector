@@ -127,15 +127,14 @@ class CAREScore:
     def evaluated_events(self) -> pd.DataFrame:
         """Pandas DataFrame with evaluated events."""
         df = pd.DataFrame(self._evaluated_events)
-
-        if self.anomaly_detection_method == 'criticality':
-            df['anomaly_detected'] = df['max_criticality'] >= self.criticality_threshold
-        else:
-            df['anomaly_detected'] = (
-                # predicted positive / total event length
-                (df['tp'] + df['fp']) / (df['tp'] + df['fp'] + df['fn'] + df['tn'])
-            ) >= self.min_fraction_anomalous
-
+        if not df.empty:
+            if self.anomaly_detection_method == 'criticality':
+                df['anomaly_detected'] = df['max_criticality'] >= self.criticality_threshold
+            else:
+                df['anomaly_detected'] = (
+                    # predicted positive / total event length
+                    (df['tp'] + df['fp']) / (df['tp'] + df['fp'] + df['fn'] + df['tn'])
+                ) >= self.min_fraction_anomalous
         return df
 
     def evaluate_event(self, event_start: Union[int, pd.Timestamp], event_end: Union[int, pd.Timestamp],
