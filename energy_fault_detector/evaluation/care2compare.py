@@ -48,7 +48,7 @@ class Care2CompareDataset:
             logger.info("Downloading CARE to Compare dataset (~5 GB) from zenodo. Depending on your internet "
                         "connection this can take some time. Additionally the downloaded zip-file will be unzipped "
                         "(~20 GB) which can also take longer.")
-            download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=True)
+            path = download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=True)
         self.path: Path = Path(path)
 
         self.wind_farms: Dict[str, Path] = {
@@ -71,8 +71,8 @@ class Care2CompareDataset:
         Args:
             wind_farm (str, optional): Wind farm name. If not provided, all datasets will be loaded.
             test_only (bool, optional): If true, only test dataset will be returned.
-            statistics (list[str], optional): List of statistics to extract.
-                If not provided, only averages are selected.
+            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
+                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str): The name of the index column, either 'time_stamp' or 'id'. Defaults to 'id'.
 
         Yields:
@@ -110,8 +110,8 @@ class Care2CompareDataset:
         Args:
             wind_farm (str, optional): Wind farm name. If not provided, all datasets will be loaded.
             test_only (bool, optional): If true, only test dataset will be returned.
-            statistics (list[str], optional): List of statistics to extract.
-                If not provided, only averages are selected.
+            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
+                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
 
         Yields:
@@ -137,8 +137,8 @@ class Care2CompareDataset:
         Args:
             event_id (int): The event ID for which to retrieve datasets.
             test_only (bool, optional): If true, only the test dataset will be returned.
-            statistics (list[str], optional): List of statistics to extract.
-                If not provided, only averages are selected.
+            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
+                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
 
         Returns:
@@ -147,7 +147,7 @@ class Care2CompareDataset:
                 If test_only is True, returns only the test dataset.
         """
         # Load the dataset for the specific event ID
-        dataset = self._load_dataset_for_event(event_id, statistics, index_column=index_column)
+        dataset = self._load_event_dataset(event_id, statistics, index_column=index_column)
         # Separate test data
         x_test = dataset[dataset['train_test'] == 'prediction'].drop('train_test', axis=1)
         if test_only:
@@ -165,8 +165,8 @@ class Care2CompareDataset:
         Args:
             event_id (int): The event ID for which to retrieve datasets.
             test_only (bool, optional): If true, only the test dataset will be returned.
-            statistics (list[str], optional): List of statistics to extract.
-                If not provided, only averages are selected.
+            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
+                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
 
         Returns:
@@ -191,8 +191,8 @@ class Care2CompareDataset:
 
         Args:
             wind_farm (str, optional): Wind farm name. If not provided, all assets will be considered.
-            statistics (list[str], optional): List of statistics to extract.
-                If not provided, only averages are selected.
+            statistics (list[str], optional): describes which statistic features will be selected. Possible statistics
+                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str): The name of the index column, either time_stamp or id. Defaults to 'id'.
 
         Yields:
@@ -218,7 +218,7 @@ class Care2CompareDataset:
                 data = []
                 for event_id in event_ids:
                     # Load the dataset for the current event ID
-                    dataset = self._load_dataset_for_event(event_id, statistics, index_column=index_column).reset_index()
+                    dataset = self._load_event_dataset(event_id, statistics, index_column=index_column).reset_index()
                     # Separate training data
                     x_train = dataset[dataset['train_test'] == 'train'].drop('train_test', axis=1)
                     data.append(x_train)
@@ -236,19 +236,13 @@ class Care2CompareDataset:
         """
 
         def get_columns(feature_description_selection: pd.DataFrame) -> List[str]:
-            col_suffix = {
-                'average': 'avg',
-                'minimum': 'min',
-                'maximum': 'max',
-                'std_dev': 'std'
-            }
             columns = []
             for _, row in feature_description_selection.iterrows():
                 if row.statistics_type == 'average':
                     # in this case the column can be either sensor_i or sensor_i_avg, so we add both
                     columns.append(row.sensor_name)
-                for stat in row.statistics_type.split(','):
-                    columns.append(f'{row.sensor_name}_{col_suffix[stat]}')
+                for stat in self._map_statistic_names(stat_names=row['statistics_type'].split(',')):
+                    columns.append(f'{row.sensor_name}_{stat}')
             return columns
 
         feature_descriptions = self.feature_descriptions[wind_farm]
@@ -314,20 +308,10 @@ class Care2CompareDataset:
             List of columns names
         """
 
-        # stat name to col_suffix
-        col_suffix = {
-            'average': 'avg',
-            'minimum': 'min',
-            'maximum': 'max',
-            'std_dev': 'std'
-        }
-
         if selected_statistics is None:
             selected_statistics = ['average']
 
-        if not all(selected_stat in col_suffix for selected_stat in selected_statistics):
-            raise ValueError('Selected statistics not valid, selected are %s, must be one of %s.',
-                             selected_statistics, list(col_suffix.keys()))
+        selected_statistics = self._map_statistic_names(stat_names=selected_statistics)
 
         # read 1 row to get existing columns
         dataset_columns = pd.read_csv(dataset_path, sep=';', nrows=1).columns
@@ -340,26 +324,51 @@ class Care2CompareDataset:
         for _, row in self.feature_descriptions[wind_farm].iterrows():
             sensor_name = row['sensor_name']
             for stat in selected_statistics:
-                if stat in row['statistics_type'].split(','):
+                if stat in self._map_statistic_names(stat_names=row['statistics_type'].split(',')):
                     # Include the sensor column if only average is selected
-                    if stat == 'average' and sensor_name in dataset_columns:
+                    if stat == 'avg' and sensor_name in dataset_columns:
                         selected_columns.append(sensor_name)
 
                     # Include the statistic-specific column if it exists
-                    stat_col_name = f"{sensor_name}_{col_suffix[stat]}"
+                    stat_col_name = f"{sensor_name}_{stat}"
                     if stat_col_name in dataset_columns:
                         selected_columns.append(stat_col_name)
 
         return selected_columns
 
-    def _load_dataset_for_event(self, event_id: int, statistics: List[str] = None, index_column: str = 'id'
-                                ) -> pd.DataFrame:
+    @staticmethod
+    def _map_statistic_names(stat_names: Union[List[str], str]) -> List[str]:
+        """ Maps given statistic_names to a unified stat name, for internal comparisons.
+
+        Args:
+            stat_names (Union[List[str], str]): List of statistic names or a single statistic name.
+
+        Returns:
+            List[str]: List of unified stat_names
+        """
+        valid_statistic_mapping = {
+            'average': 'avg', 'avg': 'avg',
+            'minimum': 'min', 'min': 'min',
+            'maximum': 'max', 'max': 'max',
+            'std_dev': 'std', 'std': 'std', 'standard_deviation': 'std'
+        }
+        if isinstance(stat_names, str):
+            stat_names = [stat_names]
+        try:
+            unified_stat_names = [valid_statistic_mapping[stat_name.lower()] for stat_name in stat_names]
+        except KeyError:
+            raise ValueError('Selected statistics not valid, selected are %s, must be one of %s.',
+                             stat_names, list(valid_statistic_mapping.keys()))
+        return unified_stat_names
+
+    def _load_event_dataset(self, event_id: int, statistics: List[str] = None, index_column: str = 'id'
+                            ) -> pd.DataFrame:
         """Returns the dataset for the provided event_id
 
         Args:
             event_id (int): ID of the event dataset
-            statistics (List[str], optional): describes which statistic features will be selected. Possible statistics are 'avg',
-                'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
+            statistics (List[str], optional): describes which statistic features will be selected. Possible statistics
+                are 'avg', 'min', 'max' and 'std'. If None are provided it defaults to ['avg'].
             index_column (str, optional): Name of the index column. Default is 'id'
         """
         if index_column not in ['id', 'time_stamp']:

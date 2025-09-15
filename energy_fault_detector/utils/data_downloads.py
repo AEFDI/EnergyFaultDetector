@@ -1,4 +1,5 @@
 
+from typing import List, Union
 import os
 import re
 import sys
@@ -171,7 +172,7 @@ def prepare_output_dir(out_dir: Path, overwrite: bool) -> None:
 
 
 def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path = "./downloads",
-                         overwrite: bool = False):
+                         overwrite: bool = False) -> Union[List[Path], Path]:
     """ Download a Zenodo record via API and unzip any .zip files.
 
     Args:
@@ -180,7 +181,8 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
         overwrite (bool): If True and dest already exists, contents of dest will be overwritten.
 
     Returns:
-
+        Union[List[Path], Path]: List of paths the extracted content of all downloaded zip files. If there is only one
+            downloaded zip file only one path is returned
     """
 
     session = requests.Session()
@@ -222,6 +224,7 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
         download_file(session, url, dest)
         downloaded.append(dest)
 
+    logger.info(f"Download of data from {identifier} successful.")
     # Unzip any downloaded .zip files
     for p in downloaded:
         if p.suffix.lower() == ".zip":
@@ -237,4 +240,21 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
                     logger.info(f"Removed archive: {p.name}")
                 except OSError as e:
                     logger.warning(f"Could not remove {p}: {e}")
-    logger.info(f"Download of data from {identifier} successful.")
+
+    logger.info(f"Validating file structure.")
+    # Check resulting file structure and remove duplicate directory names if they exist due to unzipping.
+    root_paths = []
+    for file_or_dir in os.listdir(out_dir):
+        root_path = out_dir / file_or_dir
+        if os.path.isdir(root_path):
+            root_paths.append(root_path)
+            if file_or_dir in os.listdir(root_path):
+                duplicate_dir_name = root_path / file_or_dir
+                logger.info(f"Removing redundant directory: {duplicate_dir_name}")
+                move_list = os.listdir(duplicate_dir_name)
+                for content in move_list:
+                    shutil.move(src=duplicate_dir_name / content,
+                                dst=root_path / content)
+                os.rmdir(duplicate_dir_name)
+    logger.info(f"File structure validated.")
+    return root_paths if len(root_paths) > 1 else root_paths[0]
