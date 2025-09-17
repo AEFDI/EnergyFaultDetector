@@ -125,7 +125,7 @@ class TestCARE(unittest.TestCase):
 
     def test_final_score(self):
         self.care._evaluated_events = self.test_good_prediction_df.to_dict(orient='records')
-        self.care.eventwise_f_score_beta = 0.5
+        self.care.reliability_beta = 0.5
         self.care.coverage_beta = 0.5
         self.care.criticality_threshold = 72
 
@@ -141,7 +141,7 @@ class TestCARE(unittest.TestCase):
         self.assertAlmostEqual(self.care.get_final_score(criticality_threshold=100), 0.5394565)
 
         self.care._evaluated_events = self.test_bad_prediction_df.to_dict(orient='records')
-        self.care.eventwise_f_score_beta = 0.5
+        self.care.reliability_beta = 0.5
         self.care.coverage_beta = 0.5
         self.care.criticality_threshold = 72
 
