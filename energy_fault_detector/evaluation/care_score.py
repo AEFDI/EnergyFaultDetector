@@ -32,7 +32,7 @@ class CAREScore:
     indicate a fault.
 
     Usage: 
-        For each event in the dataset call `evaluate_event`. Afterward, call `get_final_score` to calculate the
+        For each event in your dataset call `evaluate_event`. Afterward, call `get_final_score` to calculate the
         CARE-score of your model.
 
     Requirements: 
@@ -56,25 +56,6 @@ class CAREScore:
           (https://doi.org/10.3390/data9120138).
           Choose a criticality threshold based on application needs: e.g. how many anomalous points need to be observed
           in advance to be actionable? After how many anomalous data points is an anomaly significant?
-
-    Methods:
-        evaluate_event: Calculates the `Coverage`, `Accuracy` and `Earliness` for a specific event, as well as
-            whether the event was detected as anomaly (see `anomaly_detection_method`) or not. It collects this
-            information in a dataframe, which can be accessed through the `evaluated_events` property.
-        get_final_score: Is called to calculate `Reliability` and the CARE-score based on the `Coverage`, `Accuracy`,
-            `Reliability` and `Earliness` of all selected evaluated events.
-        calculate_avg_coverage: Calculated the average `Coverage` for all selected evaluated `anomaly-events`.
-            Mainly used in get_final_score.
-        calculate_avg_accuracy: Calculates the average`Accuracy` for all selected evaluated `normal-events`.
-            Mainly used in get_final_score.
-        calculate_reliability: Calculates `Reliability`for all selected events.
-            Mainly used in get_final_score.
-        calculate_avg_earliness: Calculates the average `Earliness` for all selected `anomaly-events`.
-            Mainly used in get_final_score.
-        create_ground_truth: Creates a boolean array where True represents data points of the type `actionable anomaly`
-            and False represents data points of type `normal behavior` or `non-actionable anomaly`.
-        save_evaluated_events: Saves evaluated_events.
-        load_evaluated_events: Loads evaluated_events.
     """
 
     @deprecate_kwargs(mapping, prefer="old")
@@ -102,12 +83,6 @@ class CAREScore:
                 If the fraction of event data points exceeds this threshold, the event will be detected as an anomaly.
             ws_start_of_descend (Tuple[int, int]): Fraction (numerator, denominator) where weights start to decay for
                 the Earliness-Score (weighted score). Default is (1, 4).
-
-        Deprecated:
-            min_fraction_anomalous_timestamps: Use min_fraction_anomalous instead.
-            eventwise_f_score_beta: Use reliability_beta instead.
-            weighted_score_w: Use earliness_w instead.
-            eventwise_f_score_w: Use reliability_w instead.
 
         Raises:
             ValueError: If anomaly_detection_method is not 'criticality' or 'fraction'.
