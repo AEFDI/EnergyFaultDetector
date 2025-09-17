@@ -37,6 +37,8 @@ add_module_names = False
 
 autodoc_mock_imports = ["sklearn"]
 
+autoclass_content = 'both'
+
 # ======================================================================================
 # No configurable options below this line
 
