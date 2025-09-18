@@ -98,7 +98,7 @@ class TestCARE(unittest.TestCase):
                                        ]
         score = self.care.get_final_score()
         self.assertEqual(score, 0.0)
-        self.assertEqual(self.care.calculate_eventwise_f_score(), 0.0)
+        self.assertEqual(self.care.calculate_reliability(), 0.0)
 
     def test_get_final_score_with_low_accuracy(self):
         """Test get_final_score returns 0 when no anomalies are detected."""
