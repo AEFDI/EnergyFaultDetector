@@ -48,11 +48,10 @@ For an example using one of the CARE2Compare datasets, run:
 For more information, have a look at the notebook [Quick Fault Detection](./notebooks/Example%20-%20Quick%20Fault%20Detection.ipynb)
 
 
-## Fault detection in 5 lines of code
+## Fault detection in 4 lines of code
 
 ```python
-from energy_fault_detector.fault_detector import FaultDetector
-from energy_fault_detector.config import Config
+from energy_fault_detector import FaultDetector, Config
 
 fault_detector = FaultDetector(config=Config('base_config.yaml'))
 model_data = fault_detector.train(sensor_data=sensor_data, normal_index=normal_index)
