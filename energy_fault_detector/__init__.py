@@ -3,6 +3,9 @@
 import os
 
 from energy_fault_detector.registration import registry, register
+from energy_fault_detector.fault_detector import FaultDetector
+from energy_fault_detector.config import Config
+from energy_fault_detector.quick_fault_detection import quick_fault_detector
 
 # Register models and other classes
 # class types: autoencoder, anomaly_score, threshold_selector
@@ -43,3 +46,4 @@ with open(os.path.join(HERE, 'VERSION'), 'r', encoding='utf-8') as f:
     version = f.readlines()[0].strip()
 
 __version__ = version
+__all__ = ['FaultDetector', 'Config', 'registry', 'quick_fault_detector']
