@@ -69,8 +69,13 @@ class ColumnSelector(DataTransformer):
         # transformation is not possible.
         missing_columns = set(self.feature_names_out_) - set(x.columns)
         if len(missing_columns) > 0:
-            raise ValueError('ColumnSelector: There are columns missing in the prediction data, which were present in'
-                             ' the training data. New models need to be trained!')
+            missing_columns_sorted = sorted(missing_columns)
+            missing_columns_str = ', '.join(missing_columns_sorted)
+            raise ValueError(
+                'ColumnSelector: There are columns missing in the prediction data, which were present in'
+                ' the training data. Missing columns: '
+                f"{missing_columns_str}. New models need to be trained!"
+            )
 
         x = x[self.feature_names_out_]  # ensure ordering
         return x
