@@ -66,8 +66,8 @@ settings, an example is found [here](energy_fault_detector/base_config.yaml).
 
 
 ## Background
-This project was initially developed in the research project ADWENTURE, to create a software for early fault detection
-in wind turbines. The software was developed in such a way that the algorithms do not depend on a specific data source
+This project was initially developed by the research team AEFDI at the Fraunhofer IEE in the research project ADWENTURE (funded by the German Federal Ministry for Economic Affairs and Climate Action (BMWK)), 
+to create a software for early fault detection in wind turbines. The software was developed in such a way that the algorithms do not depend on a specific data source
 and can be applied to other use cases as well.
 
 ## Documentation
@@ -111,3 +111,6 @@ Transfer learning applications for autoencoder-based anomaly detection in wind t
 
 **Autoencoder-based anomaly detection**:
 Evaluation of Anomaly Detection of an Autoencoder Based on Maintenance Information and Scada-Data. Energies. 2020; 13(5):1063., https://doi.org/10.3390/en13051063.
+
+## Contact
+For questions, feedback, or support integrating the EnergyFaultDetector into your operations, please contact [aefdi@iee.fraunhofer.de](mailto:aefdi@iee.fraunhofer.de).
