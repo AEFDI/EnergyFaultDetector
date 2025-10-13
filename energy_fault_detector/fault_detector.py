@@ -68,17 +68,24 @@ class FaultDetector(FaultDetectionModel):
             fit_preprocessor (bool, optional): if True the preprocessor is fitted. If False the preprocessor is not
                 fitted and the user has to provide a ready-to-use preprocessor by loading models before calling this
                 function.
+
         Returns: tuple of (pd.Dataframe, pd.Dataframe, pd.Series)
             x_prepped (pd.DataFrame): preprocessed normal training data
             x: ordered training data (unprocessed)  # needed for _fit_threshold
             y: ordered normal_index (unprocessed)  # needed for _fit_threshold
+
         """
+
         x = sensor_data.sort_index()
         if normal_index is not None:
             y = normal_index.sort_index()
         else:
             # assume only 'normal behaviour' in x
             y = pd.Series(np.full(len(x), True), index=x.index)
+
+        if not x.loc[x.index.duplicated()].empty or not y.loc[y.index.duplicated()].empty:
+            raise ValueError('There are duplicated indices in the input dataframe `sensor_data` and/or in the '
+                             '`normal_index`, please check your input data.')
 
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
