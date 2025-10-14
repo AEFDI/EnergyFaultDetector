@@ -128,7 +128,7 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
     if normal_index is None and not show_predicted_anomaly:
         ax.scatter(scores.index, scores, s=1, alpha=0.8, c=score_color)
     elif show_predicted_anomaly:
-        predicted_anomalies = predictions.predicted_anomalies['anomaly']
+        predicted_anomalies = predictions.predicted_anomalies
         ax.scatter(scores.index[~predicted_anomalies], scores[~predicted_anomalies], s=1, alpha=0.8, c=score_color)
         ax.scatter(scores.index[predicted_anomalies], scores[predicted_anomalies], s=1, alpha=0.8, c=anomaly_color,
                    label='predicted anomaly')

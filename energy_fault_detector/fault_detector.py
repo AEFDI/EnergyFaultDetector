@@ -302,7 +302,6 @@ class FaultDetector(FaultDetectionModel):
 
         scores = self.anomaly_score.transform(recon_error)
         predicted_anomalies = self.predict_anomalies(scores, x_prepped)
-        predicted_anomalies = pd.DataFrame(data=predicted_anomalies, columns=['anomaly'], index=scores.index)
 
         if root_cause_analysis:
             logger.info('Run root cause analysis..')
@@ -318,7 +317,7 @@ class FaultDetector(FaultDetectionModel):
             predicted_anomalies=predicted_anomalies,
             reconstruction=reconstruction,
             recon_error=recon_error,
-            anomaly_score=pd.DataFrame(data=scores, index=x_predicted.index, columns=['value']),
+            anomaly_score=scores,
             bias_data=df_arcana_bias,
             arcana_losses=arcana_losses,
             tracked_bias=tracked_bias
@@ -339,6 +338,9 @@ class FaultDetector(FaultDetectionModel):
             predicted_anomalies, _ = self.threshold_selector.predict(x=scores, scaled_ae_input=x_prepped)
         else:
             predicted_anomalies = self.threshold_selector.predict(scores)
+
+        if not isinstance(predicted_anomalies, pd.Series):
+            predicted_anomalies = pd.Series(predicted_anomalies, index=scores.index)
 
         return predicted_anomalies
 
