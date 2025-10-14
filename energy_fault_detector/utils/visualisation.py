@@ -222,6 +222,7 @@ def animate_bias(bias_list: List[pd.DataFrame], selected_column_names: List[str]
     df_list = [x[selected_column_names] for x in bias_list]
     fig, ax = plt.subplots(figsize=figsize)
     bars = ax.bar(selected_column_names, np.abs(df_list[0]))
+    ax.tick_params("x", rotation=45)
 
     def update_frame(frame):
         plt.title(f'Iteration {frame * 50}')
@@ -229,7 +230,7 @@ def animate_bias(bias_list: List[pd.DataFrame], selected_column_names: List[str]
             bar.set_height(height)
         return bars
 
-    ax.set_ylim(0, np.max([np.max(arr) for arr in df_list]) + 1)
+    ax.set_ylim(0, np.max([np.max(np.abs(arr)) for arr in df_list]) + 1)
     ani = animation.FuncAnimation(fig, update_frame, interval=200,  frames=len(df_list), repeat=False)
     ani.save(filename, writer='pillow')
 
@@ -266,6 +267,7 @@ def animate_corrected_input(corrected_list: List[pd.DataFrame], selected_column_
     for i, column in enumerate(selected_column_names):
         y_max = np.max([np.max(df[column]) for df in df_list + addon_list])
         axs[i].set_ylim(0, y_max + 0.25)
+        axs[i].tick_params("x", rotation=45)
 
     # Animation function
     def update_frame(frame):
@@ -279,7 +281,10 @@ def animate_corrected_input(corrected_list: List[pd.DataFrame], selected_column_
                 axs[i].plot(selected_expected_result[column], alpha=0.5)
             df = df_list[frame]
             axs[i].plot(df[column])
-            axs[i].set_ylabel(column)
+            if len(column) > 15:
+                axs[i].set_ylabel(column[:15] + "...",)
+            else:
+                axs[i].set_ylabel(column)
             axs[i].set_ylim(0, y_max + 0.25)
             fig.suptitle(f'Iteration {frame * 50}')
         return axs
