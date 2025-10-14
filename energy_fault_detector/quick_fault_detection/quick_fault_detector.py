@@ -114,7 +114,7 @@ def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] =
     anomaly_detector.fit(sensor_data=train_data, normal_index=train_normal_index)
     logger.info('Evaluating Test data based on the learned normal behavior.')
     prediction_results = anomaly_detector.predict(sensor_data=test_data, root_cause_analysis=False)
-    anomalies = prediction_results.predicted_anomalies['anomaly']
+    anomalies = prediction_results.predicted_anomalies
     # Find anomaly events
     event_meta_data, event_data_list = create_events(sensor_data=test_data,
                                                      boolean_information=anomalies,
