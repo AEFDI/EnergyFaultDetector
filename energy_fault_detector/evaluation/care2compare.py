@@ -24,7 +24,7 @@ class Care2CompareDataset:
     By default, only the averages are read. See statistics argument of the data loading methods.
 
     Methods:
-        get_event_info: Returns event info for a given envent ID
+        get_event_info: Returns event info for a given event ID
         iter_datasets: Reads datasets and yields the resulting training and test DataFrames while iterating over
             event IDs.
         format_event_dataset: Extracts normal_index from a loaded dataset and returns normal_index and sensor_data.
@@ -99,7 +99,7 @@ class Care2CompareDataset:
 
     @staticmethod
     def format_event_dataset(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
-        """ Splits a given dataset into normal_index and numerical sensor data"""
+        """Splits a given dataset into normal_index and numerical sensor data"""
         normal_index = data['status_type_id'] == 0
         sensor_data = data.drop(['asset_id', 'id', 'time_stamp', 'status_type_id'], axis=1, errors='ignore')
         return sensor_data, normal_index
