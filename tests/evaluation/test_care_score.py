@@ -92,7 +92,10 @@ class TestCARE(unittest.TestCase):
     def test_get_final_score_with_no_anomalies(self):
         """Test get_final_score returns 0 when no anomalies are detected."""
         self.care._evaluated_events = [{'event_id': 0, 'event_label': 'normal',
-                                        'max_criticality': 50}]
+                                        'max_criticality': 50},
+                                       {'event_id': 0, 'event_label': 'anomaly',
+                                        'max_criticality': 50}
+                                       ]
         score = self.care.get_final_score()
         self.assertEqual(score, 0.0)
         self.assertEqual(self.care.calculate_eventwise_f_score(), 0.0)
@@ -100,7 +103,10 @@ class TestCARE(unittest.TestCase):
     def test_get_final_score_with_low_accuracy(self):
         """Test get_final_score returns 0 when no anomalies are detected."""
         self.care._evaluated_events = [{'event_id': 0, 'event_label': 'normal',
-                                        'max_criticality': 73, 'accuracy': 0.5}]
+                                        'max_criticality': 73, 'accuracy': 0.5},
+                                       {'event_id': 1, 'event_label': 'anomaly',
+                                        'max_criticality': 35, 'accuracy': 0.5}
+                                       ]
         score = self.care.get_final_score()
         self.assertEqual(score, 0.5)
         self.assertEqual(self.care.calculate_avg_accuracy(), 0.5)
@@ -129,9 +135,9 @@ class TestCARE(unittest.TestCase):
         self.care.coverage_beta = 0.5
         self.care.criticality_threshold = 72
 
-        self.assertAlmostEqual(self.care.calculate_avg_f_score(), 0.7472825)
-        self.assertAlmostEqual(self.care.calculate_avg_weighted_score(), 0.65)
-        self.assertAlmostEqual(self.care.calculate_eventwise_f_score(), 0.55555556)
+        self.assertAlmostEqual(self.care.calculate_avg_coverage(), 0.7472825)
+        self.assertAlmostEqual(self.care.calculate_avg_earliness(), 0.65)
+        self.assertAlmostEqual(self.care.calculate_reliability(), 0.55555556)
         self.assertAlmostEqual(self.care.calculate_avg_accuracy(), 0.65)
 
         self.assertAlmostEqual(self.care.get_final_score(), self.expected_scores_good[0])
