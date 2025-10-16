@@ -11,6 +11,7 @@ import pandas as pd
 
 from energy_fault_detector.core import Autoencoder
 from energy_fault_detector.fault_detector import FaultDetector
+from energy_fault_detector.utils.analysis import calculate_criticality
 
 
 def plot_learning_curve(model: Union[Autoencoder, FaultDetector], ax: plt.Axes = None, label: str = '',
@@ -95,7 +96,10 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
 def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_index: pd.Series = None,
                               ax: plt.Axes = None, figsize: Tuple[float, float] = (8, 3),
                               show_predicted_anomaly: bool = False, show_threshold: bool = True,
-                              score_color: Optional[str] = None, anomaly_color: Optional[str] = None,
+                              show_criticality: bool = False, max_criticality: int = 144,
+                              score_color: Optional[str] = None,
+                              anomaly_color: Optional[str] = None,
+                              criticality_color: Optional[str] = "C2",
                               threshold_color: Optional[str] = 'k', **subplot_kwargs
                               ) -> Tuple[plt.Figure, plt.Axes]:
     """Plots the anomaly scores of the AnomalyDetector model along with the threshold for the provided data.
@@ -108,8 +112,13 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
         figsize (Tuple[float, float], optional): Size of the figure if a new one is created. Defaults to (8, 3).
         show_predicted_anomaly (bool, optional): Whether to show the predicted anomaly scores. Defaults to False.
         show_threshold (bool, optional): Whether to show the threshold scores. Defaults to True.
+        show_criticality (bool, optional): Whether to show the criticality counter. Defaults to False.
+        max_criticality (int optional): If show_criticality is True, the maximum value of the criticality counter can
+            be specified. Defaults to 144 (one day of 10 min timestamps).
         score_color (Optional[str], optional): Color to use for the anomaly score.
         anomaly_color (Optional[str], optional): Color to use for the anomalous data points (using normal_index).
+        criticality_color (Optional[str], optional): Color to use for the criticality counter if show_criticality is
+            True. Defaults to 'C2'.
         threshold_color (Optional[str], optional): Color to use for the threshold.
         **subplot_kwargs: Additional keyword arguments for plt.subplots().
 
@@ -146,6 +155,14 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
             if isinstance(scores, pd.Series):
                 threshold = pd.Series(model.threshold_selector.threshold, index=scores.index)
             ax.plot(threshold, linestyle='-', linewidth=.7, label='threshold', c=threshold_color)
+
+    if show_criticality:
+        crit = calculate_criticality(predictions.predicted_anomalies["anomaly"], normal_idx=normal_index,
+                                     max_criticality=max_criticality)
+        ax2 = ax.twinx()
+        ax2.plot(crit, label='criticality counter', color=criticality_color)
+        ax2.legend(loc='upper right', markerscale=3)
+        ax2.set_ylabel('criticality')
 
     ax.set_ylabel('anomaly score')
 
