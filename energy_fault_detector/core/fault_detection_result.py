@@ -11,20 +11,20 @@ import numpy as np
 class FaultDetectionResult:
     """Class to encapsulate results from the fault detection process."""
 
-    predicted_anomalies: pd.DataFrame
-    """DataFrame with a column 'anomaly' (bool)."""
+    predicted_anomalies: pd.Series
+    """Series with a predicted anomalies (bool)."""
 
     reconstruction: pd.DataFrame
-    """DataFrame with reconstruction of the sensor data with timestamp as index."""
+    """DataFrame with reconstruction of the input data."""
 
     recon_error: pd.DataFrame
     """DataFrame with reconstruction errors."""
 
-    anomaly_score: pd.DataFrame
-    """DataFrame with anomaly scores for each timestamp."""
+    anomaly_score: pd.Series
+    """Series with predicted anomaly scores."""
 
     bias_data: Optional[pd.DataFrame] = None
-    """DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run."""
+    """DataFrame with ARCANA results (ARCANA bias). None if ARCANA was not run."""
 
     arcana_losses: Optional[pd.DataFrame] = None
     """DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run."""

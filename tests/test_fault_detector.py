@@ -260,11 +260,10 @@ class TestFaultDetector(unittest.TestCase):
         # expected results
         recon = self.predictions
         recon.index = [0, 1, 2]
-        anomalies = pd.DataFrame(data=[[False], [False], [True]],
-                                 columns=['anomaly'])
+        anomalies = pd.Series(data=[False, False, True], dtype=bool)
 
         pd.testing.assert_frame_equal(results.reconstruction, recon)
-        pd.testing.assert_frame_equal(results.predicted_anomalies, anomalies)
+        pd.testing.assert_series_equal(results.predicted_anomalies, anomalies)
         self.assertIsNotNone(results.bias_data)
 
         mock_find_arcana_bias.assert_called_once()
