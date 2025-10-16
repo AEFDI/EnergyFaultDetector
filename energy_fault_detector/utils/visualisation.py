@@ -157,7 +157,7 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
             ax.plot(threshold, linestyle='-', linewidth=.7, label='threshold', c=threshold_color)
 
     if show_criticality:
-        crit = calculate_criticality(predictions.predicted_anomalies["anomaly"], normal_idx=normal_index,
+        crit = calculate_criticality(predictions.predicted_anomalies, normal_idx=normal_index,
                                      max_criticality=max_criticality)
         ax2 = ax.twinx()
         ax2.plot(crit, label='criticality counter', color=criticality_color)

@@ -109,7 +109,7 @@ class CAREScore:
 
     @property
     def evaluated_events(self) -> pd.DataFrame:
-        """Return a DataFrame with evaluated events.
+        """Returns a DataFrame with evaluated events.
 
         The DataFrame is built from the internal evaluated-events list. If the DataFrame is non-empty,
         an additional column 'anomaly_detected' is computed:
