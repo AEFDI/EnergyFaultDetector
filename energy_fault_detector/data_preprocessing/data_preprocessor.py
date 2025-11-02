@@ -12,6 +12,7 @@ from energy_fault_detector.data_preprocessing.column_selector import ColumnSelec
 from energy_fault_detector.data_preprocessing.low_unique_value_filter import LowUniqueValueFilter
 from energy_fault_detector.data_preprocessing.angle_transformer import AngleTransformer
 from energy_fault_detector.data_preprocessing.duplicate_value_to_nan import DuplicateValuesToNan
+from energy_fault_detector.data_preprocessing.counter_diff_transformer import CounterDiffTransformer
 
 
 class DataPreprocessor(Pipeline, SaveLoadMixin):
@@ -78,7 +79,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
                  include_duplicate_value_to_nan: bool = False,
                  value_to_replace: float = 0,
                  n_max_duplicates: int = 144,
-                 duplicate_features_to_exclude: Optional[List[str]] = None
+                 duplicate_features_to_exclude: Optional[List[str]] = None,
+                 counter_columns_to_transform: Optional[List[str]] = None,
                  ):
 
         self.include_column_selector = include_column_selector
@@ -116,6 +118,22 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
                  DuplicateValuesToNan(value_to_replace=value_to_replace, n_max_duplicates=n_max_duplicates,
                                       features_to_exclude=duplicate_features_to_exclude))
             )
+        if counter_columns_to_transform is not None and len(counter_columns_to_transform) > 0:
+            steps.append((
+                'counter_diff',
+                CounterDiffTransformer(
+                    counters=counter_columns_to_transform,
+                    compute_rate=False,  # per-sample diffs by default
+                    reset_strategy='zero',  # assume reset-to-zero
+                    rollover_values=None,  # or dict per counter if known
+                    small_negative_tolerance=0.0,
+                    fill_first='nan',
+                    keep_original=False,
+                    gap_policy='mask',  # mask after long gaps
+                    max_gap_seconds=None,  # if None, uses max_gap_factor * median(dt)
+                    max_gap_factor=3.0  # e.g., mask when gap > 3x typical cadence
+                )
+            ))
         if include_column_selector:
             steps.append(
                 ('column_selector',
