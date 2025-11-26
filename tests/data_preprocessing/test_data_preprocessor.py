@@ -12,6 +12,17 @@ from energy_fault_detector.data_preprocessing.data_preprocessor import DataPrepr
 class TestDataPreprocessorPipeline(TestCase):
     def setUp(self) -> None:
         self.standard_preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector',
+                 'params': {'max_nan_frac_per_col': 0.2}},
+                {'name': 'angle_transform',
+                 'params': {'angles': ['Sensor_6']}},
+                {'name': 'duplicate_values_to_nan'},
+                {'name': 'low_unique_value_filter',}
+            ]
+        )
+        # legacy set up
+        self.standard_preprocessor_old = DataPreprocessor(
             max_nan_frac_per_col=0.2,
             imputer_strategy='mean',
             angles=['Sensor_6'],
@@ -20,17 +31,21 @@ class TestDataPreprocessorPipeline(TestCase):
             include_low_unique_value_filter=True,
             min_unique_value_count=2,
         )
-
-        self.ts_preprocessor = DataPreprocessor(
-            max_nan_frac_per_col=0.2,
-            min_unique_value_count=3,
-            max_col_zero_frac=0.30,
-            include_column_selector=True,
-            include_duplicate_value_to_nan=False,
-            include_low_unique_value_filter=True
+        self.another_preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector',
+                 'params': {'max_nan_frac_per_col': 0.2}},
+                {'name': 'angle_transform',
+                 'params': {'angles': ['Sensor_6']}},
+                {'name': 'duplicate_values_to_nan',
+                 'params': {'n_max_duplicates': 4,
+                            'value_to_replace': 0}},
+                {'name': 'low_unique_value_filter',
+                 'params': {'min_unique_value_count': 1}},
+            ]
         )
-
-        self.extended_preprocessor = DataPreprocessor(
+        # legacy set up
+        self.another_preprocessor_old = DataPreprocessor(
             max_nan_frac_per_col=0.2,
             imputer_strategy='mean',
             min_unique_value_count=1,
@@ -41,8 +56,16 @@ class TestDataPreprocessorPipeline(TestCase):
             include_duplicate_value_to_nan=True,
             include_low_unique_value_filter=True
         )
-
+        # Feature consistent, does not drop columns
         self.fc_preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector', 'enabled': False},
+                {'name': 'angle_transform',
+                 'params': {'angles': ['Sensor_6']}},
+            ]
+        )
+        # legacy set up
+        self.fc_preprocessor_old = DataPreprocessor(
             imputer_strategy='mean',
             angles=['Sensor_6'],
             include_low_unique_value_filter=False,
@@ -94,12 +117,14 @@ class TestDataPreprocessorPipeline(TestCase):
         self.test_data3 = pd.DataFrame(index=time_index, data=data)
 
     def test_fit_standard_preprocessor(self):
+        self.standard_preprocessor_old.fit(self.test_data1)
+        check_is_fitted(self.standard_preprocessor_old.named_steps['scaler'])
         self.standard_preprocessor.fit(self.test_data1)
         check_is_fitted(self.standard_preprocessor.named_steps['scaler'])
 
     def test_fit_extended(self):
-        self.extended_preprocessor.fit(self.test_data3)
-        check_is_fitted(self.extended_preprocessor.named_steps['scaler'])
+        self.another_preprocessor_old.fit(self.test_data3)
+        check_is_fitted(self.another_preprocessor_old.named_steps['scaler'])
 
     def test_transform(self):
         # expected output
@@ -139,8 +164,8 @@ class TestDataPreprocessorPipeline(TestCase):
         sincos = (sincos - sincos.mean(axis=0)) / sincos.std(axis=0)
         exp_result = np.hstack([exp_result, sincos])
 
-        self.extended_preprocessor.fit(self.test_data3)
-        data = self.extended_preprocessor.transform(self.test_data3)
+        self.another_preprocessor_old.fit(self.test_data3)
+        data = self.another_preprocessor_old.transform(self.test_data3)
 
         assert_array_almost_equal(data, exp_result)
 
@@ -156,8 +181,8 @@ class TestDataPreprocessorPipeline(TestCase):
                                [1.21854359, 1.22474487, 0., 0., 0., 1.21773319, -1.32214018],
                                [1.5666989, 1.63299316, 0., 0., 0., 1.56338116, -1.95410719]])
 
-        self.fc_preprocessor.fit(self.test_data1)
-        data = self.fc_preprocessor.transform(self.test_data1)
+        self.fc_preprocessor_old.fit(self.test_data1)
+        data = self.fc_preprocessor_old.transform(self.test_data1)
 
         assert_array_almost_equal(data, exp_result)
 
@@ -166,49 +191,52 @@ class TestDataPreprocessorPipeline(TestCase):
             self.standard_preprocessor.transform(self.test_data1)
 
         with self.assertRaises(NotFittedError):
-            self.ts_preprocessor.transform(self.test_data1)
+            self.another_preprocessor.transform(self.test_data1)
 
     def test_inverse_transform(self):
-        self.standard_preprocessor.fit(self.test_data1)
+        for preprocessor in [self.standard_preprocessor, self.standard_preprocessor_old]:
+            preprocessor.fit(self.test_data1)
 
-        output = self.standard_preprocessor.inverse_transform(
-            self.standard_preprocessor.transform(self.test_data1)
-        ).astype(float)
-        expected = self.test_data1[['Sensor_1', 'Sensor_2', 'Sensor_6']].astype(float)
-        expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
+            output = preprocessor.inverse_transform(
+                preprocessor.transform(self.test_data1)
+            ).astype(float)
+            expected = self.test_data1[['Sensor_1', 'Sensor_2', 'Sensor_6']].astype(float)
+            expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
 
-        assert_frame_equal(
-            output.reset_index(drop=True),
-            expected.reset_index(drop=True),
-        )
+            assert_frame_equal(
+                output.reset_index(drop=True),
+                expected.reset_index(drop=True),
+            )
 
     def test_inverse_transform_extended(self):
-        self.extended_preprocessor.fit(self.test_data3)
+        for preprocessor in [self.another_preprocessor, self.another_preprocessor_old]:
+            preprocessor.fit(self.test_data3)
 
-        output = self.extended_preprocessor.inverse_transform(
-            self.extended_preprocessor.transform(self.test_data3)
-        ).astype(float)
-        expected = self.test_data3[['Sensor_1', 'Sensor_2', 'Sensor_6', 'Sensor_7']].astype(float)
-        expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
-        expected.loc['2021-05-02 08:00:00', 'Sensor_7'] = 0.555556
+            output = preprocessor.inverse_transform(
+                preprocessor.transform(self.test_data3)
+            ).astype(float)
+            expected = self.test_data3[['Sensor_1', 'Sensor_2', 'Sensor_6', 'Sensor_7']].astype(float)
+            expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
+            expected.loc['2021-05-02 08:00:00', 'Sensor_7'] = 0.555556
 
-        assert_frame_equal(
-            output.reset_index(drop=True),
-            expected.reset_index(drop=True),
-        )
+            assert_frame_equal(
+                output.reset_index(drop=True),
+                expected.reset_index(drop=True),
+            )
 
     def test_inverse_transform_fc(self):
-        self.fc_preprocessor.fit(self.test_data1)
+        for preprocessor in [self.fc_preprocessor, self.fc_preprocessor_old]:
+            preprocessor.fit(self.test_data1)
 
-        output = self.fc_preprocessor.inverse_transform(
-            self.fc_preprocessor.transform(self.test_data1)
-        ).astype(float)
-        expected = self.test_data1.astype(float)
-        expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
-        expected.loc[pd.isnull(expected['Sensor_3']), 'Sensor_3'] = 2.
-        expected.loc[pd.isnull(expected['Sensor_4']), 'Sensor_4'] = 0.
+            output = preprocessor.inverse_transform(
+                preprocessor.transform(self.test_data1)
+            ).astype(float)
+            expected = self.test_data1.astype(float)
+            expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
+            expected.loc[pd.isnull(expected['Sensor_3']), 'Sensor_3'] = 2.
+            expected.loc[pd.isnull(expected['Sensor_4']), 'Sensor_4'] = 0.
 
-        assert_frame_equal(
-            output.reset_index(drop=True),
-            expected.reset_index(drop=True),
-        )
+            assert_frame_equal(
+                output.reset_index(drop=True),
+                expected.reset_index(drop=True),
+            )

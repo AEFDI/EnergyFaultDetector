@@ -27,7 +27,6 @@ class TestModelFactory(unittest.TestCase):
         # Test for data preprocessor
         data_preprocessor = model_factory.data_preprocessor
         self.assertIsInstance(data_preprocessor, DataPreprocessor)
-        self.assertEqual(data_preprocessor.max_nan_frac_per_col, 0.05)
 
         # Test for threshold selector
         threshold_selector = model_factory.threshold_selector

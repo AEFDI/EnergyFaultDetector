@@ -14,9 +14,9 @@ class LowUniqueValueFilter(DataTransformer):
     exceeds `max_col_zero_frac`.
 
     Args:
-        min_unique_value_count (int): Minimum number of unique values a feature should have. Defaults to 2.
-            If set  to 2, only constant features are dropped.
-        max_col_zero_frac (float): Maximum fraction of zeroes a column may contain.
+        min_unique_value_count (int): Minimum number of unique values a feature should have. Default: 2.
+            If set to 2, only constant features are dropped.
+        max_col_zero_frac (float): Maximum fraction of zeroes a column may contain. Default: 1.0
 
     Attributes:
         feature_names_in_ (list): List of column names in input.
@@ -25,7 +25,7 @@ class LowUniqueValueFilter(DataTransformer):
         columns_dropped_ (list): List of columns that were dropped during filtering.
     """
 
-    def __init__(self, min_unique_value_count: int = 1, max_col_zero_frac: float = 0.9):
+    def __init__(self, min_unique_value_count: int = 2, max_col_zero_frac: float = 1.0):
         super().__init__()
 
         self.min_unique_value_count: int = min_unique_value_count
