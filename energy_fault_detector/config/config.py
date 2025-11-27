@@ -37,6 +37,14 @@ TRAIN_SCHEMA = {
         'allow_unknown': True,
         'schema': {
             'params': {'type': 'dict', 'required': False},
+            'steps': {
+                'type': 'list',
+                'required': False,
+                'schema': {
+                    'type': 'dict',
+                    'allow_unknown': True
+                }
+            },
         }
     },
     'threshold_selector': {
@@ -180,14 +188,9 @@ class Config(BaseConfig):
         return self.config_dict.get('train', {}).get('data_clipping', {})
 
     @property
-    def angle_columns(self) -> List[str]:
-        """List of angle columns."""
-        return self.config_dict.get('train', {}).get('data_preprocessor', {}).get('params', {}).get('angles', [])
-
-    @property
     def max_criticality(self) -> Optional[int]:
         """Max criticality value."""
-        return self.config_dict.get('prediction', {}).get('criticality', {}).get('max_criticality', 144)
+        return self.config_dict.get('predict', {}).get('criticality', {}).get('max_criticality', 144)
 
     @property
     def fit_threshold_on_val(self) -> bool:

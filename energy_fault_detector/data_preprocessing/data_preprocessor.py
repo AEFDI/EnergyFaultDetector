@@ -84,27 +84,26 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
 
             train:
               data_preprocessor:
-                params:
-                  steps:
-                  - name: column_selector
-                    params:
-                      max_nan_frac_per_col: 0.05
-                      features_to_exclude: ['exclude_this_feature']
-                  - name: counter_diff_transformer
-                    step_name: counter_flow
-                    params:
-                      counters: ['flow_total_m3']
-                      compute_rate: True
-                      fill_first: 'zero'
-                  - name: counter_diff_transformer
-                    step_name: counter_energy
-                    params:
-                      counters: ['energy_total_kwh']
-                      compute_rate: False
-                      fill_first: 'zero'
-                      reset_strategy: 'rollover',
-                      rollover_values:
-                        'energy_total_kwh': 100000.0
+                steps:
+                - name: column_selector
+                  params:
+                    max_nan_frac_per_col: 0.05
+                    features_to_exclude: ['exclude_this_feature']
+                - name: counter_diff_transformer
+                  step_name: counter_flow
+                  params:
+                    counters: ['flow_total_m3']
+                    compute_rate: True
+                    fill_first: 'zero'
+                - name: counter_diff_transformer
+                  step_name: counter_energy
+                  params:
+                    counters: ['energy_total_kwh']
+                    compute_rate: False
+                    fill_first: 'zero'
+                    reset_strategy: 'rollover',
+                    rollover_values:
+                      'energy_total_kwh': 100000.0
         """
 
         self.steps_spec_: Optional[List[Dict[str, Any]]] = steps

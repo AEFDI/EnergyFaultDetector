@@ -34,6 +34,7 @@ class ModelFactory:
 
         # data preprocessor
         self._models['data_preprocessor'] = DataPreprocessor(
+            steps=train_dict.get('data_preprocessor', {}).get('steps'),
             **train_dict.get('data_preprocessor', {}).get('params', {})
         )
 
