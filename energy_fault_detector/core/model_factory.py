@@ -32,10 +32,11 @@ class ModelFactory:
         # Retrieve training configuration
         train_dict = self.config['train']
 
-        # data preprocessor
+        # data preprocessor - not specified leads to a default pipeline
+        data_prep_conf = (train_dict.get('data_preprocessor', {}) or {})
         self._models['data_preprocessor'] = DataPreprocessor(
-            steps=train_dict.get('data_preprocessor', {}).get('steps'),
-            **train_dict.get('data_preprocessor', {}).get('params', {})
+            steps=data_prep_conf.get('steps'),
+            **data_prep_conf.get('params', {})
         )
 
         # Loop through each model type and initialize the corresponding model

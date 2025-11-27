@@ -46,13 +46,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         """A data preprocessing pipeline that allows for configurable steps based on the extended pipeline.
 
         If both steps and legacy params are provided, steps take precedence and a warning is emitted.
-        When neither steps nor legacy params are provided, a default "old-style" pipeline is created:
-          - ColumnSelector with max_nan_frac_per_col = 0.05.
-            This drops all columns that have more 5% NaN values
-          - LowUniqueValueFilter with min_unique_value_count = 2 and max_col_zero_frac = 1.
-            This drops columns with less than 2 unique values, i.e. unchanging values.
-          - SimpleImputer with 'mean' as strategy.
-          - StandardScaler.
+        When neither steps nor legacy params are provided, a default "old-style" pipeline is created which removes
+        features that are constant or just binary and contain more 5% missing values. Afterward, remaining missing
+        values are imputed with the mean and the features are scaled with the StandardScaler.
 
         Args:
             steps: Optional list of step specifications. Each item is a dict with:

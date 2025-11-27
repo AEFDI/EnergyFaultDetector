@@ -3,7 +3,6 @@ import os
 import shutil
 import unittest
 
-import numpy as np
 from energy_fault_detector.config import Config, InvalidConfigFile
 
 PROJECT_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..')
@@ -22,10 +21,7 @@ class TestConfig(unittest.TestCase):
         self.assertDictEqual(conf.config_dict['train'], {
             'anomaly_score': {'name': 'mahalanobis',
                               'params': {'pca': True, 'pca_min_var': 0.85}},
-            'data_preprocessor': {'params': {'max_nan_frac_per_col': 0.05,
-                                             'imputer_strategy': 'mean',
-                                             'features_to_exclude': ['feature1', 'feature2'],
-                                             'include_duplicate_value_to_nan': False}},
+            'data_preprocessor': None,  # unspecified, default pipeline
             'autoencoder': {'name': 'MultilayerAutoencoder',
                             'verbose': 0,
                             'params': {'layers': [300],

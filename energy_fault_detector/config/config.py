@@ -34,12 +34,14 @@ TRAIN_SCHEMA = {
     'data_preprocessor': {
         'type': 'dict',
         'required': True,
-        'allow_unknown': True,
+        'allow_unknown': False,
+        'nullable': True,  # if not specfied, create default pipeline
         'schema': {
-            'params': {'type': 'dict', 'required': False},
+            'params': {'type': 'dict', 'required': False, 'nullable': True,},
             'steps': {
                 'type': 'list',
                 'required': False,
+                'nullable': True,
                 'schema': {
                     'type': 'dict',
                     'allow_unknown': True
