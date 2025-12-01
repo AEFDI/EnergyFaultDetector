@@ -22,9 +22,10 @@ BIAS_RETURN_TYPE = Tuple[tf.Variable, Tuple[tf.Tensor, tf.Tensor, tf.Tensor], tf
 
 class Arcana:
     """Anomaly root cause analysis. Tries to find which of the sensors/inputs caused
-    the reconstruction error of an autoencoder model.
+    the reconstruction error of an autoencoder model. Implementation details are found in
+    https://doi.org/10.1016/j.egyai.2021.100065.
 
-    This is done by minimizing the loss function:
+    This method minimizes the loss function:
 
         '(1 - alpha) L2(X_corr - autoencoder(X_corr)) + alpha * L1(X_corr - X_obs)'
 

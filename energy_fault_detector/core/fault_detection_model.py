@@ -65,6 +65,11 @@ class FaultDetectionModel(ABC):
 
         # build models
         self._model_factory: Optional[ModelFactory] = ModelFactory(config) if config else None
+        if config is None:
+            logger.debug('No configuration set. Load models and config from path with the `FaultDetector.load_models`'
+                         ' method.')
+        else:
+            self._init_models()
 
     def _init_models(self):
         """Initialize models."""
@@ -79,12 +84,26 @@ class FaultDetectionModel(ABC):
         self.data_preprocessor = self._model_factory.data_preprocessor
 
     @abstractmethod
-    def fit(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, asset_id: Union[int, str] = None,
-            **kwargs) -> ModelMetadata:
+    def fit(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, save_models: bool = True,
+            overwrite_models: bool = False, **kwargs) -> ModelMetadata:
         """Fit models on the given sensor_data and save them locally and return the metadata.
 
         Args:
-            asset_id: asset ID of the asset for which the model should be trained.
+            sensor_data: pandas DataFrame with the sensor data to use.
+                The time stamp should be the index and the sensor values as columns.
+            normal_index: a pandas Series indicating normal behaviour as boolean with the timestamp as index.
+            save_models (bool, optional): Whether to save models. Defaults to True.
+            overwrite_models (bool, optional): If True, existing model directories can be overwritten. Defaults to
+                False.
+
+        Returns:
+            ModelMetadata object.
+        """
+
+    def train(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, **kwargs) -> ModelMetadata:
+        """Same as the `fit`-method.
+
+        Args:
             sensor_data: pandas DataFrame with the sensor data to use.
                 The time stamp should be the index and the sensor values as columns.
             normal_index: a pandas Series indicating normal behaviour as boolean with the timestamp as index.
@@ -92,11 +111,7 @@ class FaultDetectionModel(ABC):
         Returns:
             ModelMetadata object.
         """
-
-    def train(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, asset_id: Union[int, str] = None,
-              **kwargs) -> ModelMetadata:
-        """Same as the `fit`-method."""
-        return self.fit(sensor_data=sensor_data, normal_index=normal_index, asset_id=asset_id, **kwargs)
+        return self.fit(sensor_data=sensor_data, normal_index=normal_index, **kwargs)
 
     @abstractmethod
     def predict(self, sensor_data: pd.DataFrame, model_path: Optional[str] = None, asset_id: Union[int, str] = None

@@ -52,11 +52,6 @@ class FaultDetector(FaultDetectionModel):
             )
 
         super().__init__(config=config, model_directory=model_directory)
-        if config is None:
-            logger.debug('No configuration set. Load models and config from path with the `FaultDetector.load_models`'
-                         ' method.')
-        else:
-            self._init_models()
 
     def preprocess_train_data(self, sensor_data: pd.DataFrame, normal_index: pd.Series, fit_preprocessor: bool = True
                               ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:

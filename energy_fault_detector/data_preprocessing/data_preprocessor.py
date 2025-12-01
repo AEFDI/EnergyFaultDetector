@@ -24,7 +24,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         'low_unique_value_filter': LowUniqueValueFilter,
         'angle_transformer': AngleTransformer,
         'counter_diff_transformer': CounterDiffTransformer,
-        'imputer': SimpleImputer,
+        'simple_imputer': SimpleImputer,
         'standard_scaler': StandardScaler,
         'minmax_scaler': MinMaxScaler,
     }
@@ -37,7 +37,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "standard": "standard_scaler",
         "standardscaler": "standard_scaler",
         "minmax": "minmax_scaler",
-        "simple_imputer": "imputer",
+        "imputer": "simple_imputer",
         "duplicate_value_to_nan": "duplicate_to_nan",
         "duplicate_values_to_nan": "duplicate_to_nan",
     }
@@ -64,12 +64,12 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
               1) NaN introducing steps first (DuplicateValuesToNan, CounterDiffTransformer),
               2) ColumnSelector (if present),
               3) Other steps
-              4) Imputer placed before scaler (always present; mean strategy by default),
+              4) SimpleImputer placed before scaler (always present; mean strategy by default),
               5) Scaler always last (StandardScaler by default).
             - Supports two configuration modes: steps and legacy. For steps set up pass steps=[...] with per-step
               parameters. For legacy use pass old flags via **params (angles, scale, include_* etc.).
             - Legacy mode keeps the historical order (Duplicate/Counter -> ColumnSelector -> others ->
-              Imputer -> Scaler).
+              SimpleImputer -> Scaler).
             - In steps mode, only one AngleTransformer, ColumnSelector, LowUniqueValueFilter, and Imputer are allowed;
               a ValueError is raised if duplicates are provided. Multiple CounterDiffTransformer and
               DuplicateValuesToNan steps are allowed.
@@ -212,7 +212,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             "angle_transformer",
             "column_selector",
             "low_unique_value_filter",
-            "imputer",
+            "simple_imputer",
             # scaler handled separately (standard_scaler/minmax_scaler) in your code
         }
         counts: List[Tuple[str, int]] = []
