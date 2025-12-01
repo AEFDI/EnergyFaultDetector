@@ -127,12 +127,14 @@ class Care2CompareDataset:
                                       statistics=statistics, index_column=index_column,
                                       use_readable_columns=use_readable_columns):
             if not test_only:
-                train_sensor_data, train_normal_index = self.format_event_dataset(tup[0])
-                test_sensor_data, test_normal_index = self.format_event_dataset(tup[1])
-                yield train_sensor_data, train_normal_index, test_sensor_data, test_normal_index, tup[2]
+                (x_train, x_test), event_id = tup
+                train_sensor_data, train_normal_index = self.format_event_dataset(x_train)
+                test_sensor_data, test_normal_index = self.format_event_dataset(x_test)
+                yield train_sensor_data, train_normal_index, test_sensor_data, test_normal_index, event_id
             else:
-                test_sensor_data, test_normal_index = self.format_event_dataset(tup[0])
-                yield test_sensor_data, test_normal_index, tup[1]
+                x_test, event_id = tup
+                test_sensor_data, test_normal_index = self.format_event_dataset(x_test)
+                yield test_sensor_data, test_normal_index, event_id
 
     def load_event_dataset(self, event_id: int, test_only: bool = False, statistics: List[str] = None,
                            index_column: str = 'id', use_readable_columns: bool = True
@@ -265,6 +267,24 @@ class Care2CompareDataset:
                         columns.append(f'{row.sensor_name}_{stat}')
             return columns
 
+        def merge_unique(base: List[str], to_add: List[str]) -> List[str]:
+            """Merge two lists preserving order and removing duplicates."""
+            seen = set()
+            out: List[str] = []
+            for v in (base or []) + (to_add or []):
+                if v not in seen:
+                    seen.add(v)
+                    out.append(v)
+            return out
+
+        def find_step(names: List[str]) -> dict | None:
+            """Find step by name specification."""
+            for s in steps:
+                name = s.get('name')
+                if name in names:
+                    return s
+            return None
+
         feature_descriptions = self.feature_descriptions[wind_farm]
         angles = feature_descriptions.loc[feature_descriptions['is_angle']]
         to_exclude = feature_descriptions.loc[feature_descriptions['is_counter']]
@@ -272,12 +292,28 @@ class Care2CompareDataset:
         angle_columns = get_columns(angles)
         to_exclude_columns = get_columns(to_exclude)
 
-        config['train']['data_preprocessor']['params']['angles'] = (
-                config['train']['data_preprocessor']['params'].get('angles', []) + angle_columns
-        )
-        config['train']['data_preprocessor']['params']['features_to_exclude'] = (
-                config['train']['data_preprocessor']['params'].get('features_to_exclude', []) + to_exclude_columns
-        )
+        # old:
+        dp = config['train'].setdefault('data_preprocessor', {})
+        params = dp.get('params')
+        steps = dp.get('steps')
+        if params:
+            params['angles'] = merge_unique(params.get('angles', []), angle_columns)
+            params['features_to_exclude'] = merge_unique(params.get('features_to_exclude', []), to_exclude_columns)
+        # new
+        else:
+            angle_step = find_step(['angle_transformer', 'angle_transform'])
+            if angle_step is None:
+                steps.append({'name': 'angle_transformer', 'params': {'angles': angle_columns}})
+            else:
+                angle_params = angle_step.setdefault('params', {})
+                angle_params['angles'] = merge_unique(angle_params.get('angles', []), angle_columns)
+            colsel_step = find_step(['column_selector'])
+            if colsel_step is None:
+                steps.append({'name': 'column_selector', 'params': {'features_to_exclude': to_exclude_columns}})
+            else:
+                colsel_params = colsel_step.setdefault('params', {})
+                colsel_params['features_to_exclude'] = merge_unique(
+                    colsel_params.get('features_to_exclude', []), to_exclude_columns)
 
         config.update_config(config.config_dict)
 

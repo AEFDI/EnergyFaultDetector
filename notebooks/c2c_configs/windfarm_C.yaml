@@ -4,14 +4,15 @@ train:
     upper_percentile: 0.999
 
   data_preprocessor:
-    params:
-      include_column_selector: true
-      include_low_unique_value_filter: true
-      include_duplicate_value_to_nan: false
-      max_col_zero_frac: 0.99
-      max_nan_frac_per_col: 0.05
-      min_unique_value_count: 10
-      scale: minmax
+    steps:
+      - name: column_selector
+        params:
+          max_nan_frac_per_col: 0.05
+      - name: low_unique_value_filter
+        params:
+          min_unique_value_count: 10
+          max_col_zero_frac: 0.99
+      - name: minmax_scaler
 
   data_splitter:
     shuffle: true
