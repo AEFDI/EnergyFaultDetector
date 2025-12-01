@@ -1,4 +1,3 @@
-
 from typing import Optional, List
 
 import numpy as np
@@ -14,7 +13,8 @@ class ColumnSelector(DataTransformer):
     Args:
         max_nan_frac_per_col: maximum fraction of NaN values allowed per column. Defaults to 0.05.
             If the fraction exceeds max_nan_frac_per_col, the column is dropped.
-        features_to_exclude: list of features that should be dropped. Defaults to None.
+        features_to_exclude: columns to drop (case-insensitive).
+        features_to_select: columns to keep (case-insensitive). Mutually exclusive with features_to_exclude.
 
     Attributes:
         feature_names_in_: list of column names in input.
@@ -23,12 +23,20 @@ class ColumnSelector(DataTransformer):
         columns_dropped_: list of columns that were dropped.
     """
 
-    def __init__(self, max_nan_frac_per_col: float = 0.05, features_to_exclude: List[str] = None):
-
+    def __init__(
+        self,
+        max_nan_frac_per_col: float = 0.05,
+        features_to_exclude: Optional[List[str]] = None,
+        features_to_select: Optional[List[str]] = None,
+    ):
         super().__init__()
-
+        if features_to_exclude is not None and features_to_select is not None:
+            raise ValueError("Only one of features_to_exclude or features_to_select can be specified.")
+        if not (0.0 <= max_nan_frac_per_col <= 1.0):
+            raise ValueError("max_nan_frac_per_col must be within [0, 1].")
         self.max_nan_frac_per_col: float = max_nan_frac_per_col
         self.features_to_exclude: List[str] = features_to_exclude if features_to_exclude is not None else []
+        self.features_to_select: Optional[List[str]] = features_to_select
 
     # pylint: disable=attribute-defined-outside-init
     # noinspection PyAttributeOutsideInit
@@ -43,11 +51,17 @@ class ColumnSelector(DataTransformer):
         self.feature_names_in_ = x.columns.to_list()
         self.n_features_in_ = len(x.columns)
 
-        # drop features to exclude - ignore upper/lower case
-        to_drop = [col for col in x.columns if col.lower() in
-                   [excluded_feature.lower() for excluded_feature in self.features_to_exclude]
-                   ]
-        x_transformed = x.drop(to_drop, axis=1, errors='ignore')
+        # If features_to_select is provided - ignore upper/lower case
+        if self.features_to_select is not None:
+            select_lower = [f.lower() for f in self.features_to_select]
+            keep_cols = [col for col in x.columns if col.lower() in select_lower]
+            x_transformed = x[keep_cols]
+        else:
+            # drop features to exclude - ignore upper/lower case
+            to_drop = [col for col in x.columns if col.lower() in
+                       [excluded_feature.lower() for excluded_feature in self.features_to_exclude]
+                       ]
+            x_transformed = x.drop(to_drop, axis=1, errors='ignore')
 
         # drop columns which have more than max_nan_frac_per_col relative NaN frequency
         empty_percentage = x_transformed.isnull().mean(axis=0)
@@ -69,12 +83,10 @@ class ColumnSelector(DataTransformer):
         # transformation is not possible.
         missing_columns = set(self.feature_names_out_) - set(x.columns)
         if len(missing_columns) > 0:
-            missing_columns_sorted = sorted(missing_columns)
-            missing_columns_str = ', '.join(missing_columns_sorted)
             raise ValueError(
                 'ColumnSelector: There are columns missing in the prediction data, which were present in'
                 ' the training data. Missing columns: '
-                f"{missing_columns_str}. New models need to be trained!"
+                f"{', '.join(sorted(missing_columns))}. New models need to be trained!"
             )
 
         x = x[self.feature_names_out_]  # ensure ordering

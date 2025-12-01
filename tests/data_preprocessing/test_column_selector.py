@@ -51,3 +51,35 @@ class TestColumnSelector(TestCase):
     def test_not_fitted(self):
         with self.assertRaises(NotFittedError):
             self.column_selector.transform(self.raw_dataframe)
+
+    def test_fit_with_features_to_select(self):
+        # Select a mix (case-insensitive); Sensor_3 should be dropped due to NaN fraction (0.5 >= 0.2)
+        selector = ColumnSelector(max_nan_frac_per_col=0.2,
+                                  features_to_select=['sensor_1', 'SENSOR_2', 'sensor_3', 'sensor_5'])
+        selector.fit(self.raw_dataframe)
+        expected_attributes = ["Sensor_1", "Sensor_2", "Sensor_5"]
+        assert_array_equal(expected_attributes, selector.feature_names_out_)
+
+    def test_transform_with_features_to_select(self):
+        # Keep only Sensor_1 and Sensor_5
+        selector = ColumnSelector(max_nan_frac_per_col=0.2,
+                                  features_to_select=['sensor_1', 'sensor_5'])
+        expected_df = self.raw_dataframe[["Sensor_1", "Sensor_5"]]
+        df = selector.fit_transform(self.raw_dataframe)
+        # Check values and column order
+        assert_array_equal(expected_df.columns.values, df.columns.values)
+        assert_array_equal(expected_df.values, df.values)
+
+    def test_features_to_select_case_insensitive(self):
+        # Mixed casing in selection should match columns
+        selector = ColumnSelector(max_nan_frac_per_col=0.2,
+                                  features_to_select=['SeNsOr_1', 'seNSor_5'])
+        selector.fit(self.raw_dataframe)
+        expected_attributes = ["Sensor_1", "Sensor_5"]
+        assert_array_equal(expected_attributes, selector.feature_names_out_)
+
+    def test_init_mutually_exclusive_args(self):
+        with self.assertRaises(ValueError):
+            ColumnSelector(max_nan_frac_per_col=0.2,
+                           features_to_exclude=['sensor_1'],
+                           features_to_select=['sensor_1', 'sensor_5'])
