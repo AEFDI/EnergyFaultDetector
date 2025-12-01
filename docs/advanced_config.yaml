@@ -1,0 +1,110 @@
+train:
+  # clip training data to remove outliers (only applied for training)
+  data_clipping:  # (optional) if not specified, not applied.
+    lower_percentile: 0.01
+    upper_percentile: 0.99
+    # Choose one of:
+    # features_to_exclude:
+    #   - do_not_clip_this_feature
+    # features_to_clip:
+    #   - clip_only_this_feature
+
+  data_preprocessor:
+    steps:
+      # Replace consecutive duplicate 0-values with NaN
+      - name: duplicate_to_nan
+        params:
+          value_to_replace: 0
+          n_max_duplicates: 6
+          features_to_exclude:
+            - do_not_replace_value_with_nan
+      # Normalize counters to differences (configure your counter columns)
+      - name: counter_diff_transformer
+        step_name: counter_diff_energy
+        params:
+          counters:
+            - energy_total_kwh
+          compute_rate: false
+          reset_strategy: zero
+          fill_first: nan
+      # Column selection: drop columns with > 5% NaNs; also exclude specific features
+      - name: column_selector
+        params:
+          max_nan_frac_per_col: 0.05
+          features_to_exclude:
+            - feature1
+            - feature2
+          # Alternatively, keep only selected features:
+          # features_to_select:
+          #   - temp_outdoor
+          #   - flow
+          #   - power
+      # Filter low unique value features or high-zero-fraction columns
+      - name: low_unique_value_filter
+        params:
+          min_unique_value_count: 2
+          max_col_zero_frac: 0.99
+      # Transform angles to sin/cos
+      - name: angle_transformer
+        params:
+          angles:
+            - angle1
+            - angle2
+      # Imputer (explicit; will be auto-inserted if omitted)
+      - name: simple_imputer
+        params:
+          strategy: mean
+      # Scaler (choose one; StandardScaler is auto-added by default if omitted)
+      - name: standard_scaler
+        params:
+          with_mean: true
+          with_std: true
+
+  data_splitter:
+    # How to split data in train and validation sets for the autoencoder
+    type: sklearn
+    validation_split: 0.2
+    shuffle: true  # false by default (last part of the data is taken as validation data in this case)
+    # or block splitting, 4 weeks training, 1 week validation
+    # type: DataSplitter
+    # train_block_size: 4032
+    # val_block_size: 1008
+
+  autoencoder:
+    name: MultilayerAutoencoder
+    params:
+      batch_size: 128
+      # Use a ExponentialDecay schedule for the learning rate:
+      learning_rate: 0.001  # starting point
+      decay_rate: 0.99
+      decay_steps: 100000
+      # Set early stopping with max 1000 epochs, minimal improvement of 1e-4 and patience of 5 epochs
+      early_stopping: True
+      min_delta: 0.0001
+      patience: 5
+      epochs: 1000
+      # architecture settings
+      layers: [200, 100, 50]
+      code_size: 20
+      act: prelu  # activation to use for hidden layers
+      last_act: linear  # output layer activation
+
+  anomaly_score:
+    name: rmse
+    params:
+      scale: false
+
+  threshold_selector:
+    name: fbeta
+    params:
+      beta: 0.5
+
+root_cause_analysis:
+  alpha: 0.5
+  init_x_bias: recon
+  num_iter: 1000
+  verbose: true
+
+predict:
+  criticality:
+    max_criticality: 144

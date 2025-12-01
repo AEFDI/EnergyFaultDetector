@@ -1,10 +1,10 @@
 Energy Fault Detector - Autoencoder-based Fault Detection for the Future Energy System
-============================================================
+======================================================================================
 
 **Energy Fault Detector** is an open-source Python package designed for the automated detection of anomalies in
 operational data from renewable energy systems as well as power grids. It uses autoencoder-based normal behaviour
 models to identify irregularities in operational data. In addition to the classic anomaly detection, the package
-includes the unique “ARCANA” approach for root cause analysis and thus allows interpretable early fault detection.
+includes the unique ''ARCANA'' approach for root cause analysis and thus allows interpretable early fault detection.
 In addition to the pure ML models, the package also contains a range of preprocessing methods, which are particularly
 useful for analyzing systems in the energy sector. A holistic `EnergyFaultDetector` framework is provided for easy use of all
 these methods, which can be adapted to the respective use case via a single configuration file.
@@ -27,11 +27,10 @@ To install the `energy-fault-detector` package, run:
     :glob:
     :maxdepth: 2
 
-    The Energy Fault Detector package <energy_fault_detector>
     usage_examples
+    configuration
     logging
-    changelog
-
+    The EnergyFaultDetector package <energy_fault_detector>
 
 Module index
 ==================

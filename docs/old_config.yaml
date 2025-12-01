@@ -1,10 +1,5 @@
 train:
-  data_clipping:  # (optional) if not specified, not applied.
-    # clip training data to remove outliers
-    lower_percentile: 0.01
-    upper_percentile: 0.99
-    features_to_exclude:
-      - do_not_clip_this_feature
+  # ...
 
   data_preprocessor:
     # only imputation and scaling are done by default, other steps can be skipped.
@@ -28,39 +23,4 @@ train:
       duplicate_features_to_exclude:  # DuplicateValuesToNan option - list of feature to not transform with DuplicateValuesToNan
         - do_not_replace_value_with_nan
 
-  data_splitter:  # (optional) Define block size of train and validation blocks. Optional, if not specified, the defaults are used
-    # defaults:
-    type: DataSplitter  # or sklearn
-    train_block_size: 5040
-    val_block_size: 1680  # set val_block_size = 0 to use all data for training
-
-  autoencoder:
-    name: 'MultilayerAutoencoder'
-    params:
-      batch_size: 128
-      decay_rate: 0.001  # remove decay_rate+decay_steps for a fixed learning rate
-      decay_steps: 10000
-      epochs: 10
-      layers:
-        - 200  # Size of the first and last hidden layer
-        - 100  # Size of the second and second to last hidden layer
-        - 50  # Size of the third and third to last hidden layer
-      code_size: 20  # Size of the bottleneck
-      learning_rate: 0.001
-      loss_name: 'mean_squared_error'
-
-  anomaly_score:
-    name: 'rmse'
-    params:
-      scale: false
-
-  threshold_selector:
-    name: 'fbeta'
-    params:
-      beta: 0.5
-
-root_cause_analysis:  # (optional) if not specified, no root_cause_analysis (ARCANA) is run
-  alpha: 0.8
-  init_x_bias: recon
-  num_iter: 200
-
+   # ...

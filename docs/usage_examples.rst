@@ -15,64 +15,62 @@ refer to the example notebooks in the repository's notebooks folder.
 
 Energy Fault Detection
 ^^^^^^^^^^^^^^^
-The main interface for the `energy-fault-detector` package is the :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetectorDetector>` class, which
-needs a configuration object :py:obj:`Config <energy_fault_detector.config.Config>`.
+The main interface for the `energy-fault-detector` package is the :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` class, which
+needs a configuration object :py:obj:`Config <energy_fault_detector.config.config.Config>`.
 
-To create a new :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetectorDetector>` model,
+To create a new :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` model,
 create a configuration, as described below in the :ref:`configuration` section, and run:
 
 .. code-block:: python
 
-    from energy_fault_detector.fault_detector import FaultDetector
-    from energy_fault_detector.config import Config
+    from energy_fault_detector import FaultDetector, Config
 
-    config = Config('configs/base_config.yaml')
+    config = Config('configs/basic_configuration.yaml')
     fault_detector = FaultDetector(config=config, model_directory='model_directory')
 
-
-To train new models, you need to provide the input data and call the ``fit`` method:
+To train new models, you need to provide the input data and call the :py:obj:`FaultDetector.fit <energy_fault_detector.fault_detector.FaultDetector.fit>` method:
 
 .. code-block:: python
 
     # get data from database / csv / API ...
     sensor_data = ...  # a pandas DataFrame with timestamp as index and numerical sensor values as columns
     normal_index = ...  # a pandas Series with timestamp as index and booleans indicating normal behaviour
-    # NOTE: The normal_index is optional, it is used to select training data for the autoencoder.
-    # If not provided, we assume all data represents normal behaviour. The other data points are used to set a
-    # threshold for the fault detection.
+    # NOTE: The normal_index is optional; it is used to select training data for the autoencoder.
+    # If not provided, we assume all data represents normal behaviour.
+    # If you do not have any labels, you cannot use th F-beta-score- and FDR-based thresholds.
 
-    # If you do not use the models for time series, the index can also be a standard RangeIndex, as long as the
-    # sensor_data dataframe and the normal_index series have the same index.
+    # If you do not use the models for time series, the index can also be a standard RangeIndex,
+    # as long as the sensor_data DataFrame and the normal_index Series share the same index.
 
     model_data = fault_detector.fit(sensor_data=sensor_data, normal_index=normal_index, save_models=True)
 
     # to save model manually:
     # fault_detector.save_models('model_name')  # model_name is optional
 
-The trained models are saved locally in the provided ``model_directory``. The ``fit`` method returns a
+The trained models are saved locally in the provided ``model_directory``. The :py:obj:`FaultDetector.fit <energy_fault_detector.fault_detector.FaultDetector.fit>` method returns a
 :py:obj:`ModelMetadata <energy_fault_detector.core.fault_detection_result.ModelMetadata>` object with
 the model metadata such as the model date and the model path.
 
-To predict using the trained model, use the ``predict`` method:
+To predict using the trained model, use the :py:obj:`FaultDetector.predict <energy_fault_detector.fault_detector.FaultDetector.predict>` method:
 
 .. code-block:: python
 
     results = fault_detector.predict(sensor_data=test_sensor_data)
 
 The result is a :py:obj:`FaultDetectionResult <energy_fault_detector.core.fault_detection_result.FaultDetectionResult>` object
-with with the following information:
+with the following information:
 
-* predicted_anomalies: DataFrame with a column 'anomaly' (bool).
-* reconstruction: DataFrame with reconstruction of the sensor data with timestamp as index.
-* deviations: DataFrame with reconstruction errors.
-* anomaly_score: DataFrame with anomaly scores for each timestamp.
-* bias_data: DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.
-* arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
-* tracked_bias: List of DataFrames. None if ARCANA was not run.
+* predicted_anomalies: pandas Series with the predicted anomalies (bool).
+* reconstruction: pandas DataFrame with reconstruction of the sensor data with timestamp as index.
+* deviations: pandas DataFrame with reconstruction errors.
+* anomaly_score: pandas Series with anomaly scores for each timestamp.
+* bias_data: pandas DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.
+* arcana_losses: pandas DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
+* tracked_bias: List of pandas DataFrames. None if ARCANA was not run.
 
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
-trained models using the ``load_models`` method. In this case, you do not need to provide a ``model_path``
-in the ``predict`` method.
+trained models using the :py:obj:`FaultDetector.load_models <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load_models>` method. In this case, you do not need to provide a ``model_path``
+in the :py:obj:`predict <energy_fault_detector.fault_detector.FaultDetector.predict>` method.
 
 .. code-block:: python
 
@@ -95,11 +93,13 @@ The training configuration is set with a ``yaml`` file which contains ``train`` 
 train new models and ``root_cause_analysis`` specification if you want to analyse the model predictions with the `ARCANA`
 algorithm. An example:
 
-.. include:: config_example.yaml
+.. include:: basic_config.yaml
    :literal:
 
+See the :ref:`Configuration guide <configuration_guide>` for more details.
+
 To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
-configuration dictionary via the ``update_config`` method:
+configuration dictionary via the :py:obj:`Config.update_config <energy_fault_detector.config.config.Config.update_config>` method:
 
 .. code-block:: python
 
@@ -150,7 +150,7 @@ you can import the data preprocessor, autoencoder, anomaly score and threshold s
 
 This allows you to add additional steps or use different data preprocessing pipelines.
 
-An example training pipeline (similar to the :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` class )
+An example training pipeline (similar to the :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` class)
 would be:
 
 .. code-block:: python

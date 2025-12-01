@@ -1,41 +1,14 @@
 Logging Configuration
 =====================
 
-The framework uses Python's built-in logging module to provide logging capabilities. By default, the logging
-configuration is defined in a YAML file. You can customize this configuration to suit your needs.
+The framework uses Python's built-in logging module for logging.
+You can customize this configuration to suit your needs.
 
 Default Configuration
 ---------------------
 
-The framework uses a default logging configuration file named ``logging.yaml``.
+The framework uses a default logging configuration file ``energy_fault_detector/logging.yaml``.
 The logger used throughout the code is called ``energy_fault_detector``.
-
-The default logging configuration is as follows.
-
-.. code-block:: yaml
-
-    version: 1
-    disable_existing_loggers: False
-    formatters:
-      simple:
-        format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-    handlers:
-      console:
-        class: logging.StreamHandler
-        level: DEBUG
-        formatter: simple
-        stream: ext://sys.stdout
-
-    loggers:
-      energy_fault_detector:
-        level: INFO
-        handlers: [console]
-        propagate: no
-
-    root:
-      level: INFO
-      handlers: [console]
 
 You can silence the logger as follows:
 

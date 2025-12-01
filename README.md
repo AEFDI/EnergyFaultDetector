@@ -84,9 +84,8 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 2. Unification, standardisation and generic improvements
    1. Additional options for all autoencoders (e.g. drop out, regularization)
    2. Data preparation (e.g. extend imputation strategies).
-   3. Download method for the Care2Compare class.
    3. Unify default value settings. 
-   4. No or low configuration
+   4. No or low configuration need (e.g. use defaults where possible).
    5. Upgrade to Keras 3.0
 
 3. Root cause analysis expansion
