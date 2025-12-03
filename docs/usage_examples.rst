@@ -25,7 +25,7 @@ create a configuration, as described below in the :ref:`configuration` section, 
 
     from energy_fault_detector import FaultDetector, Config
 
-    config = Config('configs/basic_configuration.yaml')
+    config = Config('configs/basic_config.yaml')
     fault_detector = FaultDetector(config=config, model_directory='model_directory')
 
 To train new models, you need to provide the input data and call the :py:obj:`FaultDetector.fit <energy_fault_detector.fault_detector.FaultDetector.fit>` method:
@@ -96,7 +96,11 @@ algorithm. An example:
 .. include:: basic_config.yaml
    :literal:
 
-See the :ref:`Configuration guide <configuration_guide>` for more details.
+If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor: None``), as default preprocessing
+pipeline is generated, which drops constant features, features where >5% of the data is missing, imputes remaining
+missing values with the mean value and scales the data to zero mean and unit standard deviation.
+
+See the :ref:`Configuration guide <configuration_guide>` for more details on the configuration file and options.
 
 To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
 configuration dictionary via the :py:obj:`Config.update_config <energy_fault_detector.config.config.Config.update_config>` method:

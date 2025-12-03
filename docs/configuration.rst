@@ -49,9 +49,9 @@ Notes:
 
 Root cause analysis (ARCANA)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If ``root_cause_analysis`` is provided, ARCANA will attempt to attribute anomalies to underlying biases using the
-provided settings. For detailed documentation of ARCANA refer to the :py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`.
+If ``root_cause_analysis`` is provided, ARCANA will attempt to attribute anomalies to specific features using the
+provided settings. If not provided, the standard settings are used. For detailed documentation of ARCANA refer to the
+:py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`.
 
 Prediction options
 ^^^^^^^^^^^^^^^^^^

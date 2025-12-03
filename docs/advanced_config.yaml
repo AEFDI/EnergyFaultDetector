@@ -17,8 +17,9 @@ train:
           value_to_replace: 0
           n_max_duplicates: 6
           features_to_exclude:
-            - do_not_replace_value_with_nan
+            - do_not_replace_value_with_nan_for_this_feature
       # Normalize counters to differences (configure your counter columns)
+      # If needed, you can create multiple counter_diff_transformer steps with different settings for different counters
       - name: counter_diff_transformer
         step_name: counter_diff_energy
         params:
@@ -27,10 +28,10 @@ train:
           compute_rate: false
           reset_strategy: zero
           fill_first: nan
-      # Column selection: drop columns with > 5% NaNs; also exclude specific features
+      # Column selection: drop columns where > 20% is missing and exclude specific features
       - name: column_selector
         params:
-          max_nan_frac_per_col: 0.05
+          max_nan_frac_per_col: 0.20
           features_to_exclude:
             - feature1
             - feature2
