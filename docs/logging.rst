@@ -13,6 +13,7 @@ The logger used throughout the code is called ``energy_fault_detector``.
 You can silence the logger as follows:
 
 .. code-block:: python
+
     import logging
     from energy_fault_detector.fault_detector import FaultDetector, Config
 

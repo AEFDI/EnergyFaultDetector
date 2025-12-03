@@ -127,6 +127,11 @@ napoleon_use_ivar = False
 napoleon_use_param = True
 napoleon_use_rtype = True
 
+napoleon_type_aliases = {
+    "Config": "energy_fault_detector.Config",
+    "FaultDetector": "energy_fault_detector.FaultDetector",
+}
+
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

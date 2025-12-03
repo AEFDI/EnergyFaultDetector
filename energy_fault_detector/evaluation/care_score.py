@@ -27,7 +27,7 @@ class CAREScore:
 
     The CARE score combines Coverage, Accuracy, Reliability and Earliness to evaluate early fault-detection performance
     (see CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in Wind Turbine Data,
-     https://doi.org/10.3390/data9120138). The goal of the CARE-Score is to evaluate the ability of a given model to
+    https://doi.org/10.3390/data9120138). The goal of the CARE-Score is to evaluate the ability of a given model to
     separate `normal behavior` from `actionable anomalies` (see glossary for definitions), that lead to a fault or
     indicate a fault.
 
@@ -167,15 +167,17 @@ class CAREScore:
 
         Returns:
             dict: Dictionary with computed metrics, e.g.:
-                {
-                    'event_id': int,
-                    'event_label': str,
-                    'weighted_score': float,
-                    'max_criticality': float,
-                    'f_beta_score': float or NaN,
-                    'accuracy': float,
-                    'tp': int, 'fp': int, 'tn': int, 'fn': int
-                }
+                .. code-block:: python
+
+                    {
+                        'event_id': int,
+                        'event_label': str,
+                        'weighted_score': float,
+                        'max_criticality': float,
+                        'f_beta_score': float or NaN,
+                        'accuracy': float,
+                        'tp': int, 'fp': int, 'tn': int, 'fn': int
+                    }
 
         Raises:
             ValueError: If event_label is invalid, evaluate_until_event_end has an unknown value,
@@ -184,7 +186,7 @@ class CAREScore:
         Notes:
             - The function sorts inputs by index to ensure alignment.
             - If normal_index is provided, this also influences the criticality calculation: criticality does not change
-            if the expected behaviour is not normal.
+              if the expected behaviour is not normal.
             - If predicted_anomalies_event is empty, a ValueError is raised.
             - Use evaluate_until_event_end to control whether post-event predictions are considered.
         """
@@ -265,15 +267,17 @@ class CAREScore:
         score for anomaly events), average Accuracy (for normal events) and Reliability (eventwise F-score) using the
         configured weights.
 
-        If the average accuracy over all normal events < 0.5, CARE-score = average accuracy over all normal events
-            (worse than random guessing).
-        If no anomalies were detected, the CARE-score = 0.
-        Else, the CARE-score is calculated as:
+        - If the average accuracy over all normal events < 0.5, CARE-score = average accuracy over all normal events
+          (worse than random guessing).
+        - If no anomalies were detected, the CARE-score = 0.
+        - Else, the CARE-score is calculated as:
 
-            ( (average F-score over all anomaly events) * coverage_w
-             + (average weighted score over all anomaly events) * weighted_score_w
-             + (average accuracy over all normal events) * accuracy_w
-             + event wise F-score * eventwise_f_score_w ) / sum_of_weights
+            .. code-block:: text
+
+                ( (average F-score over all anomaly events) * coverage_w
+                + (average weighted score over all anomaly events) * weighted_score_w
+                + (average accuracy over all normal events) * accuracy_w
+                + event wise F-score * eventwise_f_score_w ) / sum_of_weights
 
         where `sum_of_weights` = coverage_w + weighted_score_w + accuracy_w + eventwise_f_score_w.
 

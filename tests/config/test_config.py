@@ -35,7 +35,7 @@ class TestConfig(unittest.TestCase):
             'threshold_selector': {'name': 'FDR',
                                    'params': {'target_false_discovery_rate': 0.8},
                                    'fit_on_val': False},
-            'data_splitter': {'train_block_size': 7, 'val_block_size': 3, 'type': 'DataSplitter'},
+            'data_splitter': {'train_block_size': 7, 'val_block_size': 3, 'type': 'BlockDataSplitter'},
             'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99}
         })
         self.assertDictEqual(conf.config_dict['root_cause_analysis'],

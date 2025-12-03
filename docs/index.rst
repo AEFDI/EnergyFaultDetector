@@ -30,7 +30,7 @@ To install the `energy-fault-detector` package, run:
     usage_examples
     configuration
     logging
-    The EnergyFaultDetector package <energy_fault_detector>
+    The EnergyFaultDetector package <modules>
 
 Module index
 ==================

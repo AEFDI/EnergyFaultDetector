@@ -52,54 +52,49 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
 
         Args:
             steps: Optional list of step specifications. Each item is a dict with:
+
                 - name: registered step name (see STEP_REGISTRY).
                 - enabled: optional bool (default True).
-                    - params: dict of constructor arguments for the step.
+                - params: dict of constructor arguments for the step.
                 - step_name: optional explicit pipeline name (defaults to name).
 
             **params: Legacy parameters used when steps is None (see _legacy_keys()).
 
         Notes:
-            - Enforced ordering in steps mode:
+            Enforced ordering in steps mode:
+
               1) NaN introducing steps first (DuplicateValuesToNan, CounterDiffTransformer),
               2) ColumnSelector (if present),
               3) Other steps
               4) SimpleImputer placed before scaler (always present; mean strategy by default),
               5) Scaler always last (StandardScaler by default).
-            - Supports two configuration modes: steps and legacy. For steps set up pass steps=[...] with per-step
-              parameters. For legacy use pass old flags via **params (angles, scale, include_* etc.).
-            - Legacy mode keeps the historical order (Duplicate/Counter -> ColumnSelector -> others ->
-              SimpleImputer -> Scaler).
-            - In steps mode, only one AngleTransformer, ColumnSelector, LowUniqueValueFilter, and Imputer are allowed;
-              a ValueError is raised if duplicates are provided. Multiple CounterDiffTransformer and
-              DuplicateValuesToNan steps are allowed.
 
         Configuration example:
 
-        .. code-block:: text
+            .. code-block:: text
 
-            train:
-              data_preprocessor:
-                steps:
-                - name: column_selector
-                  params:
-                    max_nan_frac_per_col: 0.05
-                    features_to_exclude: ['exclude_this_feature']
-                - name: counter_diff_transformer
-                  step_name: counter_flow
-                  params:
-                    counters: ['flow_total_m3']
-                    compute_rate: True
-                    fill_first: 'zero'
-                - name: counter_diff_transformer
-                  step_name: counter_energy
-                  params:
-                    counters: ['energy_total_kwh']
-                    compute_rate: False
-                    fill_first: 'zero'
-                    reset_strategy: 'rollover',
-                    rollover_values:
-                      'energy_total_kwh': 100000.0
+                train:
+                  data_preprocessor:
+                    steps:
+                    - name: column_selector
+                      params:
+                        max_nan_frac_per_col: 0.05
+                        features_to_exclude: ['exclude_this_feature']
+                    - name: counter_diff_transformer
+                      step_name: counter_flow
+                      params:
+                        counters: ['flow_total_m3']
+                        compute_rate: True
+                        fill_first: 'zero'
+                    - name: counter_diff_transformer
+                      step_name: counter_energy
+                      params:
+                        counters: ['energy_total_kwh']
+                        compute_rate: False
+                        fill_first: 'zero'
+                        reset_strategy: 'rollover',
+                        rollover_values:
+                          'energy_total_kwh': 100000.0
         """
 
         self.steps_spec_: Optional[List[Dict[str, Any]]] = steps

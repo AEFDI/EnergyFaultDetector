@@ -104,11 +104,12 @@ class Arcana:
                 loss 2 for each 50th iteration)
             track_bias: If True bias will be returned as a list arcana biases each 50th iteration)
 
-        Returns:
-            x_bias: pandas DataFrame
-            tracked_losses: A dataframe containing the combined loss, loss 1 (reconstruction) and
-                loss 2 (regularization) for each 50th iteration (if track_losses is False this list is empty)
-            tracked_bias: A List of dataframes representing x_bias
+        Returns: A tuple with the following three objects
+
+            - x_bias: pandas DataFrame
+            - tracked_losses: A dataframe containing the combined loss, loss 1 (reconstruction) and
+              loss 2 (regularization) for each 50th iteration (if track_losses is False this list is empty)
+            - tracked_bias: A List of dataframes representing x_bias
         """
 
         conditions = None

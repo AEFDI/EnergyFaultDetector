@@ -14,7 +14,7 @@ refer to the example notebooks in the repository's notebooks folder.
 
 
 Energy Fault Detection
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The main interface for the `energy-fault-detector` package is the :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` class, which
 needs a configuration object :py:obj:`Config <energy_fault_detector.config.config.Config>`.
 

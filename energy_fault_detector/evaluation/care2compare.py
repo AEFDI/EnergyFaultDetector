@@ -23,19 +23,20 @@ class Care2CompareDataset:
 
     By default, only the averages are read. See statistics argument of the data loading methods.
 
-    Methods:
-        get_event_info: Returns event info for a given event ID
-        iter_datasets: Reads datasets and yields the resulting training and test DataFrames while iterating over
-            event IDs.
-        format_event_dataset: Extracts normal_index from a loaded dataset and returns normal_index and sensor_data.
-        iter_formatted_datasets: Reads datasets, extracts normal_index and yields the resulting train and test
-            DataFrames as well as the normal_indexes while iterating over event IDs.
-        load_event_dataset: Reads dataset specified by event_id and returns training and test data.
-        load_and_format_event_dataset: Reads dataset specified by event_id and returns training and test data as well as
-            the corresponding normal indexes.
-        iter_train_datasets_per_asset: Reads datasets and yields the resulting training DataFrames while
-            iterating over asset IDs and aggregating event IDs for the same assets.
-        update_c2c_config: Updates a specified FaultDetector config based on provided feature descriptions.
+    Method overview:
+
+        - get_event_info: Returns event info for a given event ID
+        - iter_datasets: Reads datasets and yields the resulting training and test DataFrames while iterating over
+          event IDs.
+        - format_event_dataset: Extracts normal_index from a loaded dataset and returns normal_index and sensor_data.
+        - iter_formatted_datasets: Reads datasets, extracts normal_index and yields the resulting train and test
+          DataFrames as well as the normal_indexes while iterating over event IDs.
+        - load_event_dataset: Reads dataset specified by event_id and returns training and test data.
+        - load_and_format_event_dataset: Reads dataset specified by event_id and returns training and test data as well as
+          the corresponding normal indexes.
+        - iter_train_datasets_per_asset: Reads datasets and yields the resulting training DataFrames while
+          iterating over asset IDs and aggregating event IDs for the same assets.
+        - update_c2c_config: Updates a specified FaultDetector config based on provided feature descriptions.
 
     Args:
         path (Path): The directory path where the dataset is located.
@@ -181,9 +182,10 @@ class Care2CompareDataset:
 
         Returns:
             Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
-                If test_only=False, yields a tuple of train_sensor_data, train_status,
-                    test_sensor_data and test_status.
-                If test_only=True, yields a tuple of test_sensor_data and test_status.
+
+             - If test_only=False, yields a tuple of train_sensor_data, train_status, test_sensor_data and test_status.
+             - If test_only=True, yields a tuple of test_sensor_data and test_status.
+
         """
         tup = self.load_event_dataset(event_id=event_id, test_only=test_only, statistics=statistics,
                                       index_column=index_column, use_readable_columns=use_readable_columns)

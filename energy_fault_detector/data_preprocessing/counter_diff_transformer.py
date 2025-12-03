@@ -28,7 +28,7 @@ class CounterDiffTransformer(DataTransformer):
             - 'auto': use 'rollover' if rollover_values contains the counter; otherwise 'zero'.
 
         rollover_values: Optional mapping counter -> known max value (used by 'rollover' or 'auto').
-        small_negative_tolerance: Treat small negative diffs (|diff| <= tol) as 0 (noise). Default: 0.0.
+        small_negative_tolerance: Treat small negative diffs (``abs(diff) <= tol``) as 0 (noise). Default: 0.0.
         fill_first: One of {'nan', 'zero'}. How to fill the first sample where diff is undefined.
         keep_original: If True, keep original counters alongside new outputs. If False, drop them.
         gap_policy: One of {'mask', 'ignore'}:
