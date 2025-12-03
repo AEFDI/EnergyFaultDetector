@@ -48,11 +48,15 @@ For an example using one of the CARE2Compare datasets, run:
 For more information, have a look at the notebook [Quick Fault Detection](./notebooks/Example%20-%20Quick%20Fault%20Detection.ipynb)
 
 
-## Fault detection in 4 lines of code
+## Fault detection quickstart
 
 ```python
 from energy_fault_detector import FaultDetector, Config
+from energy_fault_detector.config import generate_quickstart_config
 
+# 1) Generate and save a base config (YAML)
+generate_quickstart_config(output_path="base_config.yaml")
+# 2) Train and predict using the generated config
 fault_detector = FaultDetector(config=Config('base_config.yaml'))
 model_data = fault_detector.train(sensor_data=sensor_data, normal_index=normal_index)
 results = fault_detector.predict(sensor_data=test_sensor_data)
@@ -84,9 +88,8 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 2. Unification, standardisation and generic improvements
    1. Additional options for all autoencoders (e.g. drop out, regularization)
    2. Data preparation (e.g. extend imputation strategies).
-   3. Unify default value settings. 
-   4. No or low configuration need (e.g. use defaults where possible).
-   5. Upgrade to Keras 3.0
+   3. No or low configuration need (e.g. use defaults where possible).
+   4. Upgrade to Keras 3.0
 
 3. Root cause analysis expansion
    1. integrate SHAP and possibly other XAI-methods.

@@ -70,7 +70,7 @@ TRAIN_SCHEMA = {
         'type': 'dict',
         'required': False,  # defaults if not specified
         'schema': {
-            'type': {'type': 'string', 'required': False, 'default': 'DataSplitter',
+            'type': {'type': 'string', 'required': False, 'default': 'BlockDataSplitter',
                      'allowed': ['DataSplitter', 'BlockDataSplitter', 'blocks', 'sklearn', 'train_test_split']},
             'train_block_size': {'type': 'integer', 'required': False, 'dependencies': {'type': ['DataSplitter', 'BlockDataSplitter', 'blocks']}},
             'val_block_size': {'type': 'integer', 'required': False, 'dependencies': {'type': ['DataSplitter', 'BlockDataSplitter', 'blocks']}},
