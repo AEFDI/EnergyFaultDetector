@@ -240,3 +240,85 @@ class TestDataPreprocessorPipeline(TestCase):
                 output.reset_index(drop=True),
                 expected.reset_index(drop=True),
             )
+
+    def test_steps_mode_no_duplicate_imputer(self) -> None:
+        """Providing 'simple_imputer' explicitly should not add a second default imputer."""
+        dp = DataPreprocessor(
+            steps=[
+                {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
+                {"name": "simple_imputer", "params": {"strategy": "median"}},
+                {"name": "standard_scaler"},
+            ]
+        )
+        # Count imputers by estimator type
+        n_imputers = sum(
+            est.__class__.__name__ == "SimpleImputer" for _, est in dp.steps
+        )
+        self.assertEqual(n_imputers, 1, "There should be exactly one SimpleImputer.")
+
+        # Ensure imputer precedes scaler
+        imputer_idx = next(
+            i for i, (_, est) in enumerate(dp.steps) if est.__class__.__name__ == "SimpleImputer"
+        )
+        scaler_idx = next(
+            i for i, (_, est) in enumerate(dp.steps)
+            if est.__class__.__name__ in {"StandardScaler", "MinMaxScaler"}
+        )
+        self.assertLess(imputer_idx, scaler_idx, "Imputer must precede scaler.")
+
+    def test_steps_mode_default_imputer_inserted(self) -> None:
+        """Omitting 'simple_imputer' should auto-insert a default imputer before the scaler."""
+        dp = DataPreprocessor(
+            steps=[
+                {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
+                {"name": "standard_scaler"},
+            ]
+        )
+        # Exactly one imputer should be present
+        n_imputers = sum(
+            est.__class__.__name__ == "SimpleImputer" for _, est in dp.steps
+        )
+        self.assertEqual(n_imputers, 1, "A single default SimpleImputer should be added.")
+
+        # Imputer must be before scaler
+        imputer_idx = next(
+            i for i, (_, est) in enumerate(dp.steps) if est.__class__.__name__ == "SimpleImputer"
+        )
+        scaler_idx = next(
+            i for i, (_, est) in enumerate(dp.steps)
+            if est.__class__.__name__ in {"StandardScaler", "MinMaxScaler"}
+        )
+        self.assertLess(imputer_idx, scaler_idx, "Default imputer must be inserted before scaler.")
+
+    def test_steps_mode_alias_imputer_is_normalized(self) -> None:
+        """Using 'imputer' alias should be normalized to 'simple_imputer' internally."""
+        dp = DataPreprocessor(
+            steps=[
+                {"name": "imputer", "params": {"strategy": "mean"}},  # alias
+                {"name": "standard_scaler"},
+            ]
+        )
+        # Named steps should include the canonical 'simple_imputer'
+        self.assertIn("simple_imputer", dp.named_steps)
+
+    def test_singleton_violation_raises(self) -> None:
+        """Two enabled simple_imputer steps should raise a ValueError."""
+        with self.assertRaises(ValueError):
+            _ = DataPreprocessor(
+                steps=[
+                    {"name": "simple_imputer", "params": {"strategy": "mean"}},
+                    {"name": "simple_imputer", "params": {"strategy": "median"}},
+                    {"name": "standard_scaler"},
+                ]
+            )
+
+    def test_only_one_scaler_allowed(self) -> None:
+        """Defining more than one scaler should raise a ValueError."""
+        with self.assertRaises(ValueError):
+            _ = DataPreprocessor(
+                steps=[
+                    {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
+                    {"name": "standard_scaler"},
+                    {"name": "minmax_scaler"},
+                ]
+            )

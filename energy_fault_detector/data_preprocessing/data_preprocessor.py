@@ -320,7 +320,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # 5. Impute missing values with SimpleImputer
         steps.append(
             (
-                "imputer",
+                "simple_imputer",
                 SimpleImputer(
                     strategy=params.get("imputer_strategy", "mean"),
                     fill_value=params.get("imputer_fill_value", None),
@@ -380,13 +380,13 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             steps.append((step_name, estimator))
 
         # Ensure an Imputer exists and is placed before the scaler.
-        if not any(n == "imputer" for n, _ in steps):
+        if not any(n == "simple_imputer" for n, _ in steps):
             default_imputer = SimpleImputer(strategy="mean").set_output(transform="pandas")
             # Insert before scaler if scaler already present; else append.
             if scaler_idx is not None:
-                steps.insert(scaler_idx, ("imputer", default_imputer))
+                steps.insert(scaler_idx, ("simple_imputer", default_imputer))
             else:
-                steps.append(("imputer", default_imputer))
+                steps.append(("simple_imputer", default_imputer))
 
         # Ensure a scaler exists and is last. If missing, add StandardScaler by default.
         if not scaler_defined:
@@ -420,7 +420,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         low_unique_value_filter = [s for s in steps_spec if s.get("name") == "low_unique_value_filter"]
         duplicates = [s for s in steps_spec if s.get("name") == "duplicate_to_nan"]
         counter = [s for s in steps_spec if s.get("name") == "counter_diff_transformer"]
-        imputer = [s for s in steps_spec if s.get("name") == "imputer"]
+        imputer = [s for s in steps_spec if s.get("name") == "simple_imputer"]
         scaler_names = {"standard_scaler", "minmax_scaler"}
         scalers = [s for s in steps_spec if s.get("name") in scaler_names]
         if len(scalers) > 1:
@@ -429,7 +429,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         others = [
             s for s in steps_spec
             if s.get("name") not in {
-                "column_selector", "duplicate_to_nan", "counter_diff_transformer", "imputer", "low_unique_value_filter",
+                "column_selector", "duplicate_to_nan", "counter_diff_transformer", "simple_imputer",
+                "low_unique_value_filter",
             } | scaler_names
         ]
 
