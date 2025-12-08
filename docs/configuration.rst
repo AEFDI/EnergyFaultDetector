@@ -30,7 +30,7 @@ This setup:
 - Runs ARCANA with provided parameters when calling :py:obj:`FaultDetector.predict(..., root_cause_analysis=True) <energy_fault_detector.fault_detector.FaultDetector.predict>`.
   If not provided, default ARCANA parameters are used (see :py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`).
 
-If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor: {}``), as default preprocessing pipeline
+If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor: {}``), a default preprocessing pipeline
 is generated, which drops constant features, features where >5% of the data is missing, imputes remaining missing values
 with the mean value and scales the data to zero mean and unit standard deviation.
 
