@@ -291,7 +291,8 @@ class CounterDiffTransformer(DataTransformer):
         return x_
 
     def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
-        """No-op inverse transformation. Not defined for this class, returns the input as is.
+        """If original counter columns are present, drop the derived columns and restore original feature order.
+        Otherwise, returns the input as is.
 
         Args:
             x: Input DataFrame.
@@ -299,6 +300,13 @@ class CounterDiffTransformer(DataTransformer):
         Returns:
             The input DataFrame unchanged.
         """
+        check_is_fitted(self)
+        x_ = x.copy()
+        orig_counters_present = all(c in x_.columns for c in self.counters_)
+        if orig_counters_present:
+            if all(col in x_.columns for col in self.feature_names_in_):
+                x_ = x_[self.feature_names_in_]
+            return x_
         return x
 
     def get_feature_names_out(self, input_features: Optional[List[str]] = None) -> List[str]:

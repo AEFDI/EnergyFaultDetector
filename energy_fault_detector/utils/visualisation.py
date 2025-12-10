@@ -13,6 +13,8 @@ from energy_fault_detector.core import Autoencoder
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.utils.analysis import calculate_criticality
 
+MAX_PLOTS = 20
+
 
 def plot_learning_curve(model: Union[Autoencoder, FaultDetector], ax: plt.Axes = None, label: str = '',
                         **subplot_kwargs) -> Tuple[plt.Figure, plt.Axes]:
@@ -71,7 +73,7 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
         missing = set(to_plot) - set(data.columns)
         raise ValueError(f'The columns {missing} are not present in the dataset.')
 
-    if len(to_plot) > 30:  # You can adjust this threshold
+    if len(to_plot) > MAX_PLOTS:
         warnings.warn(f"You are attempting to plot a large number of features ({len(to_plot)}). "
                       "This may result in a cluttered figure. Consider selecting fewer features to plot.")
 
@@ -91,6 +93,67 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
 
     plt.tight_layout()
     return fig, ax
+
+
+def plot_reconstruction_with_model(model: FaultDetector, data: pd.DataFrame,
+                                   features_to_plot: Optional[List[str]] = None,
+                                   height_multiplier: float = 1.5,
+                                   original_scale: bool = True) -> Tuple[plt.Figure, plt.Axes]:
+    """Plots the data and its reconstruction using the provided model. Similar to plot_reconstruction, but uses the
+     'model.predict' method to get the reconstruction. Counter values are plottet as diffs or rates with their
+     reconstruction.
+
+    Args:
+        model (FaultDetector): Fitted model with data_preprocessor and autoencoder.
+        data (pd.DataFrame): Raw input data.
+        features_to_plot (Optional[List[str]], optional): Columns to plot. If None, uses reconstruction columns.
+        height_multiplier (float, optional): Vertical scaling for the figure. Defaults to 1.5.
+        original_scale (bool, optional): If True, y-limits are based on the observed plot-series
+            (min-std, max+std). Defaults to True.
+
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: The figure and axes.
+    """
+
+    # Get model predictions
+    predictions = model.predict(sensor_data=data)
+    reconstruction = predictions.reconstruction
+    # model data preprocessor
+    dp = model.data_preprocessor
+
+    # Discover counter mappings (original -> derived) from CounterDiffTransformer steps
+    from energy_fault_detector.data_preprocessing.counter_diff_transformer import CounterDiffTransformer
+    counter_map = {}  # original counter -> derived column (e.g., energy_total_kwh -> energy_total_kwh_diff)
+    for name, est in dp.named_steps.items():
+        if isinstance(est, CounterDiffTransformer):
+            # Need fitted attributes
+            try:
+                counters = getattr(est, "counters_", [])
+                suffix = getattr(est, "output_suffix_", "_diff")
+            except Exception:
+                counters = []
+                suffix = "_diff"
+            for c in counters:
+                counter_map[c] = f"{c}{suffix}"
+
+    # Determine features to plot
+    to_plot = list(reconstruction.columns) if features_to_plot is None else features_to_plot
+
+    # If any counter are in features to plot, transform input data, so we can plot the diffs with their reconstructions
+    if any(col in counter_map.keys() for col in to_plot):
+        # replace counters with their _diff/_rate name
+        to_plot = [col if col not in counter_map.keys() else counter_map[col] for col in to_plot]
+        dataset_to_plot = dp.inverse_transform(dp.transform(data.copy()))[to_plot]
+    else:
+        dataset_to_plot = data[to_plot].copy()
+
+    return plot_reconstruction(
+        dataset_to_plot,
+        reconstruction,
+        features_to_plot=to_plot,
+        height_multiplier=height_multiplier,
+        original_scale=original_scale
+    )
 
 
 def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_index: pd.Series = None,
