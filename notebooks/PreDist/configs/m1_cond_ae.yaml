@@ -1,0 +1,53 @@
+train:
+  data_clipping:
+    lower_percentile: 0.001
+    upper_percentile: 0.999
+
+  data_preprocessor:
+    params:
+      imputer_strategy: mean
+      include_duplicate_value_to_nan: false,
+      max_col_zero_frac: 0.5
+      max_nan_frac_per_col: 0.8
+      min_unique_value_count: 3
+      scale: standardize
+      features_to_exclude:
+        - p_net_meter_energy  # we use power and flow
+        - p_net_meter_volume
+      ts_features: ['hour_of_day', 'day_of_week']
+
+  autoencoder:
+    name: conditional
+    verbose: 0
+    params:
+      batch_size: 256
+      code_size: 5  # set by bottleneck ratio (0.65)
+      early_stopping: true
+      epochs: 100
+      layers: [64, 32]
+      learning_rate: 0.00045
+      noise: 0.05
+      loss_name: mean_squared_error
+      conditional_features: ['hour_of_day_sine',
+                             'hour_of_day_cosine',
+                             'day_of_week_sine',
+                             'day_of_week_cosine']
+
+  anomaly_score:
+    name: mahalanobis
+
+  data_splitter:
+    type: sklearn
+    validation_split: 0.2
+    shuffle: true
+
+  threshold_selector:
+    fit_on_val: false
+    name: quantile
+    params:
+      quantile: 0.99
+
+root_cause_analysis:
+  alpha: 0.8
+  init_x_bias: recon
+  num_iter: 1000

@@ -2,7 +2,6 @@
 from typing import List, Union
 import os
 import re
-import sys
 import shutil
 import logging
 from pathlib import Path
@@ -172,25 +171,39 @@ def prepare_output_dir(out_dir: Path, overwrite: bool) -> None:
 
 
 def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path = "./downloads",
-                         overwrite: bool = False) -> Union[List[Path], Path]:
+                         overwrite: bool = False, flatten_file_structure: bool = True,
+                         expected_file_types: Union[List[str], str] = "*.csv") -> Path:
     """ Download a Zenodo record via API and unzip any .zip files.
 
+    Downloads all files associated with a given Zenodo record (by ID, DOI, or URL),
+    saves them to a local directory, and optionally flattens nested directories
+    that result from extracting ZIP archives.
+
     Args:
-        identifier (str): Zenodo record ID, DOI (e.g., 10.5281/zenodo.15846963), or record URL
-        dest (Path): Output directory (default: downloads)
+        identifier (str): Zenodo record ID, DOI (e.g., 10.5281/zenodo.15846963), or record URL.
+            Defaults to the CARE2Compare dataset.
+        dest (Path): Local output directory to save downloaded files. (default: downloads)
         overwrite (bool): If True and dest already exists, contents of dest will be overwritten.
+            Default is False.
+        flatten_file_structure (bool): If True and unzipping results in a single top-level folder
+            with no conflicting root-level files matching `expected_file_types`,
+            moves its contents up one level. Default is True.
+        expected_file_types (Union[List[str], str]): Glob pattern(s) used to detect existing relevant files
+            at the root. If any match, flattening is skipped.
+            Can be a string like '*.csv' or list like ['*.csv', '*.json']. Default is '*.csv'.
 
     Returns:
-        Union[List[Path], Path]: List of paths the extracted content of all downloaded zip files. If there is only one
-            downloaded zip file only one path is returned
+        Path: The absolute path to the directory containing the downloaded and unzipped data.
     """
+    if isinstance(expected_file_types, str):
+        expected_file_types = [expected_file_types]
 
     session = requests.Session()
     try:
         record_id = parse_record_id(identifier)
     except ValueError as e:
         logger.error(e)
-        sys.exit(1)
+        raise
 
     out_dir = Path(dest)
 
@@ -200,7 +213,7 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
         prepare_output_dir(out_dir, overwrite)
     except Exception as e:
         logger.error(f"Failed to prepare output directory: {e}")
-        sys.exit(1)
+        raise
 
     logger.info(f"Fetching record {record_id} metadata...")
     record = fetch_record(session, record_id)
@@ -209,7 +222,7 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
         files = list_files(session, record)
     except RuntimeError as e:
         logger.error(e)
-        sys.exit(1)
+        raise
 
     downloaded = []
     for f in files:
@@ -228,10 +241,10 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
     # Unzip any downloaded .zip files
     for p in downloaded:
         if p.suffix.lower() == ".zip":
-            extract_dir = p.with_suffix("")  # folder named after the zip
-            logger.info(f"Unzipping: {p.name} -> {extract_dir}")
+            extract_target = out_dir # Extract directly into dest
+            logger.info(f"Unzipping: {p.name} -> {extract_target}")
             try:
-                safe_extract_zip(p, extract_dir)
+                safe_extract_zip(p, extract_target)
             except Exception as e:
                 logger.error(f"Unzipping failed for {p.name}: {e}")
             else:
@@ -241,20 +254,16 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
                 except OSError as e:
                     logger.warning(f"Could not remove {p}: {e}")
 
-    logger.info(f"Validating file structure.")
-    # Check resulting file structure and remove duplicate directory names if they exist due to unzipping.
-    root_paths = []
-    for file_or_dir in os.listdir(out_dir):
-        root_path = out_dir / file_or_dir
-        if os.path.isdir(root_path):
-            root_paths.append(root_path)
-            if file_or_dir in os.listdir(root_path):
-                duplicate_dir_name = root_path / file_or_dir
-                logger.info(f"Removing redundant directory: {duplicate_dir_name}")
-                move_list = os.listdir(duplicate_dir_name)
-                for content in move_list:
-                    shutil.move(src=duplicate_dir_name / content,
-                                dst=root_path / content)
-                os.rmdir(duplicate_dir_name)
-    logger.info(f"File structure validated.")
-    return root_paths if len(root_paths) > 1 else root_paths[0]
+    if flatten_file_structure:
+        logger.info(f"Flattening file structure.")
+        # Standardize structure: If unzipping created a single subfolder, move its contents up
+        # This often happens with Zenodo zips.
+        subdirs = [d for d in out_dir.iterdir() if d.is_dir()]
+        if len(subdirs) == 1 and not any(out_dir.glob(pattern) for pattern in expected_file_types):
+            redundant_dir = subdirs[0]
+            logger.info(f"Flattening directory structure from {redundant_dir}")
+            for item in redundant_dir.iterdir():
+                shutil.move(str(item), str(out_dir / item.name))
+            redundant_dir.rmdir()
+
+    return out_dir

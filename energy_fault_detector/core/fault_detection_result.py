@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 
+from ..utils.analysis import calculate_criticality
+
 
 @dataclass
 class FaultDetectionResult:
@@ -27,10 +29,17 @@ class FaultDetectionResult:
     """DataFrame with ARCANA results (ARCANA bias). None if ARCANA was not run."""
 
     arcana_losses: Optional[pd.DataFrame] = None
-    """DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run."""
+    """DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
+       Empty if losses were not tracked."""
 
     tracked_bias: Optional[List[pd.DataFrame]] = None
-    """List of DataFrames containing the ARCANA bias every 50th iteration. None if ARCANA was not run."""
+    """List of DataFrames containing the ARCANA bias every 50th iteration. None if ARCANA was not run.
+       Empty if bias was not tracked."""
+
+    def criticality(self, normal_idx: pd.Series = None, init_criticality: int = 0, max_criticality: int = 1000
+                    ) -> pd.Series:
+        """Criticality based on the predicted anomalies."""
+        return calculate_criticality(self.predicted_anomalies, normal_idx, init_criticality, max_criticality)
 
     def save(self, directory: str, **kwargs) -> None:
         """Saves the results to CSV files in the specified directory.

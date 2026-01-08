@@ -11,7 +11,6 @@ import pandas as pd
 
 from energy_fault_detector.core import Autoencoder
 from energy_fault_detector.fault_detector import FaultDetector
-from energy_fault_detector.utils.analysis import calculate_criticality
 
 MAX_PLOTS = 20
 
@@ -220,8 +219,7 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
             ax.plot(threshold, linestyle='-', linewidth=.7, label='threshold', c=threshold_color)
 
     if show_criticality:
-        crit = calculate_criticality(predictions.predicted_anomalies, normal_idx=normal_index,
-                                     max_criticality=max_criticality)
+        crit = predictions.criticality(normal_idx=normal_index, max_criticality=max_criticality)
         ax2 = ax.twinx()
         ax2.plot(crit, label='criticality counter', color=criticality_color)
         ax2.legend(loc='upper right', markerscale=3)
@@ -229,9 +227,13 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
 
     ax.set_ylabel('anomaly score')
 
-    legend = ax.legend(loc='upper left', markerscale=3)
-    for h in legend.legend_handles:
-        h.set_alpha(1)
+    # Get handles and labels from the current axes
+    handles, labels = ax.get_legend_handles_labels()
+    if labels:
+        # Only create the legend if there are labels found
+        legend = ax.legend(loc='upper left', markerscale=3)
+        for h in legend.legend_handles:
+            h.set_alpha(1)
 
     return fig, ax
 
