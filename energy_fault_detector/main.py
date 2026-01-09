@@ -1,19 +1,19 @@
 """Quick energy fault detector CLI tool, to try out the EnergyFaultDetector model on a specific dataset."""
 
-import os
 import argparse
 import logging
 import yaml
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Optional
 
 logger = logging.getLogger('energy_fault_detector')
-here = os.path.abspath(os.path.dirname(__file__))
+here = Path(__file__).resolve().parent
 
 
 @dataclass
 class Options:
-    csv_test_data_path: Optional[str] = None
+    csv_test_data_path: Optional[str | Path] = None
     train_test_column_name: Optional[str] = None
     train_test_mapping: Optional[dict] = None
     time_column_name: Optional[str] = None
@@ -27,7 +27,7 @@ class Options:
     enable_debug_plots: bool = False
 
 
-def load_options_from_yaml(file_path: str) -> Options:
+def load_options_from_yaml(file_path: str | Path) -> Options:
     """Load options from a YAML file and return an Options dataclass."""
     with open(file_path, 'r') as file:
         options_dict = yaml.safe_load(file)
@@ -76,19 +76,19 @@ def main():
 
     parser.add_argument(
         'csv_data_path',
-        type=str,
+        type=Path,
         help='Path to a CSV file containing training data.'
     )
     parser.add_argument(
         '--options',
-        type=str,
+        type=Path,
         help='Path to a YAML file containing additional options.',
         default=None,
         required=False,
     )
     parser.add_argument(
         '--results_dir',
-        type=str,
+        type=Path,
         help='Path to a directory where results will be saved.',
         default='results'
     )
@@ -107,13 +107,13 @@ def main():
         logger.info(f"Options YAML: {args.options}")
 
     logger.info(f"Results Directory: {args.results_dir}")
-    os.makedirs(args.results_dir, exist_ok=True)
+    args.results_dir.mkdir(exist_ok=True)
 
     options = Options()  # Initialize with default values
     if args.options:
         options = load_options_from_yaml(args.options)
     elif args.c2c_example:
-        options = load_options_from_yaml(os.path.join(here, 'c2c_options.yaml'))
+        options = load_options_from_yaml(here / 'c2c_options.yaml')
 
     print(options)
 
@@ -138,10 +138,11 @@ def main():
         )
         logger.info(f'Fault detection completed. Results are saved in {args.results_dir}.')
         prediction_results.save(args.results_dir)
-        event_meta_data.to_csv(os.path.join(args.results_dir, 'events.csv'), index=False)
+        event_meta_data.to_csv(args.results_dir / 'events.csv', index=False)
 
     except Exception as e:
         logger.error(f'An error occurred: {e}')
+        raise
 
 
 if __name__ == '__main__':

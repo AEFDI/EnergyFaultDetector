@@ -1,12 +1,13 @@
 """Quick energy fault detection, to try out the EnergyFaultDetector model on a specific dataset."""
 
 import os
+from pathlib import Path
 import logging
 from typing import List, Optional, Tuple
 
 import pandas as pd
 
-from energy_fault_detector._logs import setup_logging
+from energy_fault_detector.core._logs import setup_logging
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.utils.analysis import create_events
 from energy_fault_detector.root_cause_analysis.arcana_utils import calculate_mean_arcana_importances
@@ -20,14 +21,14 @@ setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))
 logger = logging.getLogger('energy_fault_detector')
 
 
-def quick_fault_detector(csv_data_path: str, csv_test_data_path: Optional[str] = None,
+def quick_fault_detector(csv_data_path: str | Path, csv_test_data_path: Optional[str | Path] = None,
                          train_test_column_name: Optional[str] = None, train_test_mapping: Optional[dict] = None,
                          time_column_name: Optional[str] = None, status_data_column_name: Optional[str] = None,
                          status_mapping: Optional[dict] = None,
                          status_label_confidence_percentage: Optional[float] = 0.95,
                          features_to_exclude: Optional[List[str]] = None, angle_features: Optional[List[str]] = None,
                          automatic_optimization: bool = True, enable_debug_plots: bool = False,
-                         min_anomaly_length: int = 18, save_dir: Optional[str] = None
+                         min_anomaly_length: int = 18, save_dir: Optional[str | Path] = None
                          ) -> Tuple[FaultDetectionResult, pd.DataFrame]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.

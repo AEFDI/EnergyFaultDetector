@@ -2,9 +2,10 @@
 
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple
 import logging
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
@@ -16,10 +17,10 @@ from energy_fault_detector.core import Autoencoder, AnomalyScore, ThresholdSelec
 from energy_fault_detector.core.model_factory import ModelFactory
 from energy_fault_detector.core.fault_detection_result import ModelMetadata, FaultDetectionResult
 from energy_fault_detector.data_preprocessing import DataPreprocessor
-from energy_fault_detector._logs import setup_logging
+from energy_fault_detector.core._logs import setup_logging
 from energy_fault_detector.data_splitting.data_splitter import BlockDataSplitter
 
-setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))
+setup_logging(Path(__file__).parent.parent / 'logging.yaml')
 logger = logging.getLogger('energy_fault_detector')
 
 DATA_PREP_DIR = 'data_preprocessor'
@@ -28,6 +29,8 @@ THRESHOLD_DIR = 'threshold_selector'
 SCORE_DIR = 'anomaly_score'
 
 DataType = Union[pd.DataFrame, np.ndarray, List]
+PathLike = Union[str, Path]
+ModelPart = Union[DataPreprocessor, Autoencoder, AnomalyScore, ThresholdSelector]
 
 
 class NoTrainingData(Exception):
@@ -50,9 +53,9 @@ class FaultDetectionModel(ABC):
         save_timestamps: a list of string timestamps, indicating when the model was saved.
     """
 
-    def __init__(self, config: Optional[Config] = None, model_directory: str = 'models'):
+    def __init__(self, config: Optional[Config] = None, model_directory: PathLike = 'models'):
         self.config: Optional[Config] = config
-        self.model_directory: str = model_directory
+        self.model_directory: PathLike = model_directory
 
         self.anomaly_score: Optional[AnomalyScore] = None
         self.autoencoder: Optional[Autoencoder] = None
@@ -191,11 +194,11 @@ class FaultDetectionModel(ABC):
 
         return os.path.abspath(model_dir), current_datetime
 
-    def load_models(self, model_path: str) -> None:
+    def load_models(self, model_path: PathLike) -> None:
         """Load saved models given the model path.
 
         Args:
-            model_path: Path to the model files.
+            model_path (str, Path): Path to the model files.
         """
 
         data_prep_dir = os.path.join(model_path, DATA_PREP_DIR)
@@ -221,7 +224,7 @@ class FaultDetectionModel(ABC):
             self._model_factory = ModelFactory(self.config)
 
     @staticmethod
-    def _load_pickled_model(model_type: str, model_directory: str):
+    def _load_pickled_model(model_type: str, model_directory: str) -> ModelPart:
         """Load a pickled model of given type, using file name (which is the class name)."""
         model_class_name = os.listdir(model_directory)[0].split('.')[0]
         if model_type != 'data_preprocessor':
