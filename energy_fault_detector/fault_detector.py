@@ -95,6 +95,10 @@ class FaultDetector(FaultDetectionModel):
             self.data_preprocessor.fit(x_normal)
 
         x_prepped = self.data_preprocessor.transform(x_normal)
+
+        # Use float32 by default for performance, unless specified otherwise in config
+        x_prepped = x_prepped.astype(self.config.dtype)
+
         return x_prepped, x, y
 
     def fit(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, save_models: bool = True,
@@ -283,6 +287,7 @@ class FaultDetector(FaultDetectionModel):
             logger.debug('No model_path provided; using existing model instances.')
 
         x_prepped = self.data_preprocessor.transform(x).sort_index()
+        x_prepped = x_prepped.astype(self.config.dtype)
         column_order = x_prepped.columns
 
         if self.autoencoder.is_conditional:
