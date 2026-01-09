@@ -9,7 +9,7 @@ train:
       include_duplicate_value_to_nan: false,
       max_col_zero_frac: 0.5
       max_nan_frac_per_col: 0.8
-      min_unique_value_count: 3
+      min_unique_value_count: 2
       scale: standardize
       features_to_exclude:
         - p_net_meter_energy  # we use power and flow
@@ -29,12 +29,16 @@ train:
     name: conditional
     verbose: 0
     params:
+      act: prelu
+      last_act: linear
       batch_size: 256
       code_size: 5  # set by bottleneck ratio (0.25)
       early_stopping: true
+      min_delta: 0.0001
+      patience: 5
       epochs: 100
       layers: [64, 32]
-      learning_rate: 0.00053
+      learning_rate: 0.0005289609464733553
       noise: 0.15
       loss_name: mean_squared_error
       conditional_features: [ 'hour_of_day_sine',
