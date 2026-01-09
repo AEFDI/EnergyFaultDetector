@@ -127,6 +127,9 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         deviations = training_dict.val_recon_error
         score = float(np.mean((np.square(deviations))))
 
+        # help garbage collection
+        del model
+
         return score
 
     study = op.create_study(sampler=op.samplers.TPESampler(),

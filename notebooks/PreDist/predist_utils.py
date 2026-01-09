@@ -2,9 +2,11 @@ from typing import List, Tuple
 from pathlib import Path
 from copy import deepcopy
 import logging
+import gc
 
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import fbeta_score
 
@@ -62,6 +64,11 @@ def train_or_get_model(event_id: int, dataset: PreDistDataset, manufacturer: int
     if ts_features:
         test_data = add_cyclic_time_features(test_data, ts_features)
     predictions = model.predict(test_data)
+
+    # memory cleanup
+    del model
+    tf.keras.backend.clear_session()
+    gc.collect()
 
     return event_id, predictions
 
@@ -144,3 +151,32 @@ def get_arcana_importances(manufacturer: int, event_id: int, config_name: str, d
         data = add_cyclic_time_features(data, ts_features)
     bias, _, _ = model.run_root_cause_analysis(data, track_losses=False, track_bias=False)
     return calculate_mean_arcana_importances(bias).sort_values(ascending=False)
+
+
+def calculate_earliness(criticality_threshold: int, report_ts: int | pd.Timestamp, criticality: pd.Series,
+                        min_detection_time: pd.Timedelta = pd.Timedelta(hours=24)
+                        ) -> Tuple[int | pd.Timestamp | None, float]:
+    """Calculate the detection time and earliness score.
+
+    Args:
+        criticality_threshold (int): Threshold for determining whether the event is detected.
+        report_ts (int | pd.Timestamp): Timestamp of the report.
+        criticality (pd.Series): Series containing the criticality of each event.
+        min_detection_time (pd.Timedelta, optional): Minimum detection time. Defaults to pd.Timedelta(hours=24).
+
+    Returns:
+        A tuple containing the detection time and earliness score. If not detected, the detection time is None and
+        the earliness score is 0.
+    """
+
+    crit_threshold_reached = criticality[criticality >= criticality_threshold]
+    if crit_threshold_reached.empty:
+        detection_time = None
+        earliness = 0
+        return detection_time, earliness
+
+    detection_timestamp = crit_threshold_reached.sort_index(ascending=True).index[0]
+    detection_time = report_ts - detection_timestamp
+    # max(earliness, 0) to handle detection after fault is known
+    earliness = max(min(1, detection_time / min_detection_time), 0)
+    return detection_time, earliness

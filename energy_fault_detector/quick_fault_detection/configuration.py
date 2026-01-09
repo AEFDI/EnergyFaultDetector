@@ -68,10 +68,37 @@ def update_preprocessor_config(config: Config, features_to_exclude: Union[List[s
     Returns:
         Config: Updated config object.
     """
+
     if features_to_exclude is not None:
-        config['train']['data_preprocessor']['params']['features_to_exclude'] = features_to_exclude
+        if config['train']['data_preprocessor'].get('params'):
+            # old data preprocessing configuration style
+            config['train']['data_preprocessor']['params']['features_to_exclude'] = features_to_exclude
+        else:
+            # new configuration style
+            steps = config['train']['data_preprocessor'].setdefault('steps', [])
+            column_selector_found = False
+            for step in steps:
+                if step['name'] == 'column_selector':
+                    step['params']['features_to_exclude'] = features_to_exclude
+                    column_selector_found = True
+                    break
+            if not column_selector_found:
+                steps.append({'name': 'column_selector', 'params': {'features_to_exclude': features_to_exclude}})
     if angles is not None:
-        config['train']['data_preprocessor']['params']['angles'] = angles
+        if config['train']['data_preprocessor'].get('params'):
+            # old data preprocessing configuration style
+            config['train']['data_preprocessor']['params']['angles'] = angles
+        else:
+            # new configuration style
+            steps = config['train']['data_preprocessor'].setdefault('steps', [])
+            angle_transformer_found = False
+            for step in steps:
+                if step['name'] == 'angle_transformer':
+                    step['params']['angles'] = angles
+                    angle_transformer_found = True
+                    break
+            if not angle_transformer_found:
+                steps.append({'name': 'angle_transformer', 'params': {'angles': angles}})
     return config
 
 
