@@ -64,7 +64,7 @@ results = fault_detector.predict(sensor_data=test_sensor_data)
 
 The pandas `DataFrame` `sensor_data` contains the operational data in wide format with the timestamp as index, the
 pandas `Series` `normal_index` indicates which timestamps are considered 'normal' operation and can be used to create
-a normal behaviour model. The [`base_config.yaml`](energy_fault_detector/base_config.yaml) file contains all model 
+a normal behaviour model. The [`base_config.yaml`](energy_fault_detector/base_config.yaml) file contains the model 
 settings, an example is found [here](energy_fault_detector/base_config.yaml).
 
 
@@ -100,12 +100,17 @@ This project is licensed under the [MIT License](./LICENSE).
 ## References
 If you use this work, please cite us:
 
+**Fault detection in district heating substations**:
+- Enabling Predictive Maintenance in District Heating Substations: A Labelled Dataset and Fault Detection Evaluation Framework based on Service Data. 
+PrePrint on ArXiv. https://doi.org/10.48550/arXiv.2511.14791
+- Dataset: PreDist Dataset - Operational data of district heating substations labelled with faults and maintenance information. Zenodo, Nov 2025, https://doi.org/10.5281/zenodo.17522254.
+
 **ARCANA Algorithm**:
 Autoencoder-based anomaly root cause analysis for wind turbines. Energy and AI. 2021;4:100065. https://doi.org/10.1016/j.egyai.2021.100065
 
 **CARE to Compare dataset and CARE-Score**:
 - Paper: CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in Wind Turbine Data. Data. 2024; 9(12):138. https://doi.org/10.3390/data9120138 
-- Dataset: Wind Turbine SCADA Data For Early Fault Detection. Zenodo, Mar. 2025, https://doi.org/10.5281/ZENODO.14958989.
+- Dataset: Wind Turbine SCADA Data For Early Fault Detection. Zenodo, Oct. 2024, https://doi.org/10.5281/ZENODO.14958989.
 
 **Transfer learning methods**:
 Transfer learning applications for autoencoder-based anomaly detection in wind turbines. Energy and AI. 2024;17:100373. https://doi.org/10.1016/j.egyai.2024.100373
