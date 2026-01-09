@@ -98,6 +98,7 @@ CONFIG_SCHEMA = {
     'train': {'type': 'dict', 'schema': TRAIN_SCHEMA, 'required': False, 'allow_unknown': True},
     'predict': {'type': 'dict', 'schema': PREDICT_SCHEMA, 'required': False},
     'root_cause_analysis': {'type': 'dict', 'schema': ROOT_CAUSE_ANALYSIS_SCHEMA, 'required': False},
+    'dtype': {'type': 'string', 'required': False, 'allowed': ['float32', 'float64']}
 }
 
 
@@ -203,3 +204,8 @@ class Config(BaseConfig):
     def verbose(self) -> int:
         """Verbosity Level of the Autoencoder."""
         return self.config_dict.get('train', {}).get('autoencoder', {}).get('verbose', 1)
+
+    @property
+    def dtype(self):
+        """Data type, float32 by default."""
+        return self.config_dict.get('dtype', 'float32')
