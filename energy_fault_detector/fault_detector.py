@@ -3,23 +3,24 @@
 import logging
 from typing import Optional, Tuple, List
 from datetime import datetime
-import os
 import warnings
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
 from tensorflow.keras.backend import clear_session
 
 from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
+from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
 from energy_fault_detector.threshold_selectors import AdaptiveThresholdSelector
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
 from energy_fault_detector.data_preprocessing.data_clipper import DataClipper
 from energy_fault_detector.root_cause_analysis import Arcana
 from energy_fault_detector.config import Config
-from energy_fault_detector._logs import setup_logging
-from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
+from energy_fault_detector.core._logs import setup_logging
 
-setup_logging(os.path.join(os.path.dirname(__file__), 'logging.yaml'))
+
+setup_logging(Path(__file__).parent / 'logging.yaml')
 logger = logging.getLogger('energy_fault_detector')
 
 
@@ -41,7 +42,7 @@ class FaultDetector(FaultDetectionModel):
         save_timestamps: a list of string timestamps indicating when the model was saved.
     """
 
-    def __init__(self, config: Optional[Config] = None, model_directory: str = 'fault_detector_model',
+    def __init__(self, config: Optional[Config] = None, model_directory: str | Path = 'fault_detector_model',
                  model_subdir: Optional[str] = None):
         if model_subdir is not None:
             warnings.warn(
