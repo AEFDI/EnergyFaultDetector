@@ -20,12 +20,16 @@ train:
     name: conditional
     verbose: 0
     params:
+      act: prelu
+      last_act: linear
       batch_size: 256
       code_size: 5  # set by bottleneck ratio (0.65)
       early_stopping: true
+      min_delta: 0.0001
+      patience: 5
       epochs: 100
       layers: [64, 32]
-      learning_rate: 0.00045
+      learning_rate: 0.0004486710512068144
       noise: 0.05
       loss_name: mean_squared_error
       conditional_features: ['hour_of_day_sine',

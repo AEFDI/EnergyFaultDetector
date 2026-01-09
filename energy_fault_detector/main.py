@@ -136,7 +136,7 @@ def main():
             min_anomaly_length=options.min_anomaly_length,
             save_dir=args.results_dir,
         )
-        logger.info(f'Fault detection completed. Results are saved in {args.results_dir}.')
+        logger.info(f'Fault detection completed. Results are saved in the directory "{args.results_dir}".')
         prediction_results.save(args.results_dir)
         event_meta_data.to_csv(args.results_dir / 'events.csv', index=False)
 
