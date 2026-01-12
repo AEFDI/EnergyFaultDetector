@@ -141,6 +141,30 @@ def safe_extract_zip(zip_path: Path, dest_dir: Path):
         zf.extractall(dest_dir)
 
 
+def recursive_safe_extract(zip_path: Path, dest_dir: Path, remove_archives: bool = True):
+    """
+    Recursively extracts ZIP files, including those found inside other ZIPs.
+
+    Args:
+        zip_path: Path to the .zip archive.
+        dest_dir: Directory to extract into.
+        remove_archives: Whether to delete the .zip file after successful extraction.
+    """
+    logger.info(f"Extracting {zip_path.name} to {dest_dir}")
+    safe_extract_zip(zip_path, dest_dir)
+
+    if remove_archives:
+        try:
+            zip_path.unlink()
+        except OSError as e:
+            logger.warning(f"Could not remove archive {zip_path}: {e}")
+
+    # After extraction, check if any new .zip files were created in the dest_dir
+    for item in list(dest_dir.rglob("*.zip")):
+        recursive_safe_extract(item, item.parent, remove_archives=remove_archives)
+
+
+
 def prepare_output_dir(out_dir: Path, overwrite: bool) -> None:
     """Ensure the output directory is ready.
 
@@ -171,7 +195,7 @@ def prepare_output_dir(out_dir: Path, overwrite: bool) -> None:
 
 
 def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path = "./downloads",
-                         overwrite: bool = False, flatten_file_structure: bool = True,
+                         remove_zip: bool = True, overwrite: bool = False, flatten_file_structure: bool = True,
                          expected_file_types: Union[List[str], str] = "*.csv") -> Path:
     """ Download a Zenodo record via API and unzip any .zip files.
 
@@ -183,6 +207,7 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
         identifier (str): Zenodo record ID, DOI (e.g., 10.5281/zenodo.15846963), or record URL.
             Defaults to the CARE2Compare dataset.
         dest (Path): Local output directory to save downloaded files. (default: downloads)
+        remove_zip (bool): If True, ZIP archives will be removed after extraction.
         overwrite (bool): If True and dest already exists, contents of dest will be overwritten.
             Default is False.
         flatten_file_structure (bool): If True and unzipping results in a single top-level folder
@@ -241,25 +266,19 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
     # Unzip any downloaded .zip files
     for p in downloaded:
         if p.suffix.lower() == ".zip":
-            extract_target = out_dir # Extract directly into dest
+            extract_target = out_dir  # Extract directly into dest
             logger.info(f"Unzipping: {p.name} -> {extract_target}")
             try:
-                safe_extract_zip(p, extract_target)
+                recursive_safe_extract(p, extract_target, remove_archives=remove_zip)
             except Exception as e:
                 logger.error(f"Unzipping failed for {p.name}: {e}")
-            else:
-                try:
-                    p.unlink()
-                    logger.info(f"Removed archive: {p.name}")
-                except OSError as e:
-                    logger.warning(f"Could not remove {p}: {e}")
 
     if flatten_file_structure:
         logger.info(f"Flattening file structure.")
         # Standardize structure: If unzipping created a single subfolder, move its contents up
         # This often happens with Zenodo zips.
         subdirs = [d for d in out_dir.iterdir() if d.is_dir()]
-        if len(subdirs) == 1 and not any(out_dir.glob(pattern) for pattern in expected_file_types):
+        if len(subdirs) == 1 and not any(next(out_dir.glob(pattern), None) for pattern in expected_file_types):
             redundant_dir = subdirs[0]
             logger.info(f"Flattening directory structure from {redundant_dir}")
             for item in redundant_dir.iterdir():
