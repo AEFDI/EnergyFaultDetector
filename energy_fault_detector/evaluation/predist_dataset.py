@@ -11,9 +11,15 @@ logger = logging.getLogger('energy_fault_detector')
 class PreDistDataset:
     """Loader and preprocessor for the PreDist dataset.
 
+    The data can be downloaded either manually from https://doi.org/10.5281/zenodo.17522254 (in this case specify
+    `path`) or it can be downloaded automatically by setting download_dataset to True.
+
     Args:
         path (Union[str, Path]): Path to the dataset root.
         download_dataset (bool): If True, downloads the PreDist dataset from Zenodo.
+
+    Attributes:
+        events (Dict[int, pd.DataFrame): preloaded events dataframe for each manufacturer.
     """
 
     FAULT_HOURS_AFTER = 24
@@ -79,6 +85,7 @@ class PreDistDataset:
                                                's_hc1.2_heating_pump_status',
                                                's_hc1.3_heating_pump_status',
                                                's_hc2_dhw_3-way_valve_status',
+                                               's_dhw_3-way_valve_status',
                                                's_hc1.1_heating_pump_status'])]
         for col in status_cols:
             if col in df.columns:

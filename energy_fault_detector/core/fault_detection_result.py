@@ -36,7 +36,7 @@ class FaultDetectionResult:
     """List of DataFrames containing the ARCANA bias every 50th iteration. None if ARCANA was not run.
        Empty if bias was not tracked."""
 
-    def criticality(self, normal_idx: pd.Series | None, init_criticality: int = 0, max_criticality: int = 1000
+    def criticality(self, normal_idx: pd.Series | None = None, init_criticality: int = 0, max_criticality: int = 1000
                     ) -> pd.Series:
         """Criticality based on the predicted anomalies.
 

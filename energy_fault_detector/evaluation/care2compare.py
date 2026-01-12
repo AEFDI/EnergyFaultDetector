@@ -18,9 +18,6 @@ class Care2CompareDataset:
     The data can be downloaded either manually from https://doi.org/10.5281/zenodo.14958989 (in this case specify
     `path`) or it can be downloaded automatically by setting download_dataset to True.
 
-    All data is loaded into memory, which might be problematic for large datasets (consider using DataLoader classes of
-    TensorFlow and PyTorch in that case).
-
     By default, only the averages are read. See statistics argument of the data loading methods.
 
     Method overview:
