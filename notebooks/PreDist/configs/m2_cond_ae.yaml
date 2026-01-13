@@ -23,7 +23,6 @@ train:
         - s_hc1.2_room_temperature_setpoint
         - s_hc1.3_room_temperature_setpoint
         - s_hc1_room_temperature_setpoint
-      ts_features: ['hour_of_day', 'day_of_week']
 
   autoencoder:
     name: conditional

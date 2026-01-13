@@ -14,7 +14,6 @@ train:
       features_to_exclude:
         - p_net_meter_energy  # we use power and flow
         - p_net_meter_volume
-      ts_features: ['hour_of_day', 'day_of_week', 'day_of_year']
 
   autoencoder:
     name: conditional
