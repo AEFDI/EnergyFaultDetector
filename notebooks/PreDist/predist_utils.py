@@ -1,7 +1,11 @@
+import os
 from typing import List, Tuple
 from pathlib import Path
 from copy import deepcopy
 import gc
+
+# suppress tensorflow warnings
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import pandas as pd
 import numpy as np

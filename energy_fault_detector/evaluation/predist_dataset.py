@@ -74,7 +74,7 @@ class PreDistDataset:
     def load_substation_data(self, manufacturer: int, substation_id: int) -> pd.DataFrame:
         """Loads raw CSV, maps string values, and cleans indices."""
         file_path = self.root_path / f"Manufacturer {manufacturer}" / 'operational_data' / f"substation_{substation_id}.csv"
-        df = pd.read_csv(file_path, sep=';', index_col='timestamp', parse_dates=['timestamp'])
+        df = pd.read_csv(file_path, sep=';', index_col='timestamp', parse_dates=['timestamp'], low_memory=False)
         df.index = df.index.tz_localize(None)
         df = df.sort_index()
 
