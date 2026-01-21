@@ -3,6 +3,8 @@ import os
 import shutil
 import unittest
 
+import numpy as np
+
 from energy_fault_detector.config import Config, InvalidConfigFile
 
 PROJECT_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..')
@@ -110,3 +112,16 @@ class TestConfig(unittest.TestCase):
     def test_verbose_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/verbose_config.yaml'))
         self.assertEqual(conf.verbose, 0)
+
+    def test_sequence_builder_conf(self):
+        conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_ts_freq.yaml'))
+        expected = {
+            'sequence_length': 36,
+            'overlap': 35,         # stride 1
+            'ts_freq': np.timedelta64(30, 's'),      # parsed by _parse_timedelta into np.timedelta64(10, 'm')
+            'pad_incomplete': False,
+            'pad_value': 0.0,
+        }
+        self.assertDictEqual(
+            conf['train']['autoencoder']['params']['sequence_builder'], expected
+        )

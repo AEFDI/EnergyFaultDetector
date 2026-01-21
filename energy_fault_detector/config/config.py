@@ -24,11 +24,6 @@ TRAIN_SCHEMA = {
             'name': {'type': 'string', 'required': True},
             'params': {'type': ['dict', 'list'], 'required': True},
             'verbose': {'type': 'integer', 'required': False},
-            'time_series_sampler': {
-                'type': 'dict',
-                'required': False,
-                'allow_unknown': True,
-            },
         }
     },
     'data_preprocessor': {
@@ -126,33 +121,40 @@ def _validate_early_stopping(config_dict: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _parse_timedelta(config_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse timedelta string representation to numpy timedelta."""
+    """Parse sequence_builder.ts_freq from a compact string (e.g. '10m') to np.timedelta64.
 
-    ts_freq = config_dict.get('train', {}).get('autoencoder', {}).get('time_series_sampler', {}).get('ts_freq')
-    if ts_freq is not None:
-        if isinstance(ts_freq, str):
-            if (ts_freq.startswith('np.timedelta64(')
-                    or ts_freq.startswith('numpy.timedelta64(')) and ts_freq.endswith(')'):
-                import numpy  # needed for eval(ts_freq) in case ts_freq.startswith('numpy.timedelta64('))
-                import numpy as np  # needed for eval(ts_freq) in case ts_freq.startswith('np.timedelta64(')
-                config_dict['train']['autoencoder']['time_series_sampler']['ts_freq'] = eval(ts_freq)
-            else:
-                raise ValueError('Unexpected value for `ts_freq` (time_series_sampler params)')
+    Expects `ts_freq` under: train.autoencoder.params.sequence_builder.ts_freq
+    and supports strings like '10m', '1h', '30s'.
+    """
+    train_cfg = config_dict.get("train", {})
+    ae_cfg = train_cfg.get("autoencoder", {}) or {}
+    params_cfg = ae_cfg.get("params", {}) or {}
+    seq_builder_cfg = params_cfg.get("sequence_builder", {}) or {}
+    ts_freq = seq_builder_cfg.get("ts_freq")
+
+    if isinstance(ts_freq, str):
+        # Parse '10m', '1h', etc.
+        digits = "".join(ch for ch in ts_freq if ch.isdigit())
+        unit = "".join(ch for ch in ts_freq if not ch.isdigit())
+        if not digits or not unit:
+            raise ValueError(f"Unexpected value for `ts_freq`: {ts_freq!r}. Expected format like '10m', '1h'.")
+        import numpy as np  # noqa: F401
+        value = int(digits)
+        seq_builder_cfg["ts_freq"] = np.timedelta64(value, unit)
+        params_cfg["sequence_builder"] = seq_builder_cfg
+        ae_cfg["params"] = params_cfg
+        train_cfg["autoencoder"] = ae_cfg
+        config_dict["train"] = train_cfg
+
     return config_dict
 
 
 class Config(BaseConfig):
     """Configuration class. Either config_filename or config_dict must be provided.
-    Reads a yaml files with the anomaly detection configuration and sets corresponding settings.
+    Reads a yaml file with the anomaly detection configuration and sets corresponding settings.
     """
 
     def __init__(self, config_filename: str = None, config_dict: Dict[str, Any] = None):
-
-        # backwards compatibility
-        if config_filename is None:
-            if 'data' in config_dict:
-                config_dict.pop('data')
-
         super().__init__(config_filename=config_filename, config_dict=config_dict)
         self._schema = CONFIG_SCHEMA
         self._extra_validation_checks: List[Callable[[Dict], Dict]] = [_parse_timedelta,
