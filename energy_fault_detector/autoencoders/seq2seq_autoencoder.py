@@ -7,37 +7,48 @@ import pandas as pd
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import Model as KerasModel
 
-from ..data_splitting.sequence_dataset import SequenceDatasetBuilder
-from ..core.autoencoder import Autoencoder
+from energy_fault_detector.core.autoencoder import Autoencoder
+from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
+from energy_fault_detector.autoencoders._sequence_utils import sequences_to_dataframe
 
 
-class Seq2OneAutoencoder(Autoencoder):
-    """Base class for causal sequence-to-one autoencoders.
+class Seq2SeqAutoencoder(Autoencoder):
+    """Base class for sequence autoencoders (e.g. LSTM, CNN) on time-series data.
 
-    This class trains models that map a sequence of length ``sequence_length`` to a single
-    output vector (typically corresponding to the last timestep in the window).
+    This class works directly with Pandas DataFrames that have a DatetimeIndex. It:
 
-    It reuses the same initialization and latent handling as Seq2SeqAutoencoder, but uses
-    ``SequenceDatasetBuilder.build_seq2one_dataset`` instead of ``build_sliding_dataset``.
+      * builds sequence datasets via ``SequenceDatasetBuilder``,
+      * trains on 3D sequences (optionally with per-timestep conditional features),
+      * reconstructs the input sequence (of the main (non-conditional) features).
+      * flattens the reconstructed sequences into a DataFrame with one row per timestamp.
+
+    If ``conditional_features`` is provided:
+
+      * main features = all columns minus those in ``conditional_features``,
+      * model input: (sequence_main, sequence_cond),
+      * model output: sequence_main.
+
     """
 
     def __init__(
         self,
         sequence_builder: SequenceDatasetBuilder = None,
-        **ae_kwargs
-    ) -> None:
-        """Initialize a sequence-to-one autoencoder.
+        conditional_features: Optional[List[str]] = None,
+        **kwargs,
+    ):
+        """Initialize a sequence autoencoder.
 
         Args:
-            sequence_builder: SequenceDatasetBuilder used to generate windowed datasets.
-            **ae_kwargs: Passed to ``Autoencoder.__init__``.
+            sequence_builder: SequenceDatasetBuilder instance used to create sliding-window datasets.
+            conditional_features: Optional list of column names to treat as conditional features.
+            **kwargs: Additional keyword arguments passed to ``Autoencoder.__init__``.
         """
+        super().__init__(conditional_features=conditional_features, **kwargs)
 
-        super().__init__(**ae_kwargs)
         self.sequence_builder = sequence_builder
-        self.is_sequential: bool = True
+        self.conditional_features = conditional_features or []
+        self.window_timestamps_: Optional[np.ndarray] = None
 
-    # Child classes must still implement create_model, but with seq2one output shape
     def create_model(
         self,
         input_dimension: Tuple[int, int],
@@ -63,7 +74,7 @@ class Seq2OneAutoencoder(Autoencoder):
         x: pd.DataFrame,
         x_val: Optional[pd.DataFrame] = None,
         **kwargs,
-    ) -> Seq2OneAutoencoder:
+    ) -> "Seq2SeqAutoencoder":
         """Fit the sequence autoencoder on time-series data.
 
         Args:
@@ -77,7 +88,6 @@ class Seq2OneAutoencoder(Autoencoder):
         self._check_sequence_builder()
         self._ensure_model_created_from(x)
 
-        kwargs.setdefault("verbose", self.verbose)
         return self._fit_internal(
             x=x,
             x_val=x_val,
@@ -94,7 +104,7 @@ class Seq2OneAutoencoder(Autoencoder):
         learning_rate: float = 0.001,
         tune_epochs: int = 5,
         **kwargs,
-    ) -> Seq2OneAutoencoder:
+    ) -> "Seq2SeqAutoencoder":
         """Fine-tune the sequence autoencoder on additional data.
 
         This extends training for ``tune_epochs`` epochs, optionally with a new learning rate.
@@ -110,8 +120,6 @@ class Seq2OneAutoencoder(Autoencoder):
             The tuned ``Seq2SeqAutoencoder`` instance.
         """
         self._check_sequence_builder()
-
-        kwargs.setdefault("verbose", self.verbose)
         return self._fit_internal(
             x=x,
             x_val=x_val,
@@ -121,24 +129,54 @@ class Seq2OneAutoencoder(Autoencoder):
             **kwargs,
         )
 
-    def encode(self, x: pd.DataFrame, conditions: pd.DataFrame = None) -> np.ndarray:
-        """Encode input time series into the latent space.
-        One latent vector per window, associated with the last timestamp of each window.
+    def _predict(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
+        """Reconstruct main features from input time series.
 
         Args:
             x: Input data as a DataFrame with DatetimeIndex.
-            conditions: Optional DataFrame with conditional features. Currently not used. TODO: needed?
+            **kwargs: Additional keyword arguments passed to ``model.predict``.
+
+        Returns:
+            DataFrame containing reconstructed main features, indexed by timestamp.
+        """
+        self._check_sequence_builder()
+        dataset, window_timestamps = self.sequence_builder.build_sliding_dataset(
+            df=x,
+            batch_size=self.batch_size,
+            conditional_features=self.conditional_features,
+            shuffle=False,
+        )
+        self.window_timestamps_ = window_timestamps
+
+        predictions = self.model.predict(dataset, **kwargs)
+
+        if self.conditional_features:
+            main_columns = [c for c in x.columns if c not in self.conditional_features]
+        else:
+            main_columns = list(x.columns)
+
+        reconstruction = sequences_to_dataframe(
+            sequences=predictions,
+            timestamps=window_timestamps,
+            columns=main_columns,
+        )
+        return reconstruction
+
+    def encode(self, x: pd.DataFrame) -> np.ndarray:
+        """Encode input time series into the latent space.
+
+        Args:
+            x: Input data as a DataFrame with DatetimeIndex.
 
         Returns:
             NumPy array with latent representations for each sequence window.
         """
         self._check_sequence_builder()
-        dataset, _ = self.sequence_builder.build_seq2one_dataset(
+        dataset, _ = self.sequence_builder.build_sliding_dataset(
             df=x,
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
             shuffle=False,
-            predict_mode=True,
         )
         return self.encoder.predict(dataset)
 
@@ -175,8 +213,8 @@ class Seq2OneAutoencoder(Autoencoder):
         initial_epoch: int = 0,
         learning_rate: Optional[float] = None,
         **kwargs,
-    ) -> Seq2OneAutoencoder:
-        """Internal training helper using seq2one dataset (sequence -> last timestep).
+    ) -> "Seq2SeqAutoencoder":
+        """Internal training helper working with tf.data.Datasets.
 
         Args:
             x: Training data as a DataFrame with DatetimeIndex.
@@ -187,15 +225,14 @@ class Seq2OneAutoencoder(Autoencoder):
             **kwargs: Additional keyword arguments passed to ``model.fit``.
 
         Returns:
-            The trained (or tuned) ``Seq2OneAutoencoder`` instance.
+            The trained (or tuned) ``Seq2SeqAutoencoder`` instance.
         """
-        self._check_sequence_builder()
         if learning_rate is not None:
             self.compile_model(new_learning_rate=learning_rate)
         else:
             self.compile_model()
 
-        train_dataset, _ = self.sequence_builder.build_seq2one_dataset(
+        train_dataset, _ = self.sequence_builder.build_sliding_dataset(
             df=x,
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
@@ -204,12 +241,11 @@ class Seq2OneAutoencoder(Autoencoder):
 
         val_dataset = None
         if x_val is not None:
-            val_dataset, _ = self.sequence_builder.build_seq2one_dataset(
+            val_dataset, _ = self.sequence_builder.build_sliding_dataset(
                 df=x_val,
                 batch_size=self.batch_size,
                 conditional_features=self.conditional_features,
                 shuffle=False,
-                predict_mode=True,
             )
 
         callbacks: List[Callback] = list(self.callbacks)
@@ -217,7 +253,6 @@ class Seq2OneAutoencoder(Autoencoder):
             callbacks += kwargs["callbacks"]
             kwargs.pop("callbacks")
 
-        kwargs.setdefault("verbose", self.verbose)
         history = self.model.fit(
             train_dataset,
             epochs=total_epochs,
@@ -228,44 +263,6 @@ class Seq2OneAutoencoder(Autoencoder):
         )
         self._extend_fit_history(history.history)
         return self
-
-    def _predict(self, x: pd.DataFrame, return_conditions: bool = False, **kwargs) -> pd.DataFrame:
-        """Predict the last timestep per window and return a 2D DataFrame.
-
-        For each window, the model outputs a single vector (reconstruction for the last timestep).
-        The resulting DataFrame has one row per window, indexed by the last timestamp of that window.
-        """
-        self._check_sequence_builder()
-        dataset, window_timestamps = self.sequence_builder.build_seq2one_dataset(
-            df=x,
-            batch_size=self.batch_size,
-            conditional_features=self.conditional_features,
-            shuffle=False,
-            predict_mode=True,
-        )
-        self.window_timestamps_ = window_timestamps
-
-        kwargs.setdefault("verbose", self.verbose)
-        predictions = self.model.predict(dataset, **kwargs)  # (N, F_main)
-
-        if self.conditional_features:
-            main_columns = [c for c in x.columns if c not in self.conditional_features]
-        else:
-            main_columns = list(x.columns)
-
-        target_timestamps = window_timestamps[:, -1]
-        target_index = self._timestamps_to_index(target_timestamps, x.index)
-
-        reconstruction = pd.DataFrame(
-            data=predictions,
-            index=target_index,
-            columns=main_columns,
-        )
-        if return_conditions and self.conditional_features:
-            cond_at_targets = x[self.conditional_features].loc[reconstruction.index]
-            return cond_at_targets.join(reconstruction)
-
-        return reconstruction
 
     def _ensure_model_created_from(self, x: pd.DataFrame) -> None:
         """Ensure that the underlying Keras model is created based on data shape.
@@ -312,19 +309,6 @@ class Seq2OneAutoencoder(Autoencoder):
                 f"{self.__class__.__name__} requires a 'sequence_builder' to be set. "
                 "When training a new model, configure 'sequence_builder' under "
                 "'train.autoencoder.params.sequence_builder' in the config. "
-                "When loading an existing model, call 'FaultDetector.load_models' before calling fit/predict."
+                "When loading an existing model, call 'FaultDetector.load_models' "
+                "before calling fit/predict."
             )
-
-    @staticmethod
-    def _timestamps_to_index(target_timestamps: np.ndarray, ref_index: pd.DatetimeIndex) -> pd.DatetimeIndex:
-        """Convert numpy datetime64 timestamps to a DatetimeIndex compatible with ref_index.
-
-        - If ref_index is tz-naive: return tz-naive index.
-        - If ref_index is tz-aware: interpret target_timestamps as UTC instants
-          (as produced by ref_index.values) and convert to ref_index.tz.
-        """
-
-        idx = pd.DatetimeIndex(target_timestamps)
-        if isinstance(ref_index, pd.DatetimeIndex) and ref_index.tz is not None and idx.tz is None:
-            idx = idx.tz_localize("UTC").tz_convert(ref_index.tz)
-        return idx
