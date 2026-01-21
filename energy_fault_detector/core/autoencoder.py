@@ -97,7 +97,8 @@ class Autoencoder(ABC, SaveLoadMixin):
         return self.model(x)
 
     @abstractmethod
-    def create_model(self, input_dimension: Union[int, Tuple], **kwargs) -> KerasModel:
+    def create_model(self, input_dimension: Union[int, Tuple], condition_dimension: Optional[int] = None, **kwargs
+                     ) -> KerasModel:
         """Create a keras model, sets the model and (optionally) encoder attributes.
 
         Args:
@@ -148,10 +149,10 @@ class Autoencoder(ABC, SaveLoadMixin):
             self.callbacks += kwargs['callbacks']
             kwargs.pop('callbacks')
 
-        self._fit_model(x, x_val, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
+        self._fit_internal(x, x_val, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
         return self
 
-    def _fit_model(self, x: DataType, x_val: DataType, epochs: int, callbacks: List[Callback], **kwargs) -> None:
+    def _fit_internal(self, x: DataType, x_val: DataType, epochs: int, callbacks: List[Callback], **kwargs) -> None:
         """Fit the keras model on provided training data.
 
         Args:
@@ -200,7 +201,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         """
 
         self.compile_model(learning_rate)  # sets new learning rate
-        self._fit_model(
+        self._fit_internal(
             x, x_val,
             epochs=tune_epochs + self.epochs,
             callbacks=self.callbacks,

@@ -23,6 +23,13 @@ register(module_path='energy_fault_detector.autoencoders.conditional_autoencoder
          class_type='autoencoder',
          class_names=['ConditionalAE', 'ConditionalAutoencoder', 'conditional_ae', 'conditional',
                       'conditional_autoencoder'])
+register(module_path='energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder',
+         class_type='autoencoder',
+         class_names=['LSTMSeq2OneAutoencoder', 'LSTMSeq2One', 'lstm_seq2one', 'lstm_seq2one_autoencoder'])
+register(module_path='energy_fault_detector.autoencoders.LSTMSeqAutoencoder',
+         class_type='autoencoder',
+         class_names=['LSTMSeqAutoencoder', 'LSTMSeq2SeqAutoencoder', 'LSTMSeq', 'lstm_seq', 'lstm_seq_autoencoder',
+                      'lstm_seq2seq', 'lstm_seq2seq_autoencoder', 'LSTMSeq2Seq'])
 
 # scores
 register(module_path='energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore',
