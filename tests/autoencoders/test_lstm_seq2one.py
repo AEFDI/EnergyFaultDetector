@@ -57,6 +57,10 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
 
         self.autoencoder = LSTMSeq2OneAutoencoder(**self.params)
 
+    # ------------------------------------------------------------------ #
+    # Basic fit / predict (no conditional features)
+    # ------------------------------------------------------------------ #
+
     def test_fit_builds_model_and_history(self) -> None:
         """Model and history should be created after fit."""
         self.autoencoder.fit(self.df)
@@ -91,6 +95,10 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
         # Index: last timestamp of each window
         expected_index = self.df.index[self.sequence_length - 1 :]
         self.assertTrue(reconstruction.index.equals(expected_index))
+
+    # ------------------------------------------------------------------ #
+    # Conditional features
+    # ------------------------------------------------------------------ #
 
     def test_fit_and_predict_with_conditional_features(self) -> None:
         """When using conditional features, model should have two inputs and predict only main features."""

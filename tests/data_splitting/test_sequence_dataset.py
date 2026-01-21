@@ -16,6 +16,7 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
         np.random.seed(42)
         self.sequence_length = 4
         self.ts_freq = np.timedelta64(10, "m")
+        self.overlap = self.sequence_length - 1  # stride = 1
 
         # Simple regularly sampled time series: 20 timesteps, 3 features
         timestamps = pd.date_range("2025-01-01", periods=20, freq="10min")
@@ -57,6 +58,8 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
                 ts_freq=self.ts_freq,
                 stride=0,  # invalid: <= 0
             )
+
+    def test_init_invalid_overlap(self) -> None:
         with self.assertRaises(ValueError):
             _ = SequenceDatasetBuilder(
                 sequence_length=4,
