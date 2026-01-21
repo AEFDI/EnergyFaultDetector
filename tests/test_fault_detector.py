@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 
 from energy_fault_detector.fault_detector import FaultDetector, Config
-from energy_fault_detector.autoencoders import ConditionalAE
+from energy_fault_detector.autoencoders import ConditionalAE, LSTMSeq2OneAutoencoder
 
 mock_autoencoder = MagicMock()
 mock_data_preprocessor = MagicMock()
@@ -310,3 +310,8 @@ class TestFaultDetectorModelCreation(unittest.TestCase):
         model = FaultDetector(config, model_directory=self.test_model_dir)
         self.assertIsInstance(model.autoencoder, ConditionalAE)
         self.assertListEqual(model.autoencoder.conditional_features, ['feature_a', 'feature_b'])
+
+    def test_sequential_model_created(self):
+        config = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_ts_freq.yaml'))
+        model = FaultDetector(config, model_directory=self.test_model_dir)
+        self.assertIsInstance(model.autoencoder, LSTMSeq2OneAutoencoder)
