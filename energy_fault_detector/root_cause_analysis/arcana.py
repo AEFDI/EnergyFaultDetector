@@ -13,17 +13,16 @@ tf.get_logger().setLevel('ERROR')
 from tensorflow.keras.optimizers import Adam
 
 from energy_fault_detector.core.autoencoder import Autoencoder
-from energy_fault_detector.autoencoders.sequence_autoencoder import SequenceAutoencoder
+from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
 from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 from energy_fault_detector.autoencoders import _sequence_utils
 
 logger = logging.getLogger('energy_fault_detector')
 
-AE_TYPE = Union[Autoencoder, SequenceAutoencoder]
+AE_TYPE = Union[Autoencoder, Seq2SeqAutoencoder, Seq2OneAutoencoder]
 BIAS_RETURN_TYPE = Tuple[tf.Variable, Tuple[tf.Tensor, tf.Tensor, tf.Tensor], tf.Variable]
 
 
-# TODO: Refactor - separate dense/seq2one/seq2seq logic
 class Arcana:
     """Anomaly root cause analysis. Tries to find which of the sensors/inputs caused
     the reconstruction error of an autoencoder model. Implementation details are found in
@@ -81,7 +80,7 @@ class Arcana:
 
         self.keras_model: AE_TYPE = model
 
-        self.sequence_based = isinstance(self.keras_model, SequenceAutoencoder)
+        self.sequence_based = isinstance(self.keras_model, (Seq2SeqAutoencoder, Seq2OneAutoencoder))
         self.seq2one = isinstance(self.keras_model, Seq2OneAutoencoder)
 
         self.learning_rate: float = learning_rate
@@ -161,7 +160,6 @@ class Arcana:
 
             x_input = x_vals.numpy()
         else:
-            # standard AE
             if self.keras_model.is_conditional:
                 # split inputs for conditional models
                 conditions_df = x[self.keras_model.conditional_features]
@@ -196,7 +194,6 @@ class Arcana:
                     # We return the bias of the reconstructed timestep (the last one).
                     return pd.DataFrame(data=xb[:, -1, :], columns=feature_names, index=window_timestamps)
                 else:
-                    # For seq2seq, we transform 3D output back to 2D
                     return _sequence_utils.sequences_to_dataframe(xb, window_timestamps, feature_names)
             else:
                 return pd.DataFrame(data=xb, columns=feature_names, index=timestamps)
@@ -245,10 +242,8 @@ class Arcana:
         if len(x) > self.max_sample_threshold:
             x_recon = self.keras_model(x, conditions).numpy()
             if self.seq2one:
-                # seq2one: x is (N, T, F), model output is (N, F)
                 recon_error = x_recon - x[:, -1, :]
             else:
-                # standard and seq2seq: x and x_recon are same shape: (N, F) or (N, T, F)
                 recon_error = x_recon - x
 
             # Mean squared error over all features (and time steps for seq2seq)
@@ -275,7 +270,7 @@ class Arcana:
             initial x_bias values
         """
         x_recon = self.keras_model(x, conditions)
-        if self.seq2one:
+        if self.sequence_based and len(x_recon.shape) == 2:
             # Broadcast reconstruction to full sequence shape for 3D initialization
             x_recon = tf.expand_dims(x_recon, axis=1)
 
@@ -306,16 +301,16 @@ class Arcana:
             grad: (tf.variable) contains the computed gradient for this x_bias update.
         """
         with tf.GradientTape() as grad_tape:
-            x_corr = x + x_bias  # corrected input
-            x_sim = self.keras_model(x_corr, conditions)  # predict the corrected value of x
+            # no need to watch x_corrected (we do everything with x_bias)
+            x_sim = self.keras_model(x + x_bias, conditions)  # predict the corrected value of x
 
             # target for reconstruction error
             if self.seq2one:
                 # x is (N, T, F), target is last timestep (N, F)
                 target = x[:, -1, :] + x_bias[:, -1, :]
             else:
-                # x and x_bias are same shape as x_sim (standard and seq2seq)
-                target = x_corr
+                # x and x_bias are same shape as x_sim
+                target = x + x_bias
 
             # loss part 1: measures the degree of anomaly of the ARCANA-corrected x_corrected
             loss_1 = 0.5 * tf.reduce_mean((x_sim - target) ** 2)
