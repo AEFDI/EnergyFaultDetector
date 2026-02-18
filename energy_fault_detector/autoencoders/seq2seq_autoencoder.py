@@ -12,6 +12,7 @@ from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatase
 from energy_fault_detector.autoencoders._sequence_utils import sequences_to_dataframe
 
 
+# TODO: Do we need this class?
 class Seq2SeqAutoencoder(Autoencoder):
     """Base class for sequence autoencoders (e.g. LSTM, CNN) on time-series data.
 
@@ -74,7 +75,7 @@ class Seq2SeqAutoencoder(Autoencoder):
         x: pd.DataFrame,
         x_val: Optional[pd.DataFrame] = None,
         **kwargs,
-    ) -> "Seq2SeqAutoencoder":
+    ) -> Seq2SeqAutoencoder:
         """Fit the sequence autoencoder on time-series data.
 
         Args:
@@ -162,11 +163,12 @@ class Seq2SeqAutoencoder(Autoencoder):
         )
         return reconstruction
 
-    def encode(self, x: pd.DataFrame) -> np.ndarray:
+    def encode(self, x: pd.DataFrame, conditions: pd.DataFrame = None) -> np.ndarray:
         """Encode input time series into the latent space.
 
         Args:
             x: Input data as a DataFrame with DatetimeIndex.
+            conditions: Optional DataFrame with conditional features. Currently not used. TODO: needed?
 
         Returns:
             NumPy array with latent representations for each sequence window.
