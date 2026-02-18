@@ -2,7 +2,7 @@
 
 
 import logging
-from typing import Tuple, List
+from typing import Tuple, List, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -13,10 +13,13 @@ tf.get_logger().setLevel('ERROR')
 from tensorflow.keras.optimizers import Adam
 
 from energy_fault_detector.core.autoencoder import Autoencoder
+from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
+from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
+from energy_fault_detector.autoencoders import _sequence_utils
 
 logger = logging.getLogger('energy_fault_detector')
 
-AE_TYPE = Autoencoder
+AE_TYPE = Union[Autoencoder, Seq2SeqAutoencoder, Seq2OneAutoencoder]
 BIAS_RETURN_TYPE = Tuple[tf.Variable, Tuple[tf.Tensor, tf.Tensor, tf.Tensor], tf.Variable]
 
 
@@ -33,9 +36,9 @@ class Arcana:
     signal (X_obs + X_bias, should be without anomaly after optimization) and X_obs the
     original signal. We are interested in finding the Arcana-correction X_bias, which
     indicates the deviation of each sensor causing the reconstruction error (the deviation
-    from the case without anomaly, still close to the original observation X_obs).
+    from the case without an anomaly, still close to the original observation X_obs).
 
-    Minimizing the L2 term results in minimal deviations (small x_bias values), the L1
+    Minimizing the L2 term results in minimal deviations (small x_bias values), while the L1
     term keeps the solution close to the original sensor values, effectively
     keeping the number of inputs responsible for the reconstruction error small.
 
@@ -77,6 +80,9 @@ class Arcana:
 
         self.keras_model: AE_TYPE = model
 
+        self.sequence_based = isinstance(self.keras_model, (Seq2SeqAutoencoder, Seq2OneAutoencoder))
+        self.seq2one = isinstance(self.keras_model, Seq2OneAutoencoder)
+
         self.learning_rate: float = learning_rate
         self.epsilon: float = epsilon
 
@@ -113,31 +119,89 @@ class Arcana:
         """
 
         conditions = None
-        if self.keras_model.is_conditional:
-            # split inputs for conditional models
-            conditions = x[self.keras_model.conditional_features]
-            x = x.drop(self.keras_model.conditional_features, axis=1)
+        feature_names = None
+        timestamps = None
+        window_timestamps = None
 
-        feature_names = x.columns
-        timestamps = x.index
-        x = x.values.astype('float32')
+        if self.sequence_based:
+            # handle sequential input
+            sb = self.keras_model.sequence_builder
+            if self.seq2one:
+                dataset, window_timestamps_all = sb.build_seq2one_dataset(
+                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
+                )
+                # For seq2one, each window corresponds to its last timestamp
+                window_timestamps = window_timestamps_all[:, -1]
+            else:
+                dataset, window_timestamps = sb.build_sliding_dataset(
+                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
+                )
 
-        selection = self.draw_samples(x, conditions)
-        x = x[selection]
-        timestamps = timestamps[selection]
+            # Extract full data from dataset (single batch since batch_size=len(x))
+            x_vals_list = []
+            conditions_list = []
+            for inputs, _ in dataset:
+                if self.keras_model.is_conditional:
+                    x_v, cond_v = inputs
+                    x_vals_list.append(x_v)
+                    conditions_list.append(cond_v)
+                else:
+                    x_vals_list.append(inputs)
 
-        if self.keras_model.is_conditional:
-            conditions = conditions.values[selection]
-            conditions = tf.constant(conditions, dtype=tf.float32)
+            x_vals = tf.concat(x_vals_list, axis=0)
+            if self.keras_model.is_conditional:
+                conditions = tf.concat(conditions_list, axis=0)
 
-        x_bias = self.initialize_x_bias(x, conditions)
+            # Main features columns
+            if self.keras_model.conditional_features:
+                feature_names = [c for c in x.columns if c not in self.keras_model.conditional_features]
+            else:
+                feature_names = x.columns
+
+            x_input = x_vals.numpy()
+        else:
+            if self.keras_model.is_conditional:
+                # split inputs for conditional models
+                conditions_df = x[self.keras_model.conditional_features]
+                x_main = x.drop(self.keras_model.conditional_features, axis=1)
+                conditions = tf.constant(conditions_df.values, dtype=tf.float32)
+            else:
+                x_main = x
+
+            feature_names = x_main.columns
+            timestamps = x_main.index
+            x_input = x_main.values.astype('float32')
+
+        selection = self.draw_samples(x_input, conditions)
+        x_input = x_input[selection]
+        if conditions is not None:
+            conditions = tf.gather(conditions, np.where(selection)[0])
+
+        if self.sequence_based:
+            window_timestamps = window_timestamps[selection]
+        else:
+            timestamps = timestamps[selection]
+
+        x_bias = self.initialize_x_bias(x_input, conditions)
         x_bias = tf.Variable(x_bias, dtype=tf.float32)
 
         tracked_losses = {'Combined Loss': [], 'Reconstruction Loss': [], 'Regularization Loss': [], 'Iteration': []}
-        tracked_bias = [x_bias.numpy()] if track_bias else []
+
+        def get_bias_df(xb):
+            if self.sequence_based:
+                if self.seq2one:
+                    # For seq2one, each row in the bias sequence corresponds to a window.
+                    # We return the bias of the reconstructed timestep (the last one).
+                    return pd.DataFrame(data=xb[:, -1, :], columns=feature_names, index=window_timestamps)
+                else:
+                    return _sequence_utils.sequences_to_dataframe(xb, window_timestamps, feature_names)
+            else:
+                return pd.DataFrame(data=xb, columns=feature_names, index=timestamps)
+
+        tracked_bias = [get_bias_df(x_bias.numpy())] if track_bias else []
 
         for i in range(self.num_iter):
-            x_bias, losses, _ = self.update_x_bias(x, x_bias, conditions)
+            x_bias, losses, _ = self.update_x_bias(x_input, x_bias, conditions)
 
             if i % 50 == 0:
                 loss_1, loss_2, combined_loss = losses[0].numpy(), losses[1].numpy(), losses[2].numpy()
@@ -147,18 +211,22 @@ class Arcana:
                     tracked_losses['Reconstruction Loss'].append(loss_1)
                     tracked_losses['Regularization Loss'].append(loss_2)
                 if track_bias:
-                    bias = x_bias.numpy()
-                    tracked_bias.append(bias)
+                    tracked_bias.append(get_bias_df(x_bias.numpy()))
                 if self.verbose:
                     logger.info('%d Combined Loss: %.2f', i, combined_loss)
 
-        x_bias = pd.DataFrame(data=x_bias.numpy(), columns=feature_names, index=timestamps)
+        x_bias_df = get_bias_df(x_bias.numpy())
 
         # return x_bias as a pandas DataFrame
-        tracked_losses = pd.DataFrame(tracked_losses)
-        tracked_losses = tracked_losses.set_index('Iteration')
-        tracked_bias_dfs = [pd.DataFrame(data=bias, columns=feature_names, index=timestamps) for bias in tracked_bias]
-        return x_bias, tracked_losses, tracked_bias_dfs
+        tracked_losses_df = pd.DataFrame(tracked_losses)
+        if 'Iteration' in tracked_losses_df.columns:
+            tracked_losses_df = tracked_losses_df.set_index('Iteration')
+
+        if track_losses and tracked_losses_df.empty:
+            tracked_losses_df = pd.DataFrame(columns=['Combined Loss', 'Reconstruction Loss', 'Regularization Loss'])
+            tracked_losses_df.index.name = 'Iteration'
+
+        return x_bias_df, tracked_losses_df, tracked_bias
 
     def draw_samples(self, x: np.ndarray, conditions: np.ndarray = None) -> np.ndarray:
         """ Selects index values from 0 to data_length by choosing the indexes with the highest anomaly score,
@@ -172,8 +240,18 @@ class Arcana:
             array of booleans defining the selected samples.
         """
         if len(x) > self.max_sample_threshold:
-            recon_error = np.abs(self.keras_model(x, conditions) - x)
-            anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=1))
+            x_recon = self.keras_model(x, conditions).numpy()
+            if self.seq2one:
+                recon_error = x_recon - x[:, -1, :]
+            else:
+                recon_error = x_recon - x
+
+            # Mean squared error over all features (and time steps for seq2seq)
+            if self.sequence_based and not self.seq2one:
+                anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=(1, 2)))
+            else:
+                anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=1))
+
             threshold_index = np.argsort(anomaly_score)[-self.max_sample_threshold]
             selection = anomaly_score >= anomaly_score[threshold_index]
         else:
@@ -191,24 +269,29 @@ class Arcana:
         Returns:
             initial x_bias values
         """
+        x_recon = self.keras_model(x, conditions)
+        if self.seq2one:
+            # Broadcast reconstruction to full sequence shape for 3D initialization
+            x_recon = tf.expand_dims(x_recon, axis=1)
+
         x_bias = None
         if self.init_x_bias == 'recon':
-            x_bias = self.keras_model(x, conditions) - x
+            x_bias = x_recon - x
         elif self.init_x_bias == 'zero':
             x_bias = 0 * x
         elif self.init_x_bias == 'weightedA':
-            x_bias = self.alpha * (0 * x) + (1 - self.alpha) * (self.keras_model(x, conditions) - x)
+            x_bias = self.alpha * (0 * x) + (1 - self.alpha) * (x_recon - x)
         elif self.init_x_bias == 'weightedB':
-            x_bias = (1 - self.alpha) * (0 * x) + self.alpha * (self.keras_model(x, conditions) - x)
+            x_bias = (1 - self.alpha) * (0 * x) + self.alpha * (x_recon - x)
 
         return x_bias
 
-    def update_x_bias(self, x: tf.Variable, x_bias: tf.Variable, conditions: tf.Tensor = None) -> BIAS_RETURN_TYPE:
+    def update_x_bias(self, x: tf.Tensor, x_bias: tf.Variable, conditions: tf.Tensor = None) -> BIAS_RETURN_TYPE:
         """This function builds a tensor which can calculate the ARCANA loss (full_loss) and computes the gradient
         of that loss with respect to the Variable x + x_bias using tensorflow GradientTape.
 
         Args:
-            x: tensorflow variable containing input data
+            x: tensorflow tensor containing input data
             x_bias: tensorflow variable containing the current ARCANA bias.
             conditions: (optional) tensor containing the conditional feature values.
 
@@ -221,8 +304,16 @@ class Arcana:
             # no need to watch x_corrected (we do everything with x_bias)
             x_sim = self.keras_model(x + x_bias, conditions)  # predict the corrected value of x
 
+            # target for reconstruction error
+            if self.seq2one:
+                # x is (N, T, F), target is last timestep (N, F)
+                target = x[:, -1, :] + x_bias[:, -1, :]
+            else:
+                # x and x_bias are same shape as x_sim
+                target = x + x_bias
+
             # loss part 1: measures the degree of anomaly of the ARCANA-corrected x_corrected
-            loss_1 = 0.5 * tf.reduce_mean((x_sim - x - x_bias) ** 2)
+            loss_1 = 0.5 * tf.reduce_mean((x_sim - target) ** 2)
             # loss part 2: measures the norm of x_bias and therefore the deviation
             # how far the Arcana-correction is away from the observation x
             loss_2 = tf.reduce_mean(tf.abs(x_bias))

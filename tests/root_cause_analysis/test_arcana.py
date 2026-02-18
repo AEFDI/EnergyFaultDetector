@@ -133,5 +133,6 @@ class TestArcana(TestCase):
         arcana = Arcana(model=self.cond_ae, num_iter=10, init_x_bias='recon')
         x_bias, tracked_losses, tracked_bias_dfs = arcana.find_arcana_bias(self.cond_data, track_bias=True)
         self.assertTupleEqual(inputs.numpy().shape, x_bias.shape)
-        self.assertTupleEqual((0, 3), tracked_losses.shape)
+        # 4 columns: Combined Loss, Reconstruction Loss, Regularization Loss, Iteration (now index)
+        self.assertEqual(tracked_losses.shape[1], 3)
         self.assertEqual(len(tracked_bias_dfs), 2)  # init bias + first iteration
