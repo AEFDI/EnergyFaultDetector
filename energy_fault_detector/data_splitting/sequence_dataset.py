@@ -9,6 +9,8 @@ import tensorflow as tf
 from .data_gap_handler import DataGapHandler
 
 
+# TODO: consider tf.keras.preprocessing.timeseries_dataset_from_array when no data gaps are present
+#       include masking of resampled data (data gaps) and missing values (padding?)
 class SequenceDatasetBuilder:
     """Build sequence datasets from a time-series DataFrame with a DatetimeIndex.
 
@@ -184,6 +186,20 @@ class SequenceDatasetBuilder:
         """Create a seq2one tf.data.Dataset from a time-series DataFrame.
 
         Inputs are sequences of length ``sequence_length``, target is the last timestep of each sequence.
+
+        Args:
+            df: Time-series data with DatetimeIndex, already preprocessed.
+            batch_size: Batch size for the dataset.
+            conditional_features: Optional list of column names to treat as conditional features.
+            shuffle: Whether to shuffle sequences (only relevant when ``training`` is True).
+
+        Returns:
+            A tuple ``(dataset, window_timestamps)`` where:
+
+              * ``dataset`` is a tf.data.Dataset for training or inference,
+              * ``window_timestamps`` is an array of shape (n_windows, sequence_length)
+
+                with timestamps for each window.
         """
         if not isinstance(df.index, pd.DatetimeIndex):
             raise ValueError("DataFrame index must be a DatetimeIndex.")
