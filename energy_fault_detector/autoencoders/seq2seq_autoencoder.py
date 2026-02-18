@@ -35,6 +35,17 @@ class Seq2SeqAutoencoder(Autoencoder):
         self,
         sequence_builder: SequenceDatasetBuilder = None,
         conditional_features: Optional[List[str]] = None,
+        learning_rate: float = 0.001,
+        batch_size: int = 32,
+        epochs: int = 10,
+        loss_name: str = "mean_squared_error",
+        metrics: Optional[List[str]] = None,
+        decay_rate: float = None,
+        decay_steps: float = None,
+        early_stopping: bool = False,
+        patience: int = 3,
+        min_delta: float = 1e-4,
+        noise: float = 0.0,
         **kwargs,
     ):
         """Initialize a sequence autoencoder.
@@ -42,9 +53,34 @@ class Seq2SeqAutoencoder(Autoencoder):
         Args:
             sequence_builder: SequenceDatasetBuilder instance used to create sliding-window datasets.
             conditional_features: Optional list of column names to treat as conditional features.
+            learning_rate: Initial learning rate for the optimizer.
+            batch_size: Batch size during training.
+            epochs: Number of epochs for initial training.
+            loss_name: Loss function name passed to ``model.compile``.
+            metrics: Additional metrics to track during training.
+            decay_rate: Exponential decay rate for the learning rate (optional).
+            decay_steps: Number of steps over which to apply learning rate decay (optional).
+            early_stopping: If True, enable EarlyStopping in the base Autoencoder.
+            patience: Patience for EarlyStopping (number of epochs without improvement).
+            min_delta: Minimum change in monitored quantity for EarlyStopping to qualify as an improvement.
+            noise: Standard deviation of Gaussian noise applied to inputs during training (denoising AE).
             **kwargs: Additional keyword arguments passed to ``Autoencoder.__init__``.
         """
-        super().__init__(conditional_features=conditional_features, **kwargs)
+        super().__init__(
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            epochs=epochs,
+            loss_name=loss_name,
+            metrics=metrics,
+            decay_rate=decay_rate,
+            decay_steps=decay_steps,
+            early_stopping=early_stopping,
+            patience=patience,
+            min_delta=min_delta,
+            noise=noise,
+            conditional_features=conditional_features,
+            **kwargs,
+        )
 
         self.sequence_builder = sequence_builder
         self.conditional_features = conditional_features or []
