@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import pandas as pd
 from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.models import Model as KerasModel
 
 from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
@@ -39,16 +38,6 @@ class Seq2OneAutoencoder(Seq2SeqAutoencoder):
             **kwargs,
         )
 
-    # Child classes must still implement create_model, but with seq2one output shape
-    def create_model(
-        self,
-        input_dimension: Tuple[int, int],
-        condition_dimension: Optional[int] = None,
-        **kwargs,
-    ) -> KerasModel:
-        """Create the underlying Keras model (sequence -> single timestep)."""
-        raise NotImplementedError
-
     def _fit_internal(
         self,
         x: pd.DataFrame,
@@ -57,8 +46,20 @@ class Seq2OneAutoencoder(Seq2SeqAutoencoder):
         initial_epoch: int = 0,
         learning_rate: Optional[float] = None,
         **kwargs,
-    ) -> "Seq2OneAutoencoder":
-        """Internal training helper using seq2one dataset (sequence -> last timestep)."""
+    ) -> Seq2OneAutoencoder:
+        """Internal training helper using seq2one dataset (sequence -> last timestep).
+
+        Args:
+            x: Training data as a DataFrame with DatetimeIndex.
+            x_val: Optional validation data as a DataFrame with DatetimeIndex.
+            total_epochs: Total number of epochs to run.
+            initial_epoch: Epoch number to start from (used for tuning).
+            learning_rate: Optional new learning rate to use for training.
+            **kwargs: Additional keyword arguments passed to ``model.fit``.
+
+        Returns:
+            The trained (or tuned) ``Seq2OneAutoencoder`` instance.
+        """
         self._check_sequence_builder()
         if learning_rate is not None:
             self.compile_model(new_learning_rate=learning_rate)
