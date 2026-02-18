@@ -146,6 +146,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         encoded = Dense(self.code_size, activation="relu", name="encoded")(x)
 
         # Encoder model for latent representation
+        inputs = [main_input]
         if conditional_input is not None:
             self.encoder = tf.keras.Model(
                 inputs=[main_input, conditional_input],
