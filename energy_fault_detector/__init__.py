@@ -1,11 +1,6 @@
 """The anomaly-detection-iee package"""
 
-from .__about__ import __version__
-from energy_fault_detector.core._logs import setup_logging
-from pathlib import Path
-
-# Setup logging
-setup_logging(Path(__file__).parent / 'logging.yaml')
+import os
 
 from energy_fault_detector.registration import registry, register
 from energy_fault_detector.fault_detector import FaultDetector
@@ -25,7 +20,7 @@ register(module_path='energy_fault_detector.autoencoders.conditional_autoencoder
                       'conditional_autoencoder'])
 
 # scores
-register(module_path='energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore',
+register(module_path='energy_fault_detector.anomaly_scores.mahalnobis_score.MahalanobisScore',
          class_type='anomaly_score',
          class_names=['MahalanobisScore', 'Mahalanobis', 'mahalanobis'])
 register(module_path='energy_fault_detector.anomaly_scores.rmse_score.RMSEScore',
@@ -45,3 +40,9 @@ register(module_path='energy_fault_detector.threshold_selectors.quantile_thresho
 register(module_path='energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector',
          class_type='threshold_selector',
          class_names=['AdaptiveThresholdSelector', 'adaptive_threshold', 'SVR', 'svr', 'adaptive'])
+
+HERE = os.path.dirname(__file__)
+with open(os.path.join(HERE, 'VERSION'), 'r', encoding='utf-8') as f:
+    version = f.readlines()[0].strip()
+
+__version__ = version
