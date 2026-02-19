@@ -129,7 +129,8 @@ class Arcana:
             sb = self.keras_model.sequence_builder
             if self.seq2one:
                 dataset, window_timestamps_all = sb.build_seq2one_dataset(
-                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
+                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features,
+                    shuffle=False, predict_mode=True,
                 )
                 # For seq2one, each window corresponds to its last timestamp
                 window_timestamps = window_timestamps_all[:, -1]
@@ -275,7 +276,7 @@ class Arcana:
             initial x_bias values
         """
         x_recon = self.keras_model(x, conditions)
-        if self.seq2one:
+        if self.sequence_based and len(x_recon.shape) == 2:
             # Broadcast reconstruction to full sequence shape for 3D initialization
             x_recon = tf.expand_dims(x_recon, axis=1)
 
