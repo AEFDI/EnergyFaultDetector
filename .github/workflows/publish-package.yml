@@ -16,13 +16,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-
-      - name: Update VERSION file
-        run: echo "${GITHUB_REF##*/}" > "${PKG_NAME}/VERSION"
 
       - name: Build release distributions
         run: |

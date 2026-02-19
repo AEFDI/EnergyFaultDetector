@@ -121,7 +121,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         model = FaultDetector(config)
         # For autoencoder optimization, we do not need to fit a threshold
         training_dict = model.fit(train_data, normal_index=normal_index, fit_autoencoder_only=True,
-                                  save_model=False)
+                                  save_models=False)
 
         # Calculate the MSE of the reconstruction errors of the validation data - this is minimized
         deviations = training_dict.val_recon_error

@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "energy-fault-detector"
-dynamic = ["version", "dependencies", "optional-dependencies"]
 authors = [
   { name="AEFDI", email="aefdi@iee.fraunhofer.de" },
 ]
@@ -21,7 +20,41 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 license = { file = "LICENSE" }
+dependencies = [
+    "numpy>=1.23.5,<=1.26.4",
+    "scipy>=1.11,<1.17",
+    "tensorflow==2.15.1",
+    "pyyaml",
+    "scikit-learn>=1.5.2,<=1.7.0",
+    "pandas>=2.0",
+    "cerberus",
+    "matplotlib>=3.9.0",
+    "optuna>=4.0",
+    "chardet>=5.0",
+    "requests~=2.32.4",
+]
+dynamic = ["version"]
 
+[project.optional-dependencies]
+dev = [
+    "twine",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "build",
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-typehints",
+    "sphinx-copybutton",
+]
+
+[tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+include = ["energy_fault_detector*"]
+exclude = ["data*", "notebooks*", 'docs', 'tests', 'tests.*', 'notebooks']
 
 [project.urls]
 repository = "https://github.com/AEFDI/EnergyFaultDetector"
@@ -33,8 +66,49 @@ quick_fault_detector = "energy_fault_detector.main:main"
 [tool.setuptools.package-data]
 "energy_fault_detector" = [
     "logging.yaml",
-    "VERSION",
-    "ABOUT",
     "c2c_options.yaml",
     "base_config.yaml"
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:tensorflow.*",
+    "ignore::DeprecationWarning:scipy.*",
+    "ignore::UserWarning:sklearn.covariance.*",
+]
+
+[tool.coverage.run]
+omit = [
+  "./venv/*",
+  "**/tests/*",
+  "*__init__.py",
+  "*/.local/*",
+  "*/Local/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.pylint.main]
+ignore = ["docs", "build", "dist", "testdata"]
+
+[tool.pylint.messages_control]
+disable = [
+  "arguments-differ",
+  "fixme",
+  "import-outside-toplevel",
+  "import-star-module-level",
+  "invalid-name",
+  "redefined-builtin",
+  "too-few-public-methods",
+  "ungrouped-imports",
+  "unnecessary-lambda",
+  "missing-module-docstring",
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.reports]
+output-format = "parseable"

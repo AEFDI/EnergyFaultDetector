@@ -11,7 +11,7 @@ class TestFaultDetectionResultSaveLoad(unittest.TestCase):
 
     def setUp(self):
         # Create sample data
-        index = pd.date_range("2023-01-01", periods=5, freq="H")
+        index = pd.date_range("2023-01-01", periods=5, freq="h")
 
         self.predicted_anomalies = pd.Series([False, True, False, True, False], index=index, name="anomaly")
         self.reconstruction = pd.DataFrame({

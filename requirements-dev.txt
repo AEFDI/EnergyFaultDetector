@@ -1,6 +1,0 @@
--r requirements.txt
-twine
-pylint
-pytest
-pytest-cov
-build

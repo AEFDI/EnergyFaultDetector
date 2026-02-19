@@ -17,9 +17,16 @@ use os.path.abspath to make it absolute, like shown here.
 """
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
 
 IMPORT_NAME = 'energy_fault_detector'  # name used for imports
+
+# Ensure the project/package is importable when building docs from a source tree
+HERE = os.path.dirname(__file__)
+PROJECT_ROOT = os.path.dirname(HERE)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from energy_fault_detector import __about__ as about  # noqa: E402
 
 # Add the path of our module to the import searchpath (uncomment to use)
 # import sys
@@ -44,14 +51,7 @@ autoclass_content = 'both'
 
 
 # current version etc. -----------------------------------------------------------------
-HERE = os.path.dirname(__file__)
-with open(os.path.join(HERE, '..', IMPORT_NAME, 'VERSION'), 'r') as f:
-    version = f.readlines()[0].strip()
-
-with open(os.path.join(HERE, '..', IMPORT_NAME, 'ABOUT'), 'r') as f:
-    lines = f.readlines()
-    key_value_pairs = [line.replace('\n', '').split('=') for line in lines]
-    about = {key: val.strip() for key, val in key_value_pairs}
+version = about.__version__
 
 # -- General configuration -------------------------------------------------------------
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -67,8 +67,8 @@ extensions = [
     'sphinx_autodoc_typehints',  # package needs to be installed
     # 'sphinx.ext.doctest',  # if you want to use doctests somehow
     'sphinx.ext.imgmath',  # render latex graphics
-    'sphinx.ext.intersphinx',  # links to other (energy_fault_detector) packages
-    'sphinx.ext.coverage',  # documentation coverage (not test coverage)
+    #'sphinx.ext.intersphinx',  # links to other (energy_fault_detector) packages
+    #'sphinx.ext.coverage',  # documentation coverage (not test coverage)
     'sphinx_copybutton',  # add copy button to code blocks
 ]
 
@@ -85,9 +85,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = about['title']
-copyright = about['copyright']
-author = ', '.join(about['author'])
+project = about.__title__
+copyright = about.__copyright__
+author = ', '.join(about.__author__)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -182,8 +182,8 @@ latex_elements = {}
 latex_documents = [(
     master_doc,
     IMPORT_NAME + '.tex',
-    about['title'] + ' Documentation',
-    ', '.join(about['author']), 'manual'
+    about.__title__ + ' Documentation',
+    ', '.join(about.__author__), 'manual'
 )]
 
 
@@ -194,8 +194,8 @@ latex_documents = [(
 man_pages = [(
     master_doc,
     IMPORT_NAME,
-    about['title'] + ' Documentation',
-    about['author'], 1)
+    about.__title__ + ' Documentation',
+    about.__author__, 1)
 ]
 
 
@@ -205,7 +205,7 @@ man_pages = [(
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, about['title'], about['title']+ ' Documentation',
-     about['author'], about['title'], about['description'],
+    (master_doc, about.__title__, about.__title__ + ' Documentation',
+     about.__author__, about.__title__, about.__description__,
      'Miscellaneous'),
 ]

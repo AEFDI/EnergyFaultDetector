@@ -1,7 +1,5 @@
 recursive-exclude docs *
 recursive-exclude tests *
-include energy_fault_detector/VERSION
-include energy_fault_detector/ABOUT
+recursive-exclude notebooks *
 include energy_fault_detector/c2c_options.yaml
 include energy_fault_detector/base_config.yaml
-exclude notebooks/*
