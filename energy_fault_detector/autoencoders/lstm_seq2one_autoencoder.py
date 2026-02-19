@@ -10,6 +10,8 @@ from tensorflow.keras.layers import (
     Dropout,
     Dense,
     Concatenate,
+    RepeatVector,
+    Lambda,
 )
 from tensorflow.keras.models import Model as KerasModel
 
@@ -170,11 +172,23 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
                 name="encoder",
             )
 
-        # Decoder: map encoded vector directly to last-timestep features (no RepeatVector)
+        # Decoder: symmetric LSTM stack between encoded vector and Dense layer
+        # Restore temporal dimension, then apply reversed LSTM layers
+        decoder_output = RepeatVector(n=sequence_length)(encoded)
+        for layer_size in reversed(self.layers):
+            decoder_output = LSTM(
+                units=layer_size,
+                return_sequences=True,
+                stateful=self.stateful,
+            )(decoder_output)
+            decoder_output = Dropout(rate=self.dropout_rate)(decoder_output)
+
+        # Take last timestep and map to feature vector
+        last_timestep = Lambda(lambda t: t[:, -1, :], name="last_timestep")(decoder_output)
         reconstruction = Dense(
             units=n_main_features,
             name="reconstruction",
-        )(encoded)
+        )(last_timestep)
 
         if conditional_input is not None:
             self.model = tf.keras.Model(
