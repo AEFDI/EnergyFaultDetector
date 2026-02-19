@@ -20,7 +20,7 @@ register(module_path='energy_fault_detector.autoencoders.conditional_autoencoder
                       'conditional_autoencoder'])
 
 # scores
-register(module_path='energy_fault_detector.anomaly_scores.mahalnobis_score.MahalanobisScore',
+register(module_path='energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore',
          class_type='anomaly_score',
          class_names=['MahalanobisScore', 'Mahalanobis', 'mahalanobis'])
 register(module_path='energy_fault_detector.anomaly_scores.rmse_score.RMSEScore',
