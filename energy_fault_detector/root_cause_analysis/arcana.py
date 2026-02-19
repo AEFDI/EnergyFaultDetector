@@ -12,7 +12,7 @@ tf.get_logger().setLevel('ERROR')
 
 from tensorflow.keras.optimizers import Adam
 
-from energy_fault_detector.core import Autoencoder
+from energy_fault_detector.core.autoencoder import Autoencoder
 
 logger = logging.getLogger('energy_fault_detector')
 

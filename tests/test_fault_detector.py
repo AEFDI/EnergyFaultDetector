@@ -92,7 +92,8 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         expected_path = os.path.join(self.test_dir, 'my_model')
         self.assertEqual(expected_path, model_path)
 
-@patch("energy_fault_detector.core.model_factory.Autoencoder", new=mock_autoencoder)
+
+@patch("energy_fault_detector.core.autoencoder.Autoencoder", new=mock_autoencoder)
 @patch("energy_fault_detector.core.model_factory.AnomalyScore", new=mock_score)
 @patch("energy_fault_detector.core.model_factory.ThresholdSelector", new=mock_threshold)
 @patch("energy_fault_detector.core.model_factory.DataPreprocessor", new=mock_data_preprocessor)
@@ -239,7 +240,7 @@ class TestFaultDetector(unittest.TestCase):
                                            save_models=False)
         mock_autoencoder.tune_decoder.called_once()
 
-    @patch('energy_fault_detector.fault_detector.Arcana.find_arcana_bias')
+    @patch('energy_fault_detector.root_cause_analysis.arcana.Arcana.find_arcana_bias')
     def test_predict(self, mock_find_arcana_bias):
         fault_detector = self._create_fault_detector(self.conf)
         fault_detector.load_models = MagicMock()  # ensures we use the mock model objects
