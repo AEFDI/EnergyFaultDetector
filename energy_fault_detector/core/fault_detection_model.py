@@ -2,7 +2,7 @@
 
 import os
 from abc import ABC, abstractmethod
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple, TYPE_CHECKING
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -13,12 +13,15 @@ from sklearn.model_selection import train_test_split
 
 from energy_fault_detector.config import Config
 from energy_fault_detector import registry
-from energy_fault_detector.core import Autoencoder, AnomalyScore, ThresholdSelector
 from energy_fault_detector.core.model_factory import ModelFactory
 from energy_fault_detector.core.fault_detection_result import ModelMetadata, FaultDetectionResult
-from energy_fault_detector.data_preprocessing import DataPreprocessor
 from energy_fault_detector.core._logs import setup_logging
 from energy_fault_detector.data_splitting.data_splitter import BlockDataSplitter
+from energy_fault_detector.core import AnomalyScore, ThresholdSelector
+from energy_fault_detector.data_preprocessing import DataPreprocessor
+
+if TYPE_CHECKING:
+    from energy_fault_detector.core.autoencoder import Autoencoder
 
 setup_logging(Path(__file__).parent.parent / 'logging.yaml')
 logger = logging.getLogger('energy_fault_detector')
@@ -30,7 +33,7 @@ SCORE_DIR = 'anomaly_score'
 
 DataType = Union[pd.DataFrame, np.ndarray, List]
 PathLike = Union[str, Path]
-ModelPart = Union[DataPreprocessor, Autoencoder, AnomalyScore, ThresholdSelector]
+ModelPart = Union[DataPreprocessor, "Autoencoder", AnomalyScore, ThresholdSelector]
 
 
 class NoTrainingData(Exception):
@@ -58,7 +61,7 @@ class FaultDetectionModel(ABC):
         self.model_directory: PathLike = model_directory
 
         self.anomaly_score: Optional[AnomalyScore] = None
-        self.autoencoder: Optional[Autoencoder] = None
+        self.autoencoder: Optional['Autoencoder'] = None
         self.threshold_selector: Optional[ThresholdSelector] = None
         self.data_preprocessor: Optional[DataPreprocessor] = None
 

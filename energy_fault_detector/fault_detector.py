@@ -8,14 +8,11 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
-from tensorflow.keras.backend import clear_session
 
 from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
-from energy_fault_detector.threshold_selectors import AdaptiveThresholdSelector
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
 from energy_fault_detector.data_preprocessing.data_clipper import DataClipper
-from energy_fault_detector.root_cause_analysis import Arcana
 from energy_fault_detector.config import Config
 from energy_fault_detector.core._logs import setup_logging
 
@@ -123,6 +120,13 @@ class FaultDetector(FaultDetectionModel):
             ModelMetadata: metadata of the trained model: model_date, model_path, model reconstruction errors
             of the training and validation data.
         """
+
+        try:
+            from tensorflow.keras.backend import clear_session
+        except ImportError:
+            logger.warning('Could not import tensorflow.keras.backend.clear_session(). Please install tensorflow.')
+            raise
+
         clear_session()
         model_path = None  # default value (will be overwritten by self._save if the models are saved).
         x_prepped, x, y = self.preprocess_train_data(sensor_data=sensor_data, normal_index=normal_index,
@@ -203,6 +207,12 @@ class FaultDetector(FaultDetectionModel):
         else:
             if self.autoencoder is None:
                 raise ValueError('No models loaded and no pretrained_model_path provided!')
+
+        try:
+            from tensorflow.keras.backend import clear_session
+        except ImportError:
+            logger.warning('Could not import tensorflow.keras.backend.clear_session(). Please install tensorflow.')
+            raise
 
         clear_session()
         x = sensor_data.sort_index()
@@ -359,6 +369,12 @@ class FaultDetector(FaultDetectionModel):
             arcana_losses: dictionary containing loss names as keys and lists of loss values as values.
             tracked_bias: list of pandas dataframe containing the arcana bias recorded over the iterations.
         """
+        try:
+            from energy_fault_detector.root_cause_analysis.arcana import Arcana
+        except ImportError:
+            logger.warning('Could not import energy_fault_detector.root_cause_analysis.arcana import Arcana. '
+                           'Please ensure tensorflow is installed.')
+            raise
 
         x_prepped = self.data_preprocessor.transform(sensor_data)
         if self.config is None:
@@ -395,7 +411,7 @@ class FaultDetector(FaultDetectionModel):
 
         logger.info('Fit threshold.')
         # fit threshold - x_prepped and labels are filtered based on scores (all or validation data only) used
-        if isinstance(self.threshold_selector, AdaptiveThresholdSelector):
+        if self.threshold_selector.__class__.__name__ == 'AdaptiveThresholdSelector':
             self.threshold_selector.fit(scaled_ae_input=x_prepped_all.loc[scores.index],
                                         anomaly_score=scores,
                                         normal_index=y.loc[scores.index])

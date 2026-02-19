@@ -11,33 +11,33 @@ from energy_fault_detector.quick_fault_detection import quick_fault_detector
 # class types: autoencoder, anomaly_score, threshold_selector
 
 # autoencoders
-register(module_path='energy_fault_detector.autoencoders.MultilayerAutoencoder',
+register(module_path='energy_fault_detector.autoencoders.multilayer_autoencoder.MultilayerAutoencoder',
          class_type='autoencoder',
          class_names=['MultilayerAutoencoder', 'multilayer_ae', 'multilayer_autoencoder', 'default', 'dense'])
-register(module_path='energy_fault_detector.autoencoders.ConditionalAE',
+register(module_path='energy_fault_detector.autoencoders.conditional_autoencoder.ConditionalAE',
          class_type='autoencoder',
          class_names=['ConditionalAE', 'ConditionalAutoencoder', 'conditional_ae', 'conditional',
                       'conditional_autoencoder'])
 
 # scores
-register(module_path='energy_fault_detector.anomaly_scores.MahalanobisScore',
+register(module_path='energy_fault_detector.anomaly_scores.mahalnobis_score.MahalanobisScore',
          class_type='anomaly_score',
          class_names=['MahalanobisScore', 'Mahalanobis', 'mahalanobis'])
-register(module_path='energy_fault_detector.anomaly_scores.RMSEScore',
+register(module_path='energy_fault_detector.anomaly_scores.rmse_score.RMSEScore',
          class_type='anomaly_score',
          class_names=['RMSEScore', 'RMSE', 'rmse'])
 
 # threshold selectors
-register(module_path='energy_fault_detector.threshold_selectors.FDRSelector',
+register(module_path='energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector',
          class_type='threshold_selector',
          class_names=['FDRSelector', 'FDR_selector', 'fdr_selector', 'FDR', 'fdr'])
-register(module_path='energy_fault_detector.threshold_selectors.FbetaSelector',
+register(module_path='energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector',
          class_type='threshold_selector',
          class_names=['FbetaSelector', 'Fbeta_selector', 'fbeta_selector', 'fbeta'])
-register(module_path='energy_fault_detector.threshold_selectors.QuantileThresholdSelector',
+register(module_path='energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector',
          class_type='threshold_selector',
          class_names=['QuantileThresholdSelector', 'quantile_selector', 'quantile'])
-register(module_path='energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector',
+register(module_path='energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector',
          class_type='threshold_selector',
          class_names=['AdaptiveThresholdSelector', 'adaptive_threshold', 'SVR', 'svr', 'adaptive'])
 

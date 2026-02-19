@@ -1,14 +1,14 @@
 
-from typing import Union, Dict
+from typing import Union, Dict, TYPE_CHECKING
 
 from energy_fault_detector.registration import registry
 from energy_fault_detector.config import Config
 from energy_fault_detector.data_preprocessing import DataPreprocessor
-from energy_fault_detector.core import (
-    Autoencoder, AnomalyScore, ThresholdSelector
-)
+from energy_fault_detector.core import AnomalyScore, ThresholdSelector
+if TYPE_CHECKING:
+    from energy_fault_detector.core.autoencoder import Autoencoder
 
-ModelType = Union[Autoencoder, AnomalyScore, ThresholdSelector, DataPreprocessor]
+ModelType = Union["Autoencoder", AnomalyScore, ThresholdSelector, DataPreprocessor]
 
 
 class ModelFactory:
@@ -58,7 +58,7 @@ class ModelFactory:
         return self._models.get('data_preprocessor')
 
     @property
-    def autoencoder(self) -> Autoencoder:
+    def autoencoder(self) -> "Autoencoder":
         """
         Get the autoencoder model.
 

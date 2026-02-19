@@ -1,6 +1,8 @@
 """Visualisation functions."""
 
-from typing import Union, Tuple, Optional, List
+from __future__ import annotations
+
+from typing import Union, Tuple, Optional, List, TYPE_CHECKING
 import warnings
 
 import numpy as np
@@ -9,8 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerTuple
 import pandas as pd
 
-from energy_fault_detector.core import Autoencoder
-from energy_fault_detector.fault_detector import FaultDetector
+if TYPE_CHECKING:
+    from energy_fault_detector.core.autoencoder import Autoencoder
+    from energy_fault_detector.fault_detector import FaultDetector
 
 MAX_PLOTS = 20
 
