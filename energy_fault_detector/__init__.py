@@ -1,7 +1,6 @@
 """The anomaly-detection-iee package"""
 
-import os
-
+from .__about__ import __version__
 from energy_fault_detector.registration import registry, register
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.config import Config
@@ -40,9 +39,3 @@ register(module_path='energy_fault_detector.threshold_selectors.quantile_thresho
 register(module_path='energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector',
          class_type='threshold_selector',
          class_names=['AdaptiveThresholdSelector', 'adaptive_threshold', 'SVR', 'svr', 'adaptive'])
-
-HERE = os.path.dirname(__file__)
-with open(os.path.join(HERE, 'VERSION'), 'r', encoding='utf-8') as f:
-    version = f.readlines()[0].strip()
-
-__version__ = version
