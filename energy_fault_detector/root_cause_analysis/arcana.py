@@ -270,7 +270,7 @@ class Arcana:
             initial x_bias values
         """
         x_recon = self.keras_model(x, conditions)
-        if self.seq2one:
+        if self.sequence_based and len(x_recon.shape) == 2:
             # Broadcast reconstruction to full sequence shape for 3D initialization
             x_recon = tf.expand_dims(x_recon, axis=1)
 
