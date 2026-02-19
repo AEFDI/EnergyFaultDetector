@@ -6,11 +6,13 @@ import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
     Conv1D,
+    Conv1DTranspose,
     BatchNormalization,
     Dropout,
     Dense,
     Concatenate,
     Flatten,
+    Reshape,
 )
 from tensorflow.keras.models import Model as KerasModel
 
@@ -147,35 +149,64 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             
             # The last layer of the encoder should be named "encoded"
             if i == len(self.filters) - 1:
-                # We apply Flatten if we want a single vector for the whole sequence
-                # or we just use the last temporal output if it's already one.
-                # Since it's seq2one, we probably want to flatten or global pool
-                # to get a latent vector that represents the whole sequence.
-                # However, the user's CNNAutoencoder (seq2seq) didn't flatten.
-                # For seq2one, we MUST get to a fixed-size vector.
+                # Store the shape for the symmetric decoder
+                # x.shape is (batch, sequence_length / strides^num_layers, filters)
+                # We need to remember this to reshape back in the decoder.
+                # However, in Keras functional API, we can't easily get the shape 
+                # including None for batch size, but we can get it from the tensor.
+                shape_before_flatten = x.shape[1:]
                 encoded = Flatten(name="encoded")(x)
             
         # Encoder model for latent representation
-        inputs = [main_input]
         if conditional_input is not None:
-            inputs.append(conditional_input)
+            self.encoder = tf.keras.Model(
+                inputs=[main_input, conditional_input],
+                outputs=encoded,
+                name="encoder",
+            )
+        else:
+            self.encoder = tf.keras.Model(
+                inputs=main_input,
+                outputs=encoded,
+                name="encoder",
+            )
 
-        self.encoder = tf.keras.Model(
-            inputs=inputs,
-            outputs=encoded,
-            name="encoder",
-        )
+        # Decoder
 
-        # Decoder: map encoded vector directly to last-timestep features
+        # Apply symmetric Conv1DTranspose layers
+        for n_filters in self.filters[-2::-1] + [n_main_features]:
+            x = Conv1DTranspose(
+                filters=n_filters,
+                kernel_size=self.kernel_size,
+                padding="same",
+                strides=self.strides,
+                activation="relu",
+            )(x)
+            x = BatchNormalization()(x)
+            if self.dropout_rate > 0:
+                x = Dropout(rate=self.dropout_rate)(x)
+
+        # Final Flatten to get a single vector for seq2one
+        # Note: even if it's already one timestep (if strides=1), we Flatten to be sure.
+        x = Flatten()(x)
+
+        # Decoder: map to last-timestep features
         reconstruction = Dense(
             units=n_main_features,
             name="reconstruction",
-        )(encoded)
+        )(x)
 
-        self.model = tf.keras.Model(
-            inputs=inputs,
-            outputs=reconstruction,
-            name="cnn_seq2one_autoencoder",
-        )
+        if conditional_input is not None:
+            self.model = tf.keras.Model(
+                inputs=[main_input, conditional_input],
+                outputs=reconstruction,
+                name="cnn_seq2one_autoencoder",
+            )
+        else:
+            self.model = tf.keras.Model(
+                inputs=main_input,
+                outputs=reconstruction,
+                name="cnn_seq2one_autoencoder",
+            )
 
         return self.model
