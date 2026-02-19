@@ -1,8 +1,8 @@
 import numpy as np
-from tensorflow.keras import Input, Model as KerasModel
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
+from keras import Input, Model as KerasModel
+from keras.src.callbacks import EarlyStopping
+from keras.src.layers import Dense
+from keras.src.optimizers.adam import Adam
 
 
 class RegressionNN:
