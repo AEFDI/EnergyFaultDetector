@@ -71,16 +71,27 @@ def calculate_criticality(anomalies: pd.Series, normal_idx: pd.Series = None, in
     if len(anomalies) != len(normal_idx):
         raise ValueError('length of given pandas series anomalies and normal idx do not match!')
 
+    # Ensure aligned and sorted indices
     anomalies = anomalies.sort_index()
     normal_idx = normal_idx.sort_index()
-    criticality = [init_criticality]
-    for i, anomaly in enumerate(anomalies):
-        if normal_idx.iloc[i] and anomaly:
-            # increase if anomaly detected during normal OP
-            criticality.append(min(criticality[-1] + 1, max_criticality))
-        elif normal_idx.iloc[i] and not anomaly:
-            # decrease if no anomalies detected during normal OP
-            criticality.append(max(criticality[-1] - 1, 0))
-        else:
-            criticality.append(criticality[-1])
-    return pd.Series(criticality[1:], index=anomalies.index)
+
+    # Compute step deltas efficiently with numpy
+    normal_arr = normal_idx.to_numpy(dtype=bool, copy=False)
+    anomaly_arr = anomalies.to_numpy(dtype=bool, copy=False)
+
+    # +1 when normal & anomaly, -1 when normal & not anomaly, else 0
+    deltas = np.where(normal_arr & anomaly_arr, 1, np.where(normal_arr & ~anomaly_arr, -1, 0)).astype(int)
+
+    # Apply bounded cumulative sum (reflecting at 0 and max_criticality)
+    crit = np.empty_like(deltas, dtype=np.int64)
+    c = int(init_criticality)
+    max_c = int(max_criticality)
+    for i, d in enumerate(deltas):
+        c = c + int(d)
+        if c < 0:
+            c = 0
+        elif c > max_c:
+            c = max_c
+        crit[i] = c
+
+    return pd.Series(crit, index=anomalies.index)

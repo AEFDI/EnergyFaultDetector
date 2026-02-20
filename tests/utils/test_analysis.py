@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 from energy_fault_detector.utils import analysis
-from energy_fault_detector.root_cause_analysis.arcana_utils import calculate_mean_arcana_importances
 
 
 class TestAnalysis(unittest.TestCase):
 
-    def setUp(self) -> None:
-        pass
+    def make_time_index(self, n):
+        start = datetime(2020, 1, 1)
+        return pd.to_datetime([start + timedelta(minutes=15 * i) for i in range(n)])
 
     def test_create_anomaly_events_returns_correct_values(self):
         """Test if create_anomaly_events returns a DataFrame with correct values"""
@@ -27,8 +27,8 @@ class TestAnalysis(unittest.TestCase):
         expected_result = pd.DataFrame(expected_values, index=[0, 1])
         pd.testing.assert_frame_equal(event_data, expected_result)
 
-    def test_get_criticality_returns_correct_values(self):
-        """Test if  get_criticality returns a Series with correct values"""
+    def test_criticality_returns_correct_values(self):
+        """Test if calculate_criticality returns a Series with correct values (Legacy Case)"""
 
         n = 11
         anomalies = pd.Series([True, False, True, True, True, True, True, False, False, False, False],
@@ -40,29 +40,41 @@ class TestAnalysis(unittest.TestCase):
         expected_result = pd.Series(expected_values, index=pd.date_range('2022-01-01', freq='D', periods=n))
         pd.testing.assert_series_equal(result, expected_result)
 
-    def test_calculate_arcana_importances(self):
-        data = {
-            'feature1': [0.1, 0.2, 0.3],
-            'feature2': [0.4, 0.5, 0.6],
-            'feature3': [0.7, 0.8, 0.9]
-        }
-        bias_data = pd.DataFrame(data, index=pd.date_range("2023-01-01", periods=3))
+    def test_criticality_basic_increase_decrease(self):
+        idx = self.make_time_index(6)
+        anomalies = pd.Series([True, False, False, True, True, False], index=idx)
+        normal = pd.Series([True] * 6, index=idx)
+        result = analysis.calculate_criticality(anomalies=anomalies, normal_idx=normal, init_criticality=0,
+                                                max_criticality=10)
+        # Stepwise: +1 -> 1, -1 -> 0, -1 -> 0 (floor), +1 -> 1, +1 -> 2, -1 -> 1
+        expected = pd.Series([1, 0, 0, 1, 2, 1], index=idx)
+        pd.testing.assert_series_equal(result, expected)
 
-        # Sample normal_index
-        normal_index = pd.Series(index=bias_data.index, data=[True, False, True])
+    def test_criticality_with_non_normal_periods(self):
+        idx = self.make_time_index(5)
+        anomalies = pd.Series([False, True, True, False, True], index=idx)
+        normal = pd.Series([True, False, False, True, True], index=idx)
+        result = analysis.calculate_criticality(anomalies=anomalies, normal_idx=normal, init_criticality=2,
+                                                max_criticality=5)
+        # Steps where normal: t0 (-1) => 1; t1,t2 ignored; t3 (-1) => 0; t4 (+1) => 1
+        expected = pd.Series([1, 1, 1, 0, 1], index=idx)
+        pd.testing.assert_series_equal(result, expected)
 
-        # Test without start and end
-        importances = calculate_mean_arcana_importances(bias_data)
-        relative_importances = bias_data.abs()
-        sums = bias_data.abs().sum(axis=1)
-        for i, sum_value in enumerate(sums):
-            relative_importances.iloc[i] /= sum_value
-        expected_importances = relative_importances.mean(axis=0).sort_values(ascending=True)
+    def test_criticality_bounds(self):
+        idx = self.make_time_index(6)
+        anomalies = pd.Series([True, True, True, True, False, False], index=idx)
+        normal = pd.Series([True] * 6, index=idx)
+        # Start high and cap at max, then decrease but not below 0
+        result = analysis.calculate_criticality(anomalies=anomalies, normal_idx=normal, init_criticality=4,
+                                                max_criticality=5)
+        expected = pd.Series([5, 5, 5, 5, 4, 3], index=idx)
+        pd.testing.assert_series_equal(result, expected)
 
-        pd.testing.assert_series_equal(importances, expected_importances)
+    def test_criticality_length_mismatch_raises(self):
+        idx1 = self.make_time_index(3)
+        idx2 = self.make_time_index(4)
+        anomalies = pd.Series([True, False, True], index=idx1)
+        normal = pd.Series([True, True, True, True], index=idx2)
+        with self.assertRaises(ValueError):
+            analysis.calculate_criticality(anomalies=anomalies, normal_idx=normal)
 
-        # Test with start and end
-        importances = calculate_mean_arcana_importances(bias_data, start="2023-01-01", end="2023-01-02")
-        expected_importances = relative_importances.loc["2023-01-01":"2023-01-02"].mean(axis=0).sort_values(
-            ascending=True)
-        pd.testing.assert_series_equal(importances, expected_importances)
