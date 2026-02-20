@@ -1,6 +1,12 @@
 """The anomaly-detection-iee package"""
 
 from .__about__ import __version__
+from energy_fault_detector.core._logs import setup_logging
+from pathlib import Path
+
+# Setup logging
+setup_logging(Path(__file__).parent / 'logging.yaml')
+
 from energy_fault_detector.registration import registry, register
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.config import Config
