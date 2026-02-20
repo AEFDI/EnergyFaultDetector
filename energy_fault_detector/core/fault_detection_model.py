@@ -15,7 +15,6 @@ from energy_fault_detector.config import Config
 from energy_fault_detector import registry
 from energy_fault_detector.core.model_factory import ModelFactory
 from energy_fault_detector.core.fault_detection_result import ModelMetadata, FaultDetectionResult
-from energy_fault_detector.core._logs import setup_logging
 from energy_fault_detector.data_splitting.data_splitter import BlockDataSplitter
 from energy_fault_detector.core import AnomalyScore, ThresholdSelector
 from energy_fault_detector.data_preprocessing import DataPreprocessor
@@ -23,7 +22,6 @@ from energy_fault_detector.data_preprocessing import DataPreprocessor
 if TYPE_CHECKING:
     from energy_fault_detector.core.autoencoder import Autoencoder
 
-setup_logging(Path(__file__).parent.parent / 'logging.yaml')
 logger = logging.getLogger('energy_fault_detector')
 
 DATA_PREP_DIR = 'data_preprocessor'

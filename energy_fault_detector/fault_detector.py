@@ -14,10 +14,7 @@ from energy_fault_detector.core.fault_detection_result import FaultDetectionResu
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
 from energy_fault_detector.data_preprocessing.data_clipper import DataClipper
 from energy_fault_detector.config import Config
-from energy_fault_detector.core._logs import setup_logging
 
-
-setup_logging(Path(__file__).parent / 'logging.yaml')
 logger = logging.getLogger('energy_fault_detector')
 
 

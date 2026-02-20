@@ -1,13 +1,11 @@
 """Quick energy fault detection, to try out the EnergyFaultDetector model on a specific dataset."""
 
-import os
 from pathlib import Path
 import logging
 from typing import List, Optional, Tuple
 
 import pandas as pd
 
-from energy_fault_detector.core._logs import setup_logging
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.utils.analysis import create_events
 from energy_fault_detector.root_cause_analysis.arcana_utils import calculate_mean_arcana_importances
@@ -17,7 +15,6 @@ from energy_fault_detector.quick_fault_detection.data_loading import load_train_
 from energy_fault_detector.quick_fault_detection.configuration import select_config
 from energy_fault_detector.quick_fault_detection.output import generate_output_plots, output_info
 
-setup_logging(os.path.join(os.path.dirname(__file__), '..', 'logging.yaml'))
 logger = logging.getLogger('energy_fault_detector')
 
 

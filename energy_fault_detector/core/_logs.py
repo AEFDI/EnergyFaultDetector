@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import logging
 import logging.config as logging_config
 
 import yaml
@@ -21,16 +22,24 @@ def setup_logging(default_path: str | Path = 'logging.yaml', env_key: str = 'LOG
     if value:
         path = Path(value)
 
+    if not path.exists():
+        if value:
+            logging.basicConfig(level=logging.INFO)
+            logging.warning(f"Logging configuration file not found at {path}. Using basic configuration.")
+        return
+
     try:
         with open(path, 'rt', encoding='utf-8') as f:
             config = yaml.safe_load(f.read())
             # check paths exist or create them:
-            for _, handler in config['handlers'].items():
-                filename = handler.get('filename')
-                if filename:
-                    # Resolve path and create parent directories if they don't exist
-                    Path(filename).parent.mkdir(parents=True, exist_ok=True)
+            if 'handlers' in config:
+                for _, handler in config['handlers'].items():
+                    filename = handler.get('filename')
+                    if filename:
+                        # Resolve path and create parent directories if they don't exist
+                        Path(filename).parent.mkdir(parents=True, exist_ok=True)
 
         logging_config.dictConfig(config)
     except Exception as e:
-        raise ValueError(f"Error setting up logging: {e}") from e
+        logging.basicConfig(level=logging.INFO)
+        logging.warning(f"Error setting up logging from {path}: {e}. Using basic configuration.")
