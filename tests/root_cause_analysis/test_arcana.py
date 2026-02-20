@@ -82,17 +82,17 @@ class TestArcana(TestCase):
 
     def test_init_bias(self):
         arcana = Arcana(model=self.ml_ae, num_iter=42, init_x_bias='weightedB', alpha=0.6)
-        bias_expected = 0.6 * (self.ml_ae.predict(self.data) - self.data)
+        bias_expected = 0.6 * (self.ml_ae.predict(self.data, verbose=0) - self.data)
         bias = arcana.initialize_x_bias(self.data)
         assert_array_almost_equal(bias_expected, bias)
 
         arcana = Arcana(model=self.ml_ae, num_iter=42, init_x_bias='weightedA', alpha=0.6)
-        bias_expected = 0.4 * (self.ml_ae.predict(self.data) - self.data)
+        bias_expected = 0.4 * (self.ml_ae.predict(self.data, verbose=0) - self.data)
         bias = arcana.initialize_x_bias(self.data)
         assert_array_almost_equal(bias_expected, bias)
 
         arcana = Arcana(model=self.ml_ae, num_iter=42, init_x_bias='recon', alpha=0.6)
-        bias_expected = self.ml_ae.predict(self.data) - self.data
+        bias_expected = self.ml_ae.predict(self.data, verbose=0) - self.data
         bias = arcana.initialize_x_bias(self.data)
         assert_array_almost_equal(bias_expected, bias)
 

@@ -115,7 +115,7 @@ def main():
     elif args.c2c_example:
         options = load_options_from_yaml(here / 'c2c_options.yaml')
 
-    print(options)
+    logger.info("Running quick fault detector with Options: %s", options)
 
     # Call the quick_fault_detector function with parsed arguments
     try:

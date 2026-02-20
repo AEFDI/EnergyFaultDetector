@@ -241,7 +241,7 @@ class CAREScore:
             if any(criticality >= self.criticality_threshold):
                 first_time_detected = criticality[criticality >= self.criticality_threshold].index[0]
                 early_detection_time = event_end - first_time_detected
-                print(early_detection_time)
+                logger.debug("Early detection time: %s", early_detection_time)
             else:
                 first_time_detected = np.nan
                 early_detection_time = np.nan
