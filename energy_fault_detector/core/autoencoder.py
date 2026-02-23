@@ -24,7 +24,6 @@ DataType = Union[np.ndarray, pd.DataFrame]
 logger = logging.getLogger('energy_fault_detector')
 
 
-# TODO: reduce number of args of constructor (replace with kwargs, makes it easier to add others)
 class Autoencoder(ABC, SaveLoadMixin):
     """Autoencoder template. Compatible with sklearn and keras/tensorflow.
 
