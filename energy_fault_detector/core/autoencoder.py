@@ -86,7 +86,7 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         self.batch_size: int = batch_size
         self.epochs: int = epochs
-        self.loss_name: str = loss_name
+        self.loss_name: str = loss_name  # TODO: allow custom loss and metrics functions?
         self.metrics: List[str] = ['mean_absolute_error'] if metrics is None else metrics
         self.noise: float = noise
 

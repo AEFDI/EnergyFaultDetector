@@ -25,8 +25,6 @@ class FaultDetector(FaultDetectionModel):
         config (Optional[Config]):  Config object with fault detection configuration. Defaults to None.
             If None, the models need to be loaded from a path using the `load_models` method.
         model_directory (str, optional): Directory to save models to. Defaults to 'fault_detector_model'.
-        model_subdir (Optional[Any], optional): Deprecated. This argument will be removed in future versions.
-            Defaults to None.
 
     Attributes:
         anomaly_score: AnomalyScore object.
@@ -36,16 +34,7 @@ class FaultDetector(FaultDetectionModel):
         save_timestamps: a list of string timestamps indicating when the model was saved.
     """
 
-    def __init__(self, config: Optional[Config] = None, model_directory: str | Path = 'fault_detector_model',
-                 model_subdir: Optional[str] = None):
-        if model_subdir is not None:
-            warnings.warn(
-                '`model_subdir`is deprecated and will be removed in future versions. '
-                'Please append the subdirectory to the `model_directory` argument if you need a complex path.',
-                DeprecationWarning,
-                stacklevel=2
-            )
-
+    def __init__(self, config: Optional[Config] = None, model_directory: str | Path = 'fault_detector_model'):
         super().__init__(config=config, model_directory=model_directory)
 
     def preprocess_train_data(self, sensor_data: pd.DataFrame, normal_index: pd.Series, fit_preprocessor: bool = True
