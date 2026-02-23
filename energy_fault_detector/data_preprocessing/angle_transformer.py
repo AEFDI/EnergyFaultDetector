@@ -113,7 +113,7 @@ class AngleTransformer(DataTransformer):
 
     def _convert_angles(self, data: pd.DataFrame, angle_columns: List[str], invalid_range_features: List[str],
                         degrees: bool = True):
-        """ Converts angles into continuous sine and cosine features.
+        """Converts angles into continuous sine and cosine features.
         Note that in case of out of range angles values and the trust bad angles option being enabled, the sine / cosine
         transform will work just fine, there is no need to convert out of range values using modulo because of the
         periodicity at play in sine and cosine.

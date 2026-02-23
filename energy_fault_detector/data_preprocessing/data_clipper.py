@@ -48,7 +48,7 @@ class DataClipper(DataTransformer):
 
         self.lower_percentile = lower_percentile
         self.upper_percentile = upper_percentile
-        self.feature_to_exclude: Optional[List[str]] = features_to_exclude
+        self.features_to_exclude: Optional[List[str]] = features_to_exclude
         self.features_to_clip: Optional[List[str]] = features_to_clip
 
     def fit(self, x: pd.DataFrame, y: Optional[np.array] = None) -> 'DataClipper':
@@ -74,8 +74,8 @@ class DataClipper(DataTransformer):
 
         # Select feature to clip
         x_ = x.copy()
-        if self.feature_to_exclude is not None:
-            selected_features = [col for col in x_.columns if col not in self.feature_to_exclude]
+        if self.features_to_exclude is not None:
+            selected_features = [col for col in x_.columns if col not in self.features_to_exclude]
         elif self.features_to_clip is not None:
             selected_features = [col for col in x_.columns if col in self.features_to_clip]
         else:
