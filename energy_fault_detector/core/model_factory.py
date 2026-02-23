@@ -27,7 +27,6 @@ class ModelFactory:
     def _initialize_models(self) -> None:
         # runtime imports
         from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
-        from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
         from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 
         train_dict = self.config["train"]
@@ -45,7 +44,7 @@ class ModelFactory:
         ae_kwargs = dict(ae_params.get("params", {}))
 
         # If this is a sequence AE, build the SequenceDatasetBuilder from config
-        if issubclass(ae_class, (Seq2SeqAutoencoder, Seq2OneAutoencoder)):
+        if issubclass(ae_class, Seq2OneAutoencoder):
             builder_conf = ae_kwargs.pop("sequence_builder", None)
             if builder_conf is None:
                 raise ValueError(
