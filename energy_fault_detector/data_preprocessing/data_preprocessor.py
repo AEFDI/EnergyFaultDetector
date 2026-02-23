@@ -100,10 +100,19 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         self.steps_spec_: Optional[List[Dict[str, Any]]] = steps
         self.params_: Dict[str, Any] = dict(params)
 
+        # Warn if legacy params are present.
+        legacy_keys = set(self._legacy_keys())
+        legacy_used = [k for k in self.params_.keys() if k in legacy_keys]
+        if legacy_used:
+            warnings.warn(
+                f"Legacy data_preprocessor arguments {legacy_used} were provided. "
+                "Please use 'steps' instead; these legacy keys will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+
         if steps is not None and len(steps) > 0:
             # Warn if legacy params are present alongside steps.
-            legacy_keys = set(self._legacy_keys())
-            legacy_used = [k for k in self.params_.keys() if k in legacy_keys]
             if legacy_used:
                 warnings.warn(
                     f"DataPreprocessor: 'steps' provided; legacy params are ignored: {legacy_used}",

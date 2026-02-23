@@ -81,18 +81,21 @@ Contributions are welcome! Please feel free to open issues or submit pull reques
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
 ### Planned updates and features
-1. More autoencoder types:
-   1. Variational autoencoders
-   2. CNN- and LSTM-based autoencoders with time-series support.
 
-2. Unification, standardisation and generic improvements
-   1. Additional options for all autoencoders (e.g. drop out, regularization)
-   2. Data preparation (e.g. extend imputation strategies).
-   3. No or low configuration need (e.g. use defaults where possible).
-   4. Upgrade to Keras 3.0
+- Demo: Easy demo website
+- Extending the core models:
+   - Variational autoencoders
+   - Additional options for all autoencoders (e.g. drop out, regularization)
+- Unification, standardisation and generic improvements
+   - Data preparation (e.g. extend imputation strategies).
+   - No or low configuration need (e.g. use defaults where possible).
+   - Upgrade to Keras 3.0
+- Root cause analysis expansion
+   - integrate SHAP and possibly other xAI-methods.
+- Integrations
+   - logging/tracking to MLFlow for hyperparameter tuning and easy model deployment.
+   - Edge deployment
 
-3. Root cause analysis expansion
-   1. integrate SHAP and possibly other XAI-methods.
 
 ## License
 This project is licensed under the [MIT License](./LICENSE).
