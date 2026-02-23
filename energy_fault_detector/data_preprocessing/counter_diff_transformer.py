@@ -43,7 +43,8 @@ class CounterDiffTransformer(DataTransformer):
 
     Notes:
         - A DatetimeIndex is required if compute_rate=True or gap_policy='mask'.
-        - The inverse_transform is a no-op and returns the input unchanged.
+        - The inverse_transform optionally drops derived columns and restores the original feature layout if original
+          counters are still present; otherwise it returns the input unchanged.
 
     Examples:
         - Diffs: [0, 1, 3, 0 (reset), 2] -> [NaN|0, 1, 2, 0|NaN, 2]

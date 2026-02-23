@@ -49,8 +49,8 @@ class QuantileThresholdSelector(ThresholdSelector):
         Returns:
             QuantileThresholdSelector: The instance of this class after setting the threshold.
 
-        Raises:
-            Warning: If a suitable threshold cannot be found, the threshold is set to the maximum score.
+        Notes:
+            UserWarning: If a suitable threshold cannot be found, the threshold is set to the maximum score.
         """
 
         if isinstance(x, pd.Series):
@@ -66,6 +66,7 @@ class QuantileThresholdSelector(ThresholdSelector):
         self.threshold = float(np.quantile(x_, self.quantile))
 
         if self.threshold is None:
+            import warnings
+            warnings.warn('Could not find suitable threshold, `threshold` is set to max score.', UserWarning)
             self.threshold = float(np.sort(x)[-1])
-            raise Warning('Could not find suitable threshold, `threshold` is set to max score.')
         return self
