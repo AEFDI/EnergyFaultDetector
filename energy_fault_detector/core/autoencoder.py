@@ -24,29 +24,32 @@ DataType = Union[np.ndarray, pd.DataFrame]
 logger = logging.getLogger('energy_fault_detector')
 
 
-# TODO: reduce number of args of constructor (replace with kwargs, makes it easier to add others)
 class Autoencoder(ABC, SaveLoadMixin):
     """Autoencoder template. Compatible with sklearn and keras/tensorflow.
 
     Args:
-        learning_rate: learning rate of the adam optimizer.
-        batch_size: number of samples per batch.
-        epochs: number of epochs to run.
-        loss_name: name of loss metric to use.
-        metrics: list of additional metrics to track.
-        decay_rate: learning rate decay. Optional. If not defined, a fixed learning rate is used.
-        decay_steps: number of steps to decay learning rate over. Optional.
+        learning_rate: learning rate of the adam optimizer. Default: 0.001.
+        batch_size: number of samples per batch. Default: 128.
+        epochs: number of epochs to run. Default: 10.
+        loss_name: name of loss metric to use. Default: 'mean_squared_error'.
+        metrics: list of additional metrics to track. Default: ['mean_absolute_error'].
+        decay_rate: learning rate decay. Optional. If not defined, a fixed learning rate is used. Default: None.
+        decay_steps: number of steps to decay learning rate over. Optional. Default: None.
+            If not defined, a fixed learning rate is used.
         early_stopping: If True the early stopping callback will be used in the fit method. Early stopping will
             interrupt the training procedure before the last epoch is reached if the loss is not improving.
             The exact time of the interruption is based on the patience parameter.
+            Default: False.
         patience: parameter for early stopping. If early stopping is used the training will end if more than
-            patience epochs in a row have not shown an improved loss.
+            patience epochs in a row have not shown an improved loss. Default: 5.
         min_delta: parameter of the early stopping callback. If the losses of an epoch and the next epoch differ
-            by less than min_delta, they are considered equal (i.e. no improvement).
+            by less than min_delta, they are considered equal (i.e. no improvement). Default: 1e-4.
         noise: float value that determines the influence of the noise term on the training input. High values mean
             highly noisy input. 0 means no noise at all. If noise >0 is used validation metrics will not be
             affected by it. Thus training loss and validation loss can differ depending on the magnitude of noise.
+            Default: 0.0 (no noise).
         conditional_features: (optional) List of features to use as conditions for the conditional autoencoder.
+            Default: None (no conditional features).
 
 
     Attributes:
@@ -59,11 +62,19 @@ class Autoencoder(ABC, SaveLoadMixin):
 
     """
 
-    def __init__(self, learning_rate: float, batch_size: int, epochs: int,
-                 loss_name: str, metrics: List[str], decay_rate: float, decay_steps: float,
-                 early_stopping: bool, patience: int, min_delta: float, noise: float,
-                 conditional_features: Optional[List[str]] = None, **kwargs):
+    def __init__(self,
+                 *,
+                 learning_rate: float = 0.001, batch_size: int = 128, epochs: int = 10,
+                 loss_name: str = 'mean_squared_error', metrics: List[str] = None,
+                 decay_rate: float = None, decay_steps: float = None,
+                 early_stopping: bool = False, patience: int = 5, min_delta: float = 1e-4,
+                 noise: float = 0.0,
+                 conditional_features: Optional[List[str]] = None,
+                 **kwargs):
         super().__init__()
+
+        if kwargs:
+            logger.warning("Unknown Autoencoder kwargs ignored: %s", list(kwargs.keys()))
 
         self.learning_rate = (
             ExponentialDecay(initial_learning_rate=learning_rate, decay_rate=decay_rate, decay_steps=decay_steps)
@@ -76,16 +87,40 @@ class Autoencoder(ABC, SaveLoadMixin):
         self.batch_size: int = batch_size
         self.epochs: int = epochs
         self.loss_name: str = loss_name
-        self.metrics: List[str] = [] if metrics is None else metrics
+        self.metrics: List[str] = ['mean_absolute_error'] if metrics is None else metrics
         self.noise: float = noise
 
         self.model: Optional[KerasModel] = None
         self.encoder: Optional[KerasModel] = None
+        self.decoder: Optional[KerasModel] = None
         self.history: Any = None
 
         self.callbacks: List[Callback] = [
             EarlyStopping(monitor='val_loss', min_delta=min_delta, patience=patience, restore_best_weights=True)
         ] if early_stopping else []
+
+    def __repr__(self) -> str:
+        cls = self.__class__.__name__
+        status = "built" if self.model is not None else "unbuilt"
+        params = {
+            "learning_rate": self.learning_rate,
+            "batch_size": self.batch_size,
+            "epochs": self.epochs,
+            "loss_name": self.loss_name,
+            "metrics": self.metrics,
+            "noise": self.noise,
+            "conditional_features": self.conditional_features,
+        }
+        # Keep it compact
+        param_str = ", ".join(f"{k}={v!r}" for k, v in params.items())
+        return f"{cls}({param_str}, model={status})"
+
+    def summary(self, **kwargs) -> None:
+        """Print a Keras summary of the underlying model, if built."""
+        if self.model is None:
+            print(f"{self.__class__.__name__}: model is not built yet.")
+        else:
+            self.model.summary(**kwargs)
 
     def __call__(self, x: Union[np.ndarray, tf.Tensor], conditions: Union[np.ndarray, tf.Tensor] = None) -> tf.Tensor:
         """Calls the model on new inputs."""

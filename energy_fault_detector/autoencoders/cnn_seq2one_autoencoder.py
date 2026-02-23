@@ -31,72 +31,54 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         (batch_size, sequence_length, n_main_features) [+ conditional features]
     Output:
         (batch_size, n_main_features)  (last timestep reconstruction)
-    """
 
-    def __init__(
-        self,
-        sequence_builder: SequenceDatasetBuilder = None,
-        filters: Optional[List[int]] = None,
-        kernel_size: int = 3,
-        strides: int = 1,
-        dropout_rate: float = 0.0,
-        conditional_features: Optional[List[str]] = None,
-        learning_rate: float = 0.001,
-        batch_size: int = 32,
-        epochs: int = 10,
-        loss_name: str = "mean_squared_error",
-        metrics: Optional[List[str]] = None,
-        decay_rate: float = None,
-        decay_steps: float = None,
-        early_stopping: bool = False,
-        patience: int = 3,
-        min_delta: float = 1e-4,
-        noise: float = 0.0,
-    ) -> None:
-        """Initialize a CNN-based seq2one autoencoder.
-
-        Args:
+    Args:
             sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
             filters: List of integers indicating the number of filters of the convolutional layers in the encoder.
                 Defaults to [128, 64, 32] if None.
             kernel_size: Specifies the length of the 1D convolution window.
             strides: Stride length of the 1D convolution window.
             dropout_rate: Dropout rate applied after each convolutional layer.
-            conditional_features: Optional list of column names treated as conditional features.
-            learning_rate: Initial learning rate for the optimizer.
-            batch_size: Batch size during training.
-            epochs: Number of epochs for initial training.
-            loss_name: Loss function name passed to ``model.compile``.
-            metrics: Additional metrics to track during training.
-            decay_rate: Exponential decay rate for the learning rate (optional).
-            decay_steps: Number of steps over which to apply learning rate decay (optional).
-            early_stopping: If True, enable EarlyStopping in the base Autoencoder.
-            patience: Patience for EarlyStopping (number of epochs without improvement).
-            min_delta: Minimum change in monitored quantity for EarlyStopping to qualify as an improvement.
-            noise: Standard deviation of Gaussian noise applied to inputs during training (denoising AE).
-        """
+            conditional_features: Optional list of column names treated as conditional features. This will concatenate
+                the conditions to the main inputs before feeding them to the encoder.
+            ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+                are accepted as keyword arguments and forwarded to Autoencoder.__init__.
+
+    Configuration example:
+
+    .. code-block:: text
+
+        train:
+          autoencoder:
+            name: CNNSeq2OneAutoencoder
+            params:
+              filters: [100, 50, 25]
+              kernel_size: 5
+              sequence_builder:
+                sequence_length: 10
+                ts_freq: "10m"
+                overlap: 9
+    """
+
+    def __init__(
+        self,
+        sequence_builder: SequenceDatasetBuilder = None,
+        filters: Optional[List[int]] = None,
+        code_size: int = 32,
+        kernel_size: int = 3,
+        strides: int = 1,
+        dropout_rate: float = 0.0,
+        **ae_kwargs,
+    ):
+        """Initialize a CNN-based seq2one autoencoder."""
+
         self.filters = filters or [128, 64, 32]
+        self.code_size = code_size
         self.kernel_size = kernel_size
         self.strides = strides
         self.dropout_rate = dropout_rate
 
-        metrics = metrics or ["mean_absolute_error"]
-
-        super().__init__(
-            sequence_builder=sequence_builder,
-            conditional_features=conditional_features,
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            epochs=epochs,
-            loss_name=loss_name,
-            metrics=metrics,
-            decay_rate=decay_rate,
-            decay_steps=decay_steps,
-            early_stopping=early_stopping,
-            patience=patience,
-            min_delta=min_delta,
-            noise=noise,
-        )
+        super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
     def create_model(
         self,
@@ -133,7 +115,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             )
             encoder_input = Concatenate(axis=-1)([main_input, conditional_input])
 
-        # Encoder
+        # Encoder - Conv Stack
         x = encoder_input
         for i, n_filters in enumerate(self.filters):
             x = Conv1D(
@@ -146,17 +128,17 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             x = BatchNormalization()(x)
             if self.dropout_rate > 0:
                 x = Dropout(rate=self.dropout_rate)(x)
-            
-            # The last layer of the encoder should be named "encoded"
-            if i == len(self.filters) - 1:
-                # Store the shape for the symmetric decoder
-                # x.shape is (batch, sequence_length / strides^num_layers, filters)
-                # We need to remember this to reshape back in the decoder.
-                # However, in Keras functional API, we can't easily get the shape 
-                # including None for batch size, but we can get it from the tensor.
-                shape_before_flatten = x.shape[1:]
-                encoded = Flatten(name="encoded")(x)
-            
+
+        # Store the shape for the symmetric decoder
+        # x.shape is (batch, sequence_length / strides^num_layers, filters)
+        # We need to remember this to reshape back in the decoder.
+        # However, in Keras functional API, we can't easily get the shape
+        # including None for batch size, but we can get it from the tensor.
+        conv_shape = x.shape[1:]  # (T_enc, F_enc)
+        flat_dim = int(conv_shape[0] * conv_shape[1])
+        flat = Flatten()(x)
+        encoded = Dense(self.code_size, activation="relu", name="encoded")(flat)
+
         # Encoder model for latent representation
         if conditional_input is not None:
             self.encoder = tf.keras.Model(
@@ -171,41 +153,45 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
                 name="encoder",
             )
 
-        # Decoder
+        # Decoder: latent -> reconstruction
+        latent_input = Input(shape=(self.code_size,), name="latent_input")
+        z = Dense(flat_dim, activation="relu")(latent_input)
+        z = Reshape(conv_shape)(z)
 
-        # Apply symmetric Conv1DTranspose layers
+        # Decoder - Conv Transpose Stack
+        y = z
         for n_filters in self.filters[-2::-1] + [n_main_features]:
-            x = Conv1DTranspose(
+            y = Conv1DTranspose(
                 filters=n_filters,
                 kernel_size=self.kernel_size,
                 padding="same",
                 strides=self.strides,
                 activation="relu",
-            )(x)
-            x = BatchNormalization()(x)
+            )(y)
+            y = BatchNormalization()(y)
             if self.dropout_rate > 0:
-                x = Dropout(rate=self.dropout_rate)(x)
+                y = Dropout(rate=self.dropout_rate)(y)
 
-        # Final Flatten to get a single vector for seq2one
-        # Note: even if it's already one timestep (if strides=1), we Flatten to be sure.
-        x = Flatten()(x)
+        y = Flatten()(y)
+        reconstruction = Dense(units=n_main_features, name="reconstruction")(y)
 
-        # Decoder: map to last-timestep features
-        reconstruction = Dense(
-            units=n_main_features,
-            name="reconstruction",
-        )(x)
+        # Stand-alone decoder model
+        self.decoder = tf.keras.Model(
+            inputs=latent_input,
+            outputs=reconstruction,
+            name="decoder",
+        )
 
         if conditional_input is not None:
             self.model = tf.keras.Model(
                 inputs=[main_input, conditional_input],
-                outputs=reconstruction,
+                outputs=self.decoder(self.encoder(inputs=[main_input, conditional_input])),
                 name="cnn_seq2one_autoencoder",
             )
         else:
             self.model = tf.keras.Model(
                 inputs=main_input,
-                outputs=reconstruction,
+                outputs=self.decoder(self.encoder(inputs=main_input)),
                 name="cnn_seq2one_autoencoder",
             )
 
