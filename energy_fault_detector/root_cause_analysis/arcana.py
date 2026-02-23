@@ -2,7 +2,7 @@
 
 
 import logging
-from typing import Tuple, List, Union, Optional
+from typing import Tuple, List, Union
 
 import numpy as np
 import pandas as pd
@@ -13,13 +13,11 @@ tf.get_logger().setLevel('ERROR')
 from tensorflow.keras.optimizers import Adam
 
 from energy_fault_detector.core.autoencoder import Autoencoder
-from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
 from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
-from energy_fault_detector.autoencoders import _sequence_utils
 
 logger = logging.getLogger('energy_fault_detector')
 
-AE_TYPE = Union[Autoencoder, Seq2SeqAutoencoder, Seq2OneAutoencoder]
+AE_TYPE = Union[Autoencoder, Seq2OneAutoencoder]
 BIAS_RETURN_TYPE = Tuple[tf.Variable, Tuple[tf.Tensor, tf.Tensor, tf.Tensor], tf.Variable]
 
 
@@ -80,8 +78,7 @@ class Arcana:
 
         self.keras_model: AE_TYPE = model
 
-        self.sequence_based = isinstance(self.keras_model, (Seq2SeqAutoencoder, Seq2OneAutoencoder))
-        self.seq2one = isinstance(self.keras_model, Seq2OneAutoencoder)
+        self.sequence_based = isinstance(self.keras_model, Seq2OneAutoencoder)
 
         self.learning_rate: float = learning_rate
         self.epsilon: float = epsilon
@@ -126,16 +123,11 @@ class Arcana:
         if self.sequence_based:
             # handle sequential input
             sb = self.keras_model.sequence_builder
-            if self.seq2one:
-                dataset, window_timestamps_all = sb.build_seq2one_dataset(
-                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
-                )
-                # For seq2one, each window corresponds to its last timestamp
-                window_timestamps = window_timestamps_all[:, -1]
-            else:
-                dataset, window_timestamps = sb.build_sliding_dataset(
-                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
-                )
+            dataset, window_timestamps_all = sb.build_seq2one_dataset(
+                x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
+            )
+            # Each window corresponds to its last timestamp
+            window_timestamps = window_timestamps_all[:, -1]
 
             # Extract full data from dataset (single batch since batch_size=len(x))
             x_vals_list = []
@@ -189,12 +181,9 @@ class Arcana:
 
         def get_bias_df(xb):
             if self.sequence_based:
-                if self.seq2one:
-                    # For seq2one, each row in the bias sequence corresponds to a window.
-                    # We return the bias of the reconstructed timestep (the last one).
-                    return pd.DataFrame(data=xb[:, -1, :], columns=feature_names, index=window_timestamps)
-                else:
-                    return _sequence_utils.sequences_to_dataframe(xb, window_timestamps, feature_names)
+                # Each row in the bias sequence corresponds to a window.
+                # We return the bias of the reconstructed timestep (the last one).
+                return pd.DataFrame(data=xb[:, -1, :], columns=feature_names, index=window_timestamps)
             else:
                 return pd.DataFrame(data=xb, columns=feature_names, index=timestamps)
 
@@ -229,8 +218,12 @@ class Arcana:
         return x_bias_df, tracked_losses_df, tracked_bias
 
     def draw_samples(self, x: np.ndarray, conditions: np.ndarray = None) -> np.ndarray:
-        """ Selects index values from 0 to data_length by choosing the indexes with the highest anomaly score,
+        """Selects index values from 0 to data_length by choosing the indexes with the highest anomaly score,
         for defining the ARCANA samples.
+
+        For sequence (seq2one) models, `x` is (N, T, F), and we compare the
+        reconstruction of the last timestep to the last timestep of the input.
+        For standard autoencoders, `x` is (N, F), and we compare full vectors.
 
         Args:
             x (np.ndarray): Data of which samples should be drawn
@@ -241,21 +234,23 @@ class Arcana:
         """
         if len(x) > self.max_sample_threshold:
             x_recon = self.keras_model(x, conditions).numpy()
-            if self.seq2one:
-                recon_error = x_recon - x[:, -1, :]
-            else:
-                recon_error = x_recon - x
 
-            # Mean squared error over all features (and time steps for seq2seq)
-            if self.sequence_based and not self.seq2one:
-                anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=(1, 2)))
+            if self.sequence_based:
+                # seq2one: x is (N, T, F), model output is (N, F)
+                target = x[:, -1, :]  # (N, F)
+                recon_error = x_recon - target
+                anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=1))
             else:
+                # standard AE: x is (N, F), model output is (N, F)
+                recon_error = x_recon - x
                 anomaly_score = np.sqrt(np.mean(recon_error ** 2, axis=1))
 
             threshold_index = np.argsort(anomaly_score)[-self.max_sample_threshold]
             selection = anomaly_score >= anomaly_score[threshold_index]
         else:
+            # standard AE: x is (N, F), model output is (N, F)
             selection = np.full(fill_value=True, shape=(len(x),))
+
         return selection
 
     def initialize_x_bias(self, x: np.ndarray, conditions: np.ndarray = None) -> tf.Tensor:
@@ -290,6 +285,10 @@ class Arcana:
         """This function builds a tensor which can calculate the ARCANA loss (full_loss) and computes the gradient
         of that loss with respect to the Variable x + x_bias using tensorflow GradientTape.
 
+        For seq2one models (sequence_based=True), x has shape (N, T, F) and the model output has shape (N, F).
+        We compare against the corrected last timestep. For standard autoencoders, x and the model output are (N, F)
+        and we compare full vectors.
+
         Args:
             x: tensorflow tensor containing input data
             x_bias: tensorflow variable containing the current ARCANA bias.
@@ -301,16 +300,16 @@ class Arcana:
             grad: (tf.variable) contains the computed gradient for this x_bias update.
         """
         with tf.GradientTape() as grad_tape:
-            # no need to watch x_corrected (we do everything with x_bias)
-            x_sim = self.keras_model(x + x_bias, conditions)  # predict the corrected value of x
+            x_corr = x + x_bias  # corrected input
+            x_sim = self.keras_model(x_corr, conditions)  # predict the corrected value of x
 
             # target for reconstruction error
-            if self.seq2one:
-                # x is (N, T, F), target is last timestep (N, F)
-                target = x[:, -1, :] + x_bias[:, -1, :]
+            if self.sequence_based:
+                # seq2one: target is last timestep (N, F)
+                target = x_corr[:, -1, :]  # (N, F)
             else:
-                # x and x_bias are same shape as x_sim
-                target = x + x_bias
+                # standard AE: target is full vector (N, F)
+                target = x_corr
 
             # loss part 1: measures the degree of anomaly of the ARCANA-corrected x_corrected
             loss_1 = 0.5 * tf.reduce_mean((x_sim - target) ** 2)
