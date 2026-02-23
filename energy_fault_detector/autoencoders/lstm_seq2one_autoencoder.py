@@ -69,25 +69,44 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
     ):
         """Initialize an LSTM-based seq2one autoencoder.
 
-        Args:
-            sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
-            layers: List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.
-            dropout_rate: Dropout rate applied after each LSTM layer.
-            regularization: L2 regularization strength for the first encoder LSTM layer.
-            stateful: Whether to use stateful LSTMs.
-            conditional_features: Optional list of column names treated as conditional features.
-            learning_rate: Initial learning rate for the optimizer.
-            batch_size: Batch size during training.
-            epochs: Number of epochs for initial training.
-            loss_name: Loss function name passed to ``model.compile``.
-            metrics: Additional metrics to track during training.
-            decay_rate: Exponential decay rate for the learning rate (optional).
-            decay_steps: Number of steps over which to apply learning rate decay (optional).
-            early_stopping: If True, enable EarlyStopping in the base Autoencoder.
-            patience: Patience for EarlyStopping (number of epochs without improvement).
-            min_delta: Minimum change in monitored quantity for EarlyStopping to qualify as an improvement.
-            noise: Standard deviation of Gaussian noise applied to inputs during training (denoising AE).
-        """
+    Args:
+        sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
+        layers: List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.
+        dropout_rate: Dropout rate applied after each LSTM layer.
+        regularization: L2 regularization strength for the first encoder LSTM layer.
+        stateful: Whether to use stateful LSTMs.
+        conditional_features: Optional list of column names treated as conditional features. This will concatenate
+            the conditions to the main inputs before feeding them to the encoder.
+        ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+            are accepted as keyword arguments and forwarded to Autoencoder.__init__.
+
+    Configuration example:
+
+    .. code-block:: text
+
+        train:
+          autoencoder:
+            name: LSTMSeq2OneAutoencoder
+            params:
+              layers: [100, 50, 25]
+              regularization: 0.01
+              sequence_builder:
+                sequence_length: 10
+                ts_freq: "10m"
+                overlap: 9
+    """
+
+    def __init__(
+        self,
+            sequence_builder: Optional[SequenceDatasetBuilder] = None,
+            layers: Optional[List[int]] = None,
+            dropout_rate: float = 0.0,
+            regularization: float = 0.01,
+            stateful: bool = False,
+            **ae_kwargs,
+    ):
+        """Initialize an LSTM-based seq2one autoencoder."""
+
         self.layers = layers or [128, 64, 32]
         self.dropout_rate = dropout_rate
         self.regularization = regularization
