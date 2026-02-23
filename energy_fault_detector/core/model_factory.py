@@ -8,9 +8,6 @@ from energy_fault_detector.core import AnomalyScore, ThresholdSelector
 
 if TYPE_CHECKING:
     from energy_fault_detector.core.autoencoder import Autoencoder
-    from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
-    from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
-    from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 
 ModelType = Union["Autoencoder", AnomalyScore, ThresholdSelector, DataPreprocessor]
 
@@ -28,6 +25,11 @@ class ModelFactory:
         self._initialize_models()
 
     def _initialize_models(self) -> None:
+        # runtime imports
+        from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
+        from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
+        from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
+
         train_dict = self.config["train"]
 
         # Data preprocessor

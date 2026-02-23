@@ -23,13 +23,14 @@ register(module_path='energy_fault_detector.autoencoders.conditional_autoencoder
          class_type='autoencoder',
          class_names=['ConditionalAE', 'ConditionalAutoencoder', 'conditional_ae', 'conditional',
                       'conditional_autoencoder'])
-register(module_path='energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder',
+register(module_path='energy_fault_detector.autoencoders.lstm_seq2one_autoencoder.LSTMSeq2OneAutoencoder',
          class_type='autoencoder',
-         class_names=['LSTMSeq2OneAutoencoder', 'LSTMSeq2One', 'lstm_seq2one', 'lstm_seq2one_autoencoder'])
-register(module_path='energy_fault_detector.autoencoders.LSTMSeqAutoencoder',
+         class_names=['LSTMSeq2OneAutoencoder', 'LSTMSeq2One', 'lstm_seq2one', 'lstm_seq2one_autoencoder',
+                      'lstm'])
+register(module_path='energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder',
          class_type='autoencoder',
-         class_names=['LSTMSeqAutoencoder', 'LSTMSeq2SeqAutoencoder', 'LSTMSeq', 'lstm_seq', 'lstm_seq_autoencoder',
-                      'lstm_seq2seq', 'lstm_seq2seq_autoencoder', 'LSTMSeq2Seq'])
+         class_names=['CNNSeq2OneAutoencoder', 'CNNSeq2One', 'cnn_seq2one', 'cnn_seq2one_autoencoder',
+                      'cnn'])
 
 # scores
 register(module_path='energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore',
