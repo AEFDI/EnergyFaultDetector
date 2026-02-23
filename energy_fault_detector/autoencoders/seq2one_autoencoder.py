@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from tensorflow.keras.callbacks import Callback
+from tensorflow.keras.models import Model as KerasModel
 
 from ..data_splitting.sequence_dataset import SequenceDatasetBuilder
 from ..core.autoencoder import Autoencoder
@@ -138,6 +139,130 @@ class Seq2OneAutoencoder(Autoencoder):
             conditional_features=self.conditional_features,
             shuffle=False,
             predict_mode=True,
+        )
+        return self.encoder.predict(dataset)
+
+    def get_reconstruction_error(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
+        """Compute reconstruction error for main features.
+
+        The error is defined as reconstructed_main_features - original_main_features, aligned by timestamp.
+
+        Args:
+            x: Input data as a DataFrame with DatetimeIndex.
+            **kwargs: Additional keyword arguments passed to ``_predict``.
+
+        Returns:
+            DataFrame containing reconstruction errors for each main feature and timestamp.
+        """
+        reconstruction = self._predict(x, **kwargs)
+
+        if self.conditional_features:
+            main_columns = [c for c in x.columns if c not in self.conditional_features]
+        else:
+            main_columns = list(x.columns)
+
+        x_main = x[main_columns]
+        x_main = x_main.loc[reconstruction.index]
+
+        error = reconstruction - x_main
+        return error
+
+    def create_model(
+        self,
+        input_dimension: Tuple[int, int],
+        condition_dimension: Optional[int] = None,
+        **kwargs,
+    ) -> KerasModel:
+        """Create the underlying Keras model.
+
+        Subclasses must implement this method and set ``self.model`` (and optionally ``self.encoder``).
+
+        Args:
+            input_dimension: Tuple ``(sequence_length, n_main_features)``.
+            condition_dimension: Number of conditional features, or ``None`` if no conditions are used.
+            **kwargs: Additional keyword arguments for model creation.
+
+        Returns:
+            The created Keras model.
+        """
+        raise NotImplementedError
+
+    def fit(
+        self,
+        x: pd.DataFrame,
+        x_val: Optional[pd.DataFrame] = None,
+        **kwargs,
+    ) -> Seq2OneAutoencoder:
+        """Fit the sequence autoencoder on time-series data.
+
+        Args:
+            x: Training data as a DataFrame with DatetimeIndex.
+            x_val: Optional validation data as a DataFrame with DatetimeIndex.
+            **kwargs: Additional keyword arguments passed to ``model.fit``.
+
+        Returns:
+            The fitted ``Seq2SeqAutoencoder`` instance.
+        """
+        self._check_sequence_builder()
+        self._ensure_model_created_from(x)
+
+        return self._fit_internal(
+            x=x,
+            x_val=x_val,
+            total_epochs=self.epochs,
+            initial_epoch=0,
+            learning_rate=None,
+            **kwargs,
+        )
+
+    def tune(
+        self,
+        x: pd.DataFrame,
+        x_val: Optional[pd.DataFrame] = None,
+        learning_rate: float = 0.001,
+        tune_epochs: int = 5,
+        **kwargs,
+    ) -> Seq2OneAutoencoder:
+        """Fine-tune the sequence autoencoder on additional data.
+
+        This extends training for ``tune_epochs`` epochs, optionally with a new learning rate.
+
+        Args:
+            x: Training data as a DataFrame with DatetimeIndex.
+            x_val: Optional validation data as a DataFrame with DatetimeIndex.
+            learning_rate: Learning rate to use during tuning.
+            tune_epochs: Number of additional epochs to run.
+            **kwargs: Additional keyword arguments passed to ``model.fit``.
+
+        Returns:
+            The tuned ``Seq2SeqAutoencoder`` instance.
+        """
+        self._check_sequence_builder()
+        return self._fit_internal(
+            x=x,
+            x_val=x_val,
+            total_epochs=self.epochs + tune_epochs,
+            initial_epoch=self.epochs,
+            learning_rate=learning_rate,
+            **kwargs,
+        )
+
+    def encode(self, x: pd.DataFrame, conditions: pd.DataFrame = None) -> np.ndarray:
+        """Encode input time series into the latent space.
+
+        Args:
+            x: Input data as a DataFrame with DatetimeIndex.
+            conditions: Optional DataFrame with conditional features. Currently not used. TODO: needed?
+
+        Returns:
+            NumPy array with latent representations for each sequence window.
+        """
+        self._check_sequence_builder()
+        dataset, _ = self.sequence_builder.build_sliding_dataset(
+            df=x,
+            batch_size=self.batch_size,
+            conditional_features=self.conditional_features,
+            shuffle=False,
         )
         return self.encoder.predict(dataset)
 
