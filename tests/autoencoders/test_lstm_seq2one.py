@@ -52,6 +52,7 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
             "patience": 3,
             "min_delta": 1e-4,
             "noise": 0.0,
+            "verbose": 0,
         }
 
         self.autoencoder = LSTMSeq2OneAutoencoder(**self.params)
@@ -62,7 +63,7 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
 
     def test_fit_builds_model_and_history(self) -> None:
         """Model and history should be created after fit."""
-        self.autoencoder.fit(self.df, verbose=0)
+        self.autoencoder.fit(self.df)
 
         self.assertIsNotNone(self.autoencoder.model)
         self.assertIsNotNone(self.autoencoder.encoder)
@@ -82,8 +83,8 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
 
     def test_predict_returns_last_timestep_per_window(self) -> None:
         """Predict should return one row per window, aligned to last timestamp."""
-        self.autoencoder.fit(self.df, verbose=0)
-        reconstruction = self.autoencoder.predict(self.df, verbose=0)
+        self.autoencoder.fit(self.df)
+        reconstruction = self.autoencoder.predict(self.df)
 
         self.assertIsInstance(reconstruction, pd.DataFrame)
 
@@ -136,8 +137,8 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
             noise=0.0,
         )
 
-        ae_cond.fit(df_cond, verbose=0)
-        reconstruction = ae_cond.predict(df_cond, verbose=0)
+        ae_cond.fit(df_cond)
+        reconstruction = ae_cond.predict(df_cond)
 
         # Only main features (all except "cond") should be reconstructed
         self.assertListEqual(list(reconstruction.columns), ["f1", "f2", "f3"])

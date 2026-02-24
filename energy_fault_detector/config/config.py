@@ -203,11 +203,6 @@ class Config(BaseConfig):
         return self.config_dict.get('train', {}).get('threshold_selector', {}).get('fit_on_val', False)
 
     @property
-    def verbose(self) -> int:
-        """Verbosity Level of the Autoencoder."""
-        return self.config_dict.get('train', {}).get('autoencoder', {}).get('verbose', 1)
-
-    @property
     def dtype(self):
         """Data type, float32 by default."""
         return self.config_dict.get('dtype', 'float32')
