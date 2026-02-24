@@ -33,8 +33,8 @@ class Seq2OneAutoencoder(Autoencoder):
             **ae_kwargs: Passed to ``Autoencoder.__init__``.
         """
 
+        super().__init__(**ae_kwargs)
         self.sequence_builder = sequence_builder
-        super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
     def create_model(
         self,
@@ -224,7 +224,7 @@ class Seq2OneAutoencoder(Autoencoder):
         self._extend_fit_history(history.history)
         return self
 
-    def _predict(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def _predict(self, x: pd.DataFrame, return_conditions: bool = False, **kwargs) -> pd.DataFrame:
         """Predict the last timestep per window and return a 2D DataFrame.
 
         For each window, the model outputs a single vector (reconstruction for the last timestep).
@@ -254,6 +254,10 @@ class Seq2OneAutoencoder(Autoencoder):
             index=target_timestamps,
             columns=main_columns,
         )
+        if return_conditions and self.conditional_features:
+            cond_at_targets = x[self.conditional_features].loc[reconstruction.index]
+            return cond_at_targets.join(reconstruction)
+
         return reconstruction
 
     def _ensure_model_created_from(self, x: pd.DataFrame) -> None:
