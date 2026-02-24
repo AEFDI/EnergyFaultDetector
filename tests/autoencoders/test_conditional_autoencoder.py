@@ -22,7 +22,8 @@ class TestConditionalAutoencoder(TestCase):
             'decay_steps': 1000,
             'batch_size': 144,
             'epochs': 33,
-            'loss_name': 'mean_squared_error'
+            'loss_name': 'mean_squared_error',
+            'verbose': 0,
         }
         self.conditional_features = ['cond1', 'cond2']
         self.autoencoder = ConditionalAE(self.conditional_features, **params)
@@ -39,7 +40,7 @@ class TestConditionalAutoencoder(TestCase):
             )
 
         self.fitted_autoencoder = ConditionalAE(self.conditional_features, **params).fit(
-            self.train_data, verbose=0
+            self.train_data
         )
         self.test_data = pd.DataFrame(
             np.random.random(size=(10, 10)),
@@ -75,24 +76,24 @@ class TestConditionalAutoencoder(TestCase):
         assert_array_almost_equal(output.numpy(), output_predict)
 
     def test_fit(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         self.assertEqual(len(self.autoencoder.model.layers), 11)  # Adjust based on your model structure
         self.assertIsNotNone(self.autoencoder.model)
         self.assertEqual(len(self.autoencoder.history['loss']), 33)
 
     def test_fit_with_val(self) -> None:
-        self.autoencoder.fit(self.train_data, x_val=self.test_data, verbose=0)
+        self.autoencoder.fit(self.train_data, x_val=self.test_data)
         self.assertIsNotNone(self.autoencoder.model)
         self.assertEqual(len(self.autoencoder.history['loss']), 33)
 
     def test_encode(self) -> None:
-        self.autoencoder.fit(self.train_data, x_val=self.test_data, verbose=0)
+        self.autoencoder.fit(self.train_data, x_val=self.test_data)
 
         encoded = self.autoencoder.encode(self.test_data)
         self.assertEqual(encoded.shape, (10, 5))
 
     def test_predict(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         output = self.autoencoder.predict(self.test_data)
         self.assertEqual(self.test_data.shape[0], output.shape[0])  # Check number of rows
         self.assertEqual(self.test_inputs.shape[1], output.shape[1])  # Check number of columns
@@ -102,7 +103,7 @@ class TestConditionalAutoencoder(TestCase):
         self.assertEqual(self.test_data.shape[1], output.shape[1])  # Check number of columns
 
     def test_recon_error(self):
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         recon_error = self.autoencoder.get_reconstruction_error(self.test_data)
         self.assertEqual(self.test_data.shape[0], recon_error.shape[0])
         self.assertEqual(self.test_inputs.shape[1], recon_error.shape[1])  # columns should be input data only
@@ -112,7 +113,7 @@ class TestConditionalAutoencoder(TestCase):
             self.autoencoder.predict(self.test_data)
 
     def test_tune(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         self.autoencoder.tune(self.train_data, tune_epochs=5, learning_rate=0.001)
         self.assertEqual(len(self.autoencoder.history['loss']), 5 + 33)
 
@@ -130,7 +131,7 @@ class TestConditionalAutoencoder(TestCase):
         self.assertIsNone(new_model.model)
         self.assertIsNone(new_model.history)
 
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         self.autoencoder.save(self.saved_models, overwrite=True)
 
         new_model = ConditionalAE(self.conditional_features)

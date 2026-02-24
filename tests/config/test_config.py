@@ -109,10 +109,6 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(InvalidConfigFile):
             Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_bad_early_stopping_config.yaml'))
 
-    def test_verbose_config(self):
-        conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/verbose_config.yaml'))
-        self.assertEqual(conf.verbose, 0)
-
     def test_sequence_builder_conf(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_ts_freq.yaml'))
         expected = {
