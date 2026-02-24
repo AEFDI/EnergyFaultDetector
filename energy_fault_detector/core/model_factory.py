@@ -43,6 +43,10 @@ class ModelFactory:
         ae_class = registry.get("autoencoder", ae_params["name"])
         ae_kwargs = dict(ae_params.get("params", {}))
 
+        # Add verbose from config (train.autoencoder.verbose), defaulting to 1
+        ae_verbose = ae_params.get("verbose", 1)
+        ae_kwargs.setdefault("verbose", ae_verbose)
+
         # If this is a sequence AE, build the SequenceDatasetBuilder from config
         if issubclass(ae_class, Seq2OneAutoencoder):
             builder_conf = ae_kwargs.pop("sequence_builder", None)

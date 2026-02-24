@@ -133,5 +133,5 @@ class ModelMetadata:
 
     model_date: str
     model_path: str | Path
-    train_recon_error: np.ndarray
-    val_recon_error: Optional[np.ndarray] = None
+    train_recon_error: np.ndarray | pd.DataFrame
+    val_recon_error: Optional[np.ndarray | pd.DataFrame] = None
