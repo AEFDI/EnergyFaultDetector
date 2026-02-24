@@ -3,7 +3,6 @@
 import logging
 from typing import Optional, Tuple, List
 from datetime import datetime
-import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -120,12 +119,12 @@ class FaultDetector(FaultDetectionModel):
         train_recon_error, val_recon_error = None, None
         x_train, x_val = self.train_val_split(x_prepped)
         logger.info('Train autoencoder.')
-        self.autoencoder.fit(x=x_train, x_val=x_val, verbose=self.config.verbose)
+        self.autoencoder.fit(x=x_train, x_val=x_val)
 
-        train_recon_error = self.autoencoder.get_reconstruction_error(x_train, verbose=self.config.verbose)
+        train_recon_error = self.autoencoder.get_reconstruction_error(x_train)
         if x_val is not None:
             if len(x_val) > 0:
-                val_recon_error = self.autoencoder.get_reconstruction_error(x_val, verbose=self.config.verbose)
+                val_recon_error = self.autoencoder.get_reconstruction_error(x_val)
 
         if not fit_autoencoder_only:
             self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=self.config.fit_threshold_on_val)
@@ -219,15 +218,14 @@ class FaultDetector(FaultDetectionModel):
         if tune_method != 'threshold':
             logger.info('Tune autoencoder.')
             if tune_method == 'full':
-                self.autoencoder.tune(x=x_train, x_val=x_val, learning_rate=new_learning_rate, tune_epochs=tune_epochs,
-                                      verbose=self.config.verbose)
+                self.autoencoder.tune(x=x_train, x_val=x_val, learning_rate=new_learning_rate, tune_epochs=tune_epochs)
             else:  # tune_method == 'decoder':
                 self.autoencoder.tune_decoder(x=x_train, x_val=x_val, learning_rate=new_learning_rate,
-                                              tune_epochs=tune_epochs, verbose=self.config.verbose)
+                                              tune_epochs=tune_epochs)
 
-            train_recon_error = self.autoencoder.get_reconstruction_error(x_train, verbose=self.config.verbose)
+            train_recon_error = self.autoencoder.get_reconstruction_error(x_train)
             val_recon_error = (
-                self.autoencoder.get_reconstruction_error(x_val, verbose=self.config.verbose) if len(x_val) > 0 else None
+                self.autoencoder.get_reconstruction_error(x_val) if len(x_val) > 0 else None
             )
 
         # tune/fit threshold
@@ -287,12 +285,12 @@ class FaultDetector(FaultDetectionModel):
         column_order = x_prepped.columns
 
         if self.autoencoder.is_conditional:
-            x_predicted = self.autoencoder.predict(x_prepped, return_conditions=True, verbose=self.config.verbose)
+            x_predicted = self.autoencoder.predict(x_prepped, return_conditions=True)
             x_predicted = x_predicted[column_order]
         else:
-            x_predicted = self.autoencoder.predict(x_prepped, verbose=self.config.verbose)
+            x_predicted = self.autoencoder.predict(x_prepped)
 
-        recon_error = self.autoencoder.get_reconstruction_error(x_prepped, verbose=self.config.verbose)
+        recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
 
         # inverse transform predictions, so they are comparable to the raw data
         reconstruction = self.data_preprocessor.inverse_transform(x_predicted)
@@ -324,7 +322,7 @@ class FaultDetector(FaultDetectionModel):
         """Predict the anomaly score."""
 
         x_prepped = self.data_preprocessor.transform(sensor_data)
-        recon_error = self.autoencoder.get_reconstruction_error(x_prepped, verbose=self.config.verbose)
+        recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
         scores = self.anomaly_score.transform(recon_error)
         return scores
 
@@ -380,7 +378,7 @@ class FaultDetector(FaultDetectionModel):
 
         # Fit score object only on normal data (all training + validation data)
         x_prepped_all = self.data_preprocessor.transform(x)
-        deviations = self.autoencoder.get_reconstruction_error(x_prepped_all, verbose=self.config.verbose)
+        deviations = self.autoencoder.get_reconstruction_error(x_prepped_all)
         y_ = y.loc[deviations.index]
         self.anomaly_score.fit(deviations[y_.values])  # use series values for compatibility with a multi-index
 
@@ -392,7 +390,7 @@ class FaultDetector(FaultDetectionModel):
                 x_val = x
 
             x_val_all = x_prepped_all.sort_index().loc[x_val.index.min():]  # including known anomalies
-            re_val = self.autoencoder.get_reconstruction_error(x_val_all, verbose=self.config.verbose)
+            re_val = self.autoencoder.get_reconstruction_error(x_val_all)
             scores = self.anomaly_score.transform(re_val)
 
         logger.info('Fit threshold.')

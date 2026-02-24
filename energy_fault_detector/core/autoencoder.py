@@ -50,6 +50,7 @@ class Autoencoder(ABC, SaveLoadMixin):
             Default: 0.0 (no noise).
         conditional_features: (optional) List of features to use as conditions for the conditional autoencoder.
             Default: None (no conditional features).
+        verbose: verbosity mode - passed to KerasModel fit and predict methods. Default: 1.
 
 
     Attributes:
@@ -70,6 +71,7 @@ class Autoencoder(ABC, SaveLoadMixin):
                  early_stopping: bool = False, patience: int = 5, min_delta: float = 1e-4,
                  noise: float = 0.0,
                  conditional_features: Optional[List[str]] = None,
+                 verbose: int = 1,
                  **kwargs):
         super().__init__()
 
@@ -89,6 +91,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         self.loss_name: str = loss_name  # TODO: allow custom loss and metrics functions?
         self.metrics: List[str] = ['mean_absolute_error'] if metrics is None else metrics
         self.noise: float = noise
+        self.verbose: int = verbose
 
         self.model: Optional[KerasModel] = None
         self.encoder: Optional[KerasModel] = None
@@ -172,7 +175,6 @@ class Autoencoder(ABC, SaveLoadMixin):
         if self.is_conditional and (self.conditional_features is None or len(self.conditional_features) == 0):
             raise ValueError('A list of conditional features must be provided for conditional autoencoders!')
 
-
         if self.model is None:
             self.create_model(
                 input_dimension=x.shape[1] - len(self.conditional_features) if self.is_conditional else x.shape[1],
@@ -184,6 +186,9 @@ class Autoencoder(ABC, SaveLoadMixin):
         if 'callbacks' in kwargs:
             self.callbacks += kwargs['callbacks']
             kwargs.pop('callbacks')
+
+        # ensure verbose default
+        kwargs.setdefault("verbose", self.verbose)
 
         self._fit_internal(x, x_val, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
         return self
@@ -237,6 +242,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         """
 
         self.compile_model(learning_rate)  # sets new learning rate
+        kwargs.setdefault("verbose", self.verbose)
         self._fit_internal(
             x, x_val,
             epochs=tune_epochs + self.epochs,
@@ -267,22 +273,25 @@ class Autoencoder(ABC, SaveLoadMixin):
                              " attribute.")
 
         self.encoder.trainable = False
+        kwargs.setdefault("verbose", self.verbose)
         self.tune(x=x, x_val=x_val, learning_rate=learning_rate, tune_epochs=tune_epochs, **kwargs)
         return self
 
-    def encode(self, x: DataType, conditions: DataType = None) -> np.ndarray:
+    def encode(self, x: DataType, conditions: DataType = None, **kwargs) -> np.ndarray:
         """Return latent representation using autoencoder."""
 
         if self.encoder is None:
             raise ValueError("Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
                              " attribute.")
 
+        kwargs.setdefault("verbose", self.verbose)
+
         if self.is_conditional:
             if conditions is None:
                 input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
-            return self.encoder.predict([input_data, conditions])
+            return self.encoder.predict([input_data, conditions], **kwargs)
 
-        return self.encoder.predict(x)
+        return self.encoder.predict(x, **kwargs)
 
     def predict(self, x: DataType, **kwargs) -> DataType:
         """Predict values using fitted model.
@@ -294,6 +303,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         if not self._is_fitted():
             raise ValueError(f'{self.__class__} object needs to be fitted first!')
 
+        kwargs.setdefault("verbose", self.verbose)
         return self._predict(x, **kwargs)
 
     def _predict(self, x: DataType, return_conditions: bool = False, **kwargs) -> DataType:

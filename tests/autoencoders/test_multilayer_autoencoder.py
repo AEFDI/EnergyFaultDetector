@@ -1,4 +1,4 @@
-import os.path
+
 import shutil
 from typing import Dict
 from unittest import TestCase
@@ -20,14 +20,15 @@ class TestMultilayerAutoencoder(TestCase):
             'decay_steps': 1000,
             'batch_size': 144,
             'epochs': 33,
-            'loss_name': 'mean_squared_error'
+            'loss_name': 'mean_squared_error',
+            'verbose': 0
         }
         self.autoencoder = MultilayerAutoencoder(**params)
         np.random.seed(42)
         self.train_data = pd.DataFrame(
             np.random.random(size=(1000, 10))
         )
-        self.fitted_autoencoder = MultilayerAutoencoder(**params).fit(self.train_data, verbose=0)
+        self.fitted_autoencoder = MultilayerAutoencoder(**params).fit(self.train_data)
         self.test_data = pd.DataFrame(
             np.random.random(size=(10, 10))
         )
@@ -43,31 +44,31 @@ class TestMultilayerAutoencoder(TestCase):
         self.assertEqual(self.autoencoder.loss_name, 'mean_squared_error')
 
     def test_call(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         output = self.autoencoder(self.test_data.values)
         output_predict = self.autoencoder.predict(self.test_data)
         assert_array_almost_equal(output.numpy(), output_predict)
 
     def test_fit(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         self.assertEqual(len(self.autoencoder.model.layers), 8)  # input, 20, prelu, 5, prelu, 20, prelu, output
         self.assertIsNotNone(self.autoencoder.model)
         self.assertEqual(len(self.autoencoder.history['loss']), 33)
 
     def test_fit_with_val(self) -> None:
-        self.autoencoder.fit(self.train_data, x_val=self.test_data, verbose=0)
+        self.autoencoder.fit(self.train_data, x_val=self.test_data)
         self.assertIsNotNone(self.autoencoder.model)
         self.assertEqual(len(self.autoencoder.history['loss']), 33)
 
     def test_encode(self) -> None:
-        self.autoencoder.fit(self.train_data, x_val=self.test_data, verbose=0)
+        self.autoencoder.fit(self.train_data, x_val=self.test_data)
 
         encoded = self.autoencoder.encode(self.test_data)
         # note: weak test
         self.assertEqual(encoded.shape, (10, 5))
 
     def test_predict(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         output = self.autoencoder.predict(self.test_data)
         self.assertEqual(self.test_data.shape, output.shape)
 
@@ -76,14 +77,14 @@ class TestMultilayerAutoencoder(TestCase):
             self.autoencoder.predict(self.test_data)
 
     def test_tune(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
-        self.autoencoder.tune(self.train_data, tune_epochs=5, verbose=0, learning_rate=0.001)
+        self.autoencoder.fit(self.train_data)
+        self.autoencoder.tune(self.train_data, tune_epochs=5, learning_rate=0.001)
         self.assertEqual(len(self.autoencoder.history['loss']), 5 + 33)
 
     def test_tune_decoder(self) -> None:
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         encoder_weights = self.autoencoder.encoder.get_weights()
-        self.autoencoder.tune_decoder(self.train_data, tune_epochs=5, verbose=0, learning_rate=0.001)
+        self.autoencoder.tune_decoder(self.train_data, tune_epochs=5, learning_rate=0.001)
         encoder_weights_tuned = self.autoencoder.encoder.get_weights()
         self.assertEqual(len(self.autoencoder.history['loss']), 5 + 33)
         for w1, w2 in zip(encoder_weights, encoder_weights_tuned):
@@ -104,7 +105,7 @@ class TestMultilayerAutoencoder(TestCase):
         self.assertIsNone(new_model.model)
         self.assertIsNone(new_model.history)
 
-        self.autoencoder.fit(self.train_data, verbose=0)
+        self.autoencoder.fit(self.train_data)
         self.autoencoder.save(self.saved_models, overwrite=True)
 
         new_model = MultilayerAutoencoder()

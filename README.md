@@ -86,6 +86,7 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 - Extending the core models:
    - Variational autoencoders
    - Additional options for all autoencoders (e.g. drop out, regularization)
+   - Model ensembles
 - Unification, standardisation and generic improvements
    - Data preparation (e.g. extend imputation strategies).
    - No or low configuration need (e.g. use defaults where possible).
