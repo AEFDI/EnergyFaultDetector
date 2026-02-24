@@ -34,6 +34,43 @@ If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor:
 is generated, which drops constant features, features where >5% of the data is missing, imputes remaining missing values
 with the mean value and scales the data to zero mean and unit standard deviation.
 
+You can also generate this kind of configuration programmatically using
+:func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
+
+.. code-block:: python
+
+   from energy_fault_detector.config.quickstart_config import generate_quickstart_config
+   generate_quickstart_config(output_path="base_config.yaml")
+
+You can look up the names for the available model classes in the class registry:
+
+.. code-block:: python
+
+    from energy_fault_detector import registry
+
+    registry.print_available_classes()
+
+Configuration updates
+^^^^^^^^^^^^^^^^^^^^^
+
+To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
+configuration dictionary via the :py:obj:`Config.update_config <energy_fault_detector.config.config.Config.update_config>` method:
+
+.. code-block:: python
+
+  from energy_fault_detector.config import Config
+  from copy import deepcopy
+
+  config = Config('configs/base_config.yaml')
+
+  # update some parameters:
+  new_config_dict = deepcopy(config.config_dict)
+  new_config_dict['train']['anomaly_score']['name'] = 'mahalanobis'
+  config.update_config(new_config_dict)
+
+  # or create a new configuration object and model
+  new_model = FaultDetector(Config(config_dict=new_config_dict))
+
 Detailed configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 Below is a more thorough configuration. It shows how to specify preprocessing steps and more model parameters.
@@ -98,12 +135,13 @@ Other training configuration sections
 
   - ``name``: class name in the registry.
   - ``params``: architecture and training args (e.g., ``layers``, ``epochs``, ``learning_rate``, ``early_stopping``).
-    Refer to the autoencoder class docs (:py:obj:`autoencoders <energy_fault_detector.autoencoders>`) for specific params and their defaults.
+    See (:py:obj:`autoencoders <energy_fault_detector.autoencoders>`) for specific params and their defaults.
 
 - Anomaly score (``train.anomaly_score``):
 
   - ``name``: score name (e.g., ``rmse``, ``mahalanobis``).
-  - ``params``: score-specific parameters. Refer to the :py:obj:`anomaly_scores <energy_fault_detector.anomaly_scores>` docs.
+  - ``params``: score-specific parameters.
+    See :py:obj:`anomaly_scores <energy_fault_detector.anomaly_scores>` docs.
 
 - Threshold selector (``train.threshold_selector``):
 
@@ -124,13 +162,3 @@ Root cause analysis (ARCANA)
 If ``root_cause_analysis`` is provided, ARCANA will attempt to attribute anomalies to specific features using the
 provided settings. If not provided, default settings are used. For detailed documentation refer to
 :py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`.
-
-
-Old params data preprocessing configuration (for older versions)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Older configurations use params under ``train.data_preprocessor.params``.
-These remain supported but are deprecated in favor of steps mode.
-When both ``steps`` and legacy params are present, ``steps`` take precedence and legacy params are ignored with a warning.
-
-.. include:: old_config.yaml
-   :literal:
