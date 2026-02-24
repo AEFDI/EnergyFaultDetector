@@ -19,7 +19,7 @@ class TestArcanaSeq2One(unittest.TestCase):
         
         # Build model
         self.seq_len = 5
-        sb = SequenceDatasetBuilder(sequence_length=self.seq_len, ts_freq=np.timedelta64(10, 'm'), overlap=self.seq_len - 1)
+        sb = SequenceDatasetBuilder(sequence_length=self.seq_len, ts_freq=np.timedelta64(10, 'm'), stride=1)
         self.model = LSTMSeq2OneAutoencoder(
             sequence_builder=sb,
             layers=[16, 8],

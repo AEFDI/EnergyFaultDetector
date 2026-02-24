@@ -349,7 +349,7 @@ class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
         self.assertIsInstance(fd.autoencoder, LSTMSeq2OneAutoencoder)
         sb = fd.autoencoder.sequence_builder
         self.assertEqual(sb.sequence_length, 36)
-        self.assertEqual(sb.overlap, 35)
+        self.assertEqual(sb.stride, 1)
         self.assertEqual(sb.pad_incomplete, False)
         self.assertEqual(sb.pad_value, 0.0)
 
@@ -361,7 +361,7 @@ class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
         self.assertIsInstance(fd2.autoencoder, LSTMSeq2OneAutoencoder)
         sb2 = fd2.autoencoder.sequence_builder
         self.assertEqual(sb2.sequence_length, sb.sequence_length)
-        self.assertEqual(sb2.overlap, sb.overlap)
+        self.assertEqual(sb2.stride, sb.stride)
         self.assertEqual(sb2.pad_incomplete, sb.pad_incomplete)
         self.assertEqual(sb2.pad_value, sb.pad_value)
         self.assertEqual(sb2.ts_freq, sb.ts_freq)
