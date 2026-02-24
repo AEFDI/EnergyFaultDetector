@@ -9,8 +9,7 @@ import tensorflow as tf
 from .data_gap_handler import DataGapHandler
 
 
-# TODO: consider tf.keras.preprocessing.timeseries_dataset_from_array when no data gaps are present
-#       include masking of resampled data (data gaps) and missing values (padding?)
+# TODO: consider tf.keras.preprocessing.timeseries_dataset_from_array (needs masking)
 class SequenceDatasetBuilder:
     """Build sequence datasets from a time-series DataFrame with a DatetimeIndex.
 
@@ -82,20 +81,31 @@ class SequenceDatasetBuilder:
         Raises:
             ValueError: If no valid windows can be created (all cross data gaps).
         """
+
         n_samples = len(timestamps)
-        step = self.stride
+        if n_samples < self.sequence_length:
+            raise ValueError("No valid windows found (series shorter than sequence_length).")
+
+        # Fast path: no gaps at all → all windows are valid
+        if gap_handler.data_gaps is None:
+            # starts: 0, step, 2*step, ...
+            starts = np.arange(0, n_samples - self.sequence_length + 1, self.stride, dtype=int)
+            # Build an index matrix of shape (n_windows, sequence_length)
+            window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
+            window_timestamps = timestamps[window_idx]
+            return starts, window_timestamps
 
         starts: List[int] = []
         window_timestamps: List[np.ndarray] = []
 
-        for start_idx in range(0, n_samples - self.sequence_length + 1, step):
+        for start_idx in range(0, n_samples - self.sequence_length + 1, self.stride):
             start_ts = timestamps[start_idx]
             end_ts = timestamps[start_idx + self.sequence_length - 1]
             if gap_handler.has_data_gaps(start_ts, end_ts):
                 continue
 
             starts.append(start_idx)
-            window_timestamps.append(timestamps[start_idx : start_idx + self.sequence_length])
+            window_timestamps.append(timestamps[start_idx: start_idx + self.sequence_length])
 
         if not starts:
             raise ValueError("No valid windows found (all windows cross data gaps).")
