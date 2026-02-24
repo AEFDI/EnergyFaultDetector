@@ -6,6 +6,7 @@ import pandas as pd
 from numpy.testing import assert_array_almost_equal
 
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
+from energy_fault_detector.data_splitting.data_gap_handler import DataGapHandler
 
 
 class TestSequenceDatasetBuilder(unittest.TestCase):
@@ -199,6 +200,10 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
             conditional_features=conditional_features,
             shuffle=False,
         )
+
+        gap_handler = DataGapHandler(self.df.index.values, self.builder.ts_freq)
+        # Ensure the fast path condition holds
+        self.assertIsNone(gap_handler.data_gaps)
 
         expected_windows = len(self.df) - self.sequence_length + 1
         self.assertEqual(window_timestamps.shape, (expected_windows, self.sequence_length))
