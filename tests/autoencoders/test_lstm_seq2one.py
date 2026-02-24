@@ -30,7 +30,7 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
         self.sequence_builder = SequenceDatasetBuilder(
             sequence_length=self.sequence_length,
             ts_freq=self.ts_freq,
-            overlap=self.sequence_length - 1,  # stride = 1
+            stride=1,
             pad_incomplete=False,
         )
 
@@ -112,7 +112,7 @@ class TestLSTMSeq2OneAutoencoder(unittest.TestCase):
         builder = SequenceDatasetBuilder(
             sequence_length=self.sequence_length,
             ts_freq=self.ts_freq,
-            overlap=self.sequence_length - 1,
+            stride=1,
             pad_incomplete=False,
         )
 

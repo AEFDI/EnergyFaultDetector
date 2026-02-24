@@ -11,7 +11,7 @@ train:
     params:
       sequence_builder:
         sequence_length: 36
-        overlap: 35         # stride 1
+        stride: 1
         ts_freq: "30s"      # parsed by _parse_timedelta into np.timedelta64(10, 'm')
         pad_incomplete: false
         pad_value: 0.0
