@@ -17,6 +17,7 @@ from .counter_diff_transformer import CounterDiffTransformer
 from .timestamp_transformer import TimestampTransformer
 
 
+# TODO: move legacy params handling to config and deprecate there to simplify there
 class DataPreprocessor(Pipeline, SaveLoadMixin):
     STEP_REGISTRY = {
         'duplicate_to_nan': DuplicateValuesToNan,
