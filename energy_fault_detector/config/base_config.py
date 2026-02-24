@@ -5,13 +5,22 @@ import logging
 from typing import Dict, Optional, List, Any, Callable
 import datetime
 from abc import ABC
+from copy import deepcopy
 
 import yaml
+import numpy as np
 from cerberus import Validator
 
 logger = logging.getLogger('energy_fault_detector')
 
 SCHEMA = {'allow_unknown': True}
+
+
+def _format_timedelta(value: np.timedelta64) -> str:
+    """Format np.timedelta64 as a compact string like '30s' for YAML."""
+    # Store everything in seconds
+    total_seconds = int(value.astype('timedelta64[s]').astype(int))
+    return f"{total_seconds}s"
 
 
 class InvalidConfigFile(Exception):
@@ -77,6 +86,9 @@ class BaseConfig(ABC):
     def write_config(self, file_name: Optional[str] = None, overwrite: bool = False) -> None:
         """Write the configuration to a yaml file"""
 
+        # make copy to not modify the original config
+        conf_dict_to_save = deepcopy(self.config_dict)
+
         if file_name is None and self.configuration_file is None:
             raise ValueError('No file name given and no known configuration file to overwrite.')
 
@@ -84,18 +96,16 @@ class BaseConfig(ABC):
         if os.path.exists(file_name) and not overwrite:
             raise FileExistsError(f'File {file_name} already exists and overwrite is set to False.')
 
-        sampler_params = self.config_dict.get('train', {}).get('autoencoder', {}).get('time_series_sampler', {})
-        ts_freq = sampler_params.get('ts_freq')
-        if ts_freq is not None:
-            self.config_dict['train']['autoencoder']['time_series_sampler']['ts_freq'] = repr(ts_freq)
-
-        # remove sampler from autoencoder params dictionary
-        ts_sampler = self.config_dict.get('train', {}).get('autoencoder', {}).get('params', {}).get('ts_sampler')
-        if ts_sampler is not None:
-            self.config_dict['train']['autoencoder']['params'].pop('ts_sampler')
+        ae_params = conf_dict_to_save.get('train', {}).get('autoencoder', {}).get('params', {})
+        seq_builder = ae_params.get('sequence_builder')
+        if isinstance(seq_builder, dict):
+            sb_ts_freq = seq_builder.get('ts_freq')
+            if isinstance(sb_ts_freq, np.timedelta64):
+                seq_builder['ts_freq'] = _format_timedelta(sb_ts_freq)
+                conf_dict_to_save['train']['autoencoder']['params']['sequence_builder'] = seq_builder
 
         with open(file_name, 'w', encoding='utf-8') as f:
-            yaml.safe_dump(self.config_dict, f)
+            yaml.safe_dump(conf_dict_to_save, f)
 
     @staticmethod
     def _parse_dates(dates: List, dt_format: str = '%Y-%m-%d') -> List:
