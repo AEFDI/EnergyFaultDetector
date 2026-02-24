@@ -57,11 +57,8 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
                         height_multiplier: float = 1.5, original_scale: bool = True) -> Tuple[plt.Figure, plt.Axes]:
     """Plots the original dataset and its reconstruction.
 
-    Notes:
-        - Can result in a very large plot, if the dataset contains many columns/features. Use the
-         `features_to_plot` parameter to specify which columns to plot.
-        - For MultiIndex data (e.g. multiple devices), pass data for a single
-          group/device, i.e. ``df.loc[device_id]`` to select one device before plotting.
+    Note: can result in a very large plot, if the dataset contains many columns/features. Use the
+    `features_to_plot` parameter to specify which columns to plot.
 
     Args:
         data (pd.DataFrame): DataFrame containing the original data.
@@ -94,25 +91,8 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
         else:
             warnings.warn(f'No reconstruction available for column {col}.')
         ax_.legend(loc='upper left')
-
         if original_scale:
-            s = data[col].dropna()  # use finite values only
-            if s.empty:
-                # nothing to scale
-                continue
-
-            vmin = s.min()
-            vmax = s.max()
-            vstd = s.std()
-            if not np.isfinite(vmin) and not np.isfinite(vmax):
-                continue
-
-            if not np.isfinite(vstd) or vstd == 0:
-                # constant: add a small margin
-                margin = 1.0 if vmin == 0 else 0.1 * abs(vmin)
-                ax_.set_ylim(vmin - margin, vmax + margin)
-            else:
-                ax_.set_ylim(vmin - vstd, vmax + vstd)
+            ax_.set_ylim(data[col].min() - data[col].std(), data[col].max() + data[col].std())
 
     plt.tight_layout()
     return fig, ax
@@ -125,10 +105,6 @@ def plot_reconstruction_with_model(model: FaultDetector, data: pd.DataFrame,
     """Plots the data and its reconstruction using the provided model. Similar to plot_reconstruction, but uses the
      'model.predict' method to get the reconstruction. Counter values are plottet as diffs or rates with their
      reconstruction.
-
-    Note:
-        For MultiIndex data (e.g. multiple devices), pass data for a single
-        group/device. Use ``df.loc[device_id]`` to select one device before plotting.
 
     Args:
         model (FaultDetector): Fitted model with data_preprocessor and autoencoder.
@@ -190,14 +166,9 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
                               score_color: Optional[str] = None,
                               anomaly_color: Optional[str] = None,
                               criticality_color: Optional[str] = "C2",
-                              marker_size: Optional[int] = 1,
                               threshold_color: Optional[str] = 'k', **subplot_kwargs
                               ) -> Tuple[plt.Figure, plt.Axes]:
     """Plots the anomaly scores of the AnomalyDetector model along with the threshold for the provided data.
-
-    Note:
-        For MultiIndex data (e.g. multiple devices), pass data for a single
-        group/device. Use ``df.loc[device_id]`` to select one device before plotting.
 
     Args:
         model (FaultDetector): The anomaly detection model used to compute the scores.
@@ -214,7 +185,6 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
         anomaly_color (Optional[str], optional): Color to use for the anomalous data points (using normal_index).
         criticality_color (Optional[str], optional): Color to use for the criticality counter if show_criticality is
             True. Defaults to 'C2'.
-        marker_size (Optional[int], optional): Dot size in the scatter plot. Defaults to 1.
         threshold_color (Optional[str], optional): Color to use for the threshold.
         **subplot_kwargs: Additional keyword arguments for plt.subplots().
 
@@ -227,7 +197,6 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
     else:
         fig = ax.get_figure()
 
-    ax2: Optional[plt.Axes] = None
     predictions = model.predict(data)
     scores = predictions.anomaly_score
 
@@ -241,19 +210,17 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
         aligned_normal_index = aligned_normal_index.fillna(True).astype(bool)
 
     if aligned_normal_index is None and not show_predicted_anomaly:
-        ax.scatter(scores.index, scores, s=marker_size, alpha=0.8, c=score_color)
+        ax.scatter(scores.index, scores, s=1, alpha=0.8, c=score_color)
     elif show_predicted_anomaly:
         predicted_anomalies = predictions.predicted_anomalies
-        ax.scatter(scores.index[~predicted_anomalies], scores[~predicted_anomalies], s=marker_size, alpha=0.8,
-                   c=score_color)
-        ax.scatter(scores.index[predicted_anomalies], scores[predicted_anomalies], s=marker_size, alpha=0.8,
-                   c=anomaly_color,
+        ax.scatter(scores.index[~predicted_anomalies], scores[~predicted_anomalies], s=1, alpha=0.8, c=score_color)
+        ax.scatter(scores.index[predicted_anomalies], scores[predicted_anomalies], s=1, alpha=0.8, c=anomaly_color,
                    label='predicted anomaly')
     elif aligned_normal_index is not None:
         ax.scatter(scores.loc[aligned_normal_index].index, scores.loc[aligned_normal_index],
-                   s=marker_size, alpha=0.8, label='normal status', c=score_color)
+                   s=1, alpha=0.8, label='normal status', c=score_color)
         ax.scatter(scores.loc[~aligned_normal_index].index, scores.loc[~aligned_normal_index],
-                   s=marker_size, alpha=0.8, label='anomalous status', c=anomaly_color)
+                   s=1, alpha=0.8, label='anomalous status', c=anomaly_color)
 
     if show_threshold:
         if isinstance(model.threshold_selector.threshold, float):
@@ -268,21 +235,19 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
         crit = predictions.criticality(normal_idx=normal_index, max_criticality=max_criticality)
         ax2 = ax.twinx()
         ax2.plot(crit, label='criticality counter', color=criticality_color)
+        ax2.legend(loc='upper right', markerscale=3)
         ax2.set_ylabel('criticality')
 
     ax.set_ylabel('anomaly score')
 
     # Get handles and labels from the current axes
     handles, labels = ax.get_legend_handles_labels()
-    if ax2 is not None:
-        handles2, labels2 = ax2.get_legend_handles_labels()
-        handles += handles2
-        labels += labels2
     if labels:
         # Only create the legend if there are labels found
-        legend = ax.legend(handles, labels, loc='upper left', markerscale=3)
+        legend = ax.legend(loc='upper left', markerscale=3)
         for h in legend.legend_handles:
             h.set_alpha(1)
+
     return fig, ax
 
 
