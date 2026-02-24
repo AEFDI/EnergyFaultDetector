@@ -10,6 +10,7 @@ from .data_gap_handler import DataGapHandler
 
 
 # TODO: consider tf.keras.preprocessing.timeseries_dataset_from_array (needs masking)
+# TODO: support tz-aware timestamps
 class SequenceDatasetBuilder:
     """Build sequence datasets from a time-series DataFrame with a DatetimeIndex.
 
