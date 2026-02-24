@@ -206,6 +206,7 @@ class Seq2OneAutoencoder(Autoencoder):
         self._check_sequence_builder()
         self._ensure_model_created_from(x)
 
+        kwargs.setdefault("verbose", self.verbose)
         return self._fit_internal(
             x=x,
             x_val=x_val,
@@ -238,6 +239,8 @@ class Seq2OneAutoencoder(Autoencoder):
             The tuned ``Seq2SeqAutoencoder`` instance.
         """
         self._check_sequence_builder()
+
+        kwargs.setdefault("verbose", self.verbose)
         return self._fit_internal(
             x=x,
             x_val=x_val,
