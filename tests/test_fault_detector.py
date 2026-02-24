@@ -315,3 +315,63 @@ class TestFaultDetectorModelCreation(unittest.TestCase):
         config = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_ts_freq.yaml'))
         model = FaultDetector(config, model_directory=self.test_model_dir)
         self.assertIsInstance(model.autoencoder, LSTMSeq2OneAutoencoder)
+
+
+class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
+    """Round-trip saving/loading for a sequence AE + FaultDetector."""
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_config_ts_freq.yaml')
+        self.conf = Config(self.config_path)
+
+        self.tmp_dir = tempfile.mkdtemp()
+
+        # Synthetic time series matching ts_freq = 30s
+        n = 200
+        index = pd.date_range("2025-01-01", periods=n, freq="30s")
+        np.random.seed(42)
+        self.sensor_data = pd.DataFrame(
+            np.random.randn(n, 3), index=index, columns=["f1", "f2", "f3"]
+        )
+        # For training we assume all normal
+        self.normal_index = pd.Series(True, index=index)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp_dir)
+
+    def test_sequence_model_save_and_load_roundtrip(self) -> None:
+        # Train and save
+        fd = FaultDetector(config=self.conf, model_directory=self.tmp_dir)
+        result = fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index)
+        model_path = result.model_path
+
+        # Sanity: we really trained a sequence AE
+        self.assertIsInstance(fd.autoencoder, LSTMSeq2OneAutoencoder)
+        sb = fd.autoencoder.sequence_builder
+        self.assertEqual(sb.sequence_length, 36)
+        self.assertEqual(sb.overlap, 35)
+        self.assertEqual(sb.pad_incomplete, False)
+        self.assertEqual(sb.pad_value, 0.0)
+
+        # Load into a fresh FaultDetector
+        fd2 = FaultDetector(model_directory=self.tmp_dir)
+        fd2.load_models(model_path=model_path)
+
+        # Autoencoder type and sequence_builder attributes should match
+        self.assertIsInstance(fd2.autoencoder, LSTMSeq2OneAutoencoder)
+        sb2 = fd2.autoencoder.sequence_builder
+        self.assertEqual(sb2.sequence_length, sb.sequence_length)
+        self.assertEqual(sb2.overlap, sb.overlap)
+        self.assertEqual(sb2.pad_incomplete, sb.pad_incomplete)
+        self.assertEqual(sb2.pad_value, sb.pad_value)
+        self.assertEqual(sb2.ts_freq, sb.ts_freq)
+
+        # Weights should be equal
+        w1 = fd.autoencoder.model.get_weights()
+        w2 = fd2.autoencoder.model.get_weights()
+        self.assertEqual(len(w1), len(w2))
+        for a, b in zip(w1, w2):
+            np.testing.assert_allclose(a, b, atol=1e-6)
+
+        # Config should round-trip as well
+        self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
