@@ -15,7 +15,6 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
         np.random.seed(42)
         self.sequence_length = 4
         self.ts_freq = np.timedelta64(10, "m")
-        self.overlap = self.sequence_length - 1  # stride = 1
 
         # Simple regularly sampled time series: 20 timesteps, 3 features
         timestamps = pd.date_range("2025-01-01", periods=20, freq="10min")
@@ -28,7 +27,7 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
         self.builder = SequenceDatasetBuilder(
             sequence_length=self.sequence_length,
             ts_freq=self.ts_freq,
-            overlap=self.overlap,
+            stride=1,
             pad_incomplete=False,
         )
 
@@ -36,26 +35,32 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
         builder = SequenceDatasetBuilder(
             sequence_length=5,
             ts_freq=np.timedelta64(10, "m"),
-            overlap=4,
+            stride=1,
             pad_incomplete=False,
         )
         self.assertEqual(builder.sequence_length, 5)
-        self.assertEqual(builder.overlap, 4)
+        self.assertEqual(builder.stride, 1)
 
     def test_init_invalid_sequence_length(self) -> None:
         with self.assertRaises(ValueError):
             _ = SequenceDatasetBuilder(
                 sequence_length=0,
                 ts_freq=self.ts_freq,
-                overlap=0,
+                stride=3,
             )
 
-    def test_init_invalid_overlap(self) -> None:
+    def test_init_invalid_stride(self) -> None:
         with self.assertRaises(ValueError):
             _ = SequenceDatasetBuilder(
                 sequence_length=4,
                 ts_freq=self.ts_freq,
-                overlap=4,  # must be < sequence_length
+                stride=0,  # invalid: <= 0
+            )
+        with self.assertRaises(ValueError):
+            _ = SequenceDatasetBuilder(
+                sequence_length=4,
+                ts_freq=self.ts_freq,
+                stride=5,  # invalid: > sequence_length
             )
 
     def test_build_sliding_dataset_no_conditional_train(self) -> None:
@@ -141,7 +146,7 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
         builder = SequenceDatasetBuilder(
             sequence_length=self.sequence_length,
             ts_freq=self.ts_freq,
-            overlap=self.overlap,
+            stride=3,
             pad_incomplete=False,
         )
 
@@ -231,7 +236,7 @@ class TestSequenceDatasetBuilder(unittest.TestCase):
         builder_short = SequenceDatasetBuilder(
             sequence_length=4,
             ts_freq=self.ts_freq,
-            overlap=3,
+            stride=3,
             pad_incomplete=False,
         )
 

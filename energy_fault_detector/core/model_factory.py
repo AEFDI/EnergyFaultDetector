@@ -55,7 +55,7 @@ class ModelFactory:
             sequence_builder = SequenceDatasetBuilder(
                 sequence_length=builder_conf["sequence_length"],
                 ts_freq=ts_freq,
-                overlap=builder_conf.get("overlap", 0),
+                stride=builder_conf.get("stride", 1),
                 pad_incomplete=builder_conf.get("pad_incomplete", False),
                 pad_value=builder_conf.get("pad_value", 0.0),
             )

@@ -29,7 +29,7 @@ class SequenceDatasetBuilder:
     Args:
         sequence_length: Number of time steps in each sequence.
         ts_freq: Expected sampling frequency as ``np.timedelta64``.
-        overlap: Overlap between consecutive windows (0 = disjoint).
+        stride: Stride between consecutive windows (sequence_length = disjoint).
         pad_incomplete: If True, resample to a regular grid and pad missing values with ``pad_value`` before windowing.
         pad_value: Value to use when padding during resampling if ``pad_incomplete`` is True.
     """
@@ -38,18 +38,18 @@ class SequenceDatasetBuilder:
         self,
         sequence_length: int,
         ts_freq: np.timedelta64,
-        overlap: int = 0,
+        stride: int = 1,
         pad_incomplete: bool = False,
         pad_value: float = 0.0,
     ) -> None:
         if sequence_length <= 0:
             raise ValueError("sequence_length must be > 0.")
-        if overlap >= sequence_length:
-            raise ValueError("overlap must be < sequence_length.")
+        if stride <= 0 or stride > sequence_length:
+            raise ValueError("stride must be in [1, sequence_length].")
 
         self.sequence_length = sequence_length
         self.ts_freq = ts_freq
-        self.overlap = overlap
+        self.stride = stride
         self.pad_incomplete = pad_incomplete
         self.pad_value = pad_value
 
@@ -83,7 +83,7 @@ class SequenceDatasetBuilder:
             ValueError: If no valid windows can be created (all cross data gaps).
         """
         n_samples = len(timestamps)
-        step = max(1, self.sequence_length - self.overlap)
+        step = self.stride
 
         starts: List[int] = []
         window_timestamps: List[np.ndarray] = []
