@@ -144,13 +144,19 @@ class FaultDetectionModel(ABC):
 
         data_splitter_params = self.config.data_split_params
 
+        # Normalize aliases
         data_splitter_type = data_splitter_params.get('type')
-        if (data_splitter_type is None) or (data_splitter_type in ['DataSplitter', 'BlockDataSplitter', 'blocks']):
+        if data_splitter_type in ('sklearn', 'train_test_split', 'train_val_split'):
+            splitter_kind = 'sklearn'
+        else:
+            splitter_kind = 'blocks'
+
+        if splitter_kind == 'blocks':
             train_data, val_data = BlockDataSplitter(
                 train_block_size=data_splitter_params.get('train_block_size'),
                 val_block_size=data_splitter_params.get('val_block_size'),
             ).split(x=x)
-        else:  # 'sklearn', 'train_test_split'
+        else:  # 'sklearn'
             shuffle = data_splitter_params.get('shuffle')
             train_data, val_data = train_test_split(
                 x,
