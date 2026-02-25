@@ -120,12 +120,30 @@ class Arcana:
         timestamps = None
         window_timestamps = None
 
+        empty_df = pd.DataFrame(columns=x.columns, index=pd.Index([], name=x.index.name))
+        empty_losses = pd.DataFrame(columns=["Combined Loss", "Reconstruction Loss", "Regularization Loss"])
+        empty_losses.index.name = "Iteration"
+
         if self.sequence_based:
             # handle sequential input
             sb = self.keras_model.sequence_builder
-            dataset, window_timestamps_all = sb.build_seq2one_dataset(
-                x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
-            )
+
+            if len(x) < sb.sequence_length:
+                logger.warning("ARCANA: sequence-based model, but event length (%d) < sequence_length (%d). "
+                               "Skip root cause analysis for this event.",len(x), sb.sequence_length)
+                return empty_df, empty_losses, []
+
+            try:
+                dataset, window_timestamps_all = sb.build_seq2one_dataset(
+                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
+                )
+            except ValueError as exc:
+                if "No valid windows found (series shorter than sequence_length)" in str(exc):
+                    logger.warning("ARCANA: no valid sequence windows for event (len(x)=%d). "
+                                   "Skip root cause analysis for this event.",len(x))
+                    return empty_df, empty_losses, []
+                raise
+
             # Each window corresponds to its last timestamp
             window_timestamps = window_timestamps_all[:, -1]
 
