@@ -11,14 +11,16 @@ import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerTuple
 import pandas as pd
 
+from energy_fault_detector.fault_detector import FaultDetector
 if TYPE_CHECKING:
     from energy_fault_detector.core.autoencoder import Autoencoder
-    from energy_fault_detector.fault_detector import FaultDetector
 
 MAX_PLOTS = 20
 
 
-def plot_learning_curve(model: Union[Autoencoder, FaultDetector], ax: plt.Axes = None, label: str = '',
+def plot_learning_curve(model: Union["Autoencoder", FaultDetector],
+                        ax: plt.Axes = None,
+                        label: str = '',
                         **subplot_kwargs) -> Tuple[plt.Figure, plt.Axes]:
     """Plot the learning curve of the specified model.
 
@@ -31,7 +33,6 @@ def plot_learning_curve(model: Union[Autoencoder, FaultDetector], ax: plt.Axes =
     Returns:
         Tuple[plt.Figure, plt.Axes]: The figure and axes containing the plot.
     """
-
     if ax is None:
         fig, ax = plt.subplots(**subplot_kwargs)
     else:
@@ -199,18 +200,27 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
     predictions = model.predict(data)
     scores = predictions.anomaly_score
 
-    if normal_index is None and not show_predicted_anomaly:
+    # Align normal_index to scores.index if provided
+    # The anomaly idx can be shorter than normal idx when using seq2one models
+    aligned_normal_index = None
+    if normal_index is not None:
+        # Reindex and treat missing as normal (True), consistent with normal_idx=None
+        aligned_normal_index = normal_index.reindex(scores.index)
+        # If it was a boolean Series, fill NaNs as True
+        aligned_normal_index = aligned_normal_index.fillna(True).astype(bool)
+
+    if aligned_normal_index is None and not show_predicted_anomaly:
         ax.scatter(scores.index, scores, s=1, alpha=0.8, c=score_color)
     elif show_predicted_anomaly:
         predicted_anomalies = predictions.predicted_anomalies
         ax.scatter(scores.index[~predicted_anomalies], scores[~predicted_anomalies], s=1, alpha=0.8, c=score_color)
         ax.scatter(scores.index[predicted_anomalies], scores[predicted_anomalies], s=1, alpha=0.8, c=anomaly_color,
                    label='predicted anomaly')
-    elif normal_index is not None:
-        ax.scatter(scores.loc[normal_index].index, scores.loc[normal_index], s=1, alpha=0.8, label='normal status',
-                   c=score_color)
-        ax.scatter(scores.loc[~normal_index].index, scores.loc[~normal_index], s=1, alpha=0.8, label='anomalous status',
-                   c=anomaly_color)
+    elif aligned_normal_index is not None:
+        ax.scatter(scores.loc[aligned_normal_index].index, scores.loc[aligned_normal_index],
+                   s=1, alpha=0.8, label='normal status', c=score_color)
+        ax.scatter(scores.loc[~aligned_normal_index].index, scores.loc[~aligned_normal_index],
+                   s=1, alpha=0.8, label='anomalous status', c=anomaly_color)
 
     if show_threshold:
         if isinstance(model.threshold_selector.threshold, float):
