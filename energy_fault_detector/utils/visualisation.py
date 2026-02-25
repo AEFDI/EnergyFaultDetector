@@ -11,14 +11,16 @@ import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerTuple
 import pandas as pd
 
+from energy_fault_detector.fault_detector import FaultDetector
 if TYPE_CHECKING:
     from energy_fault_detector.core.autoencoder import Autoencoder
-    from energy_fault_detector.fault_detector import FaultDetector
 
 MAX_PLOTS = 20
 
 
-def plot_learning_curve(model: Union[Autoencoder, FaultDetector], ax: plt.Axes = None, label: str = '',
+def plot_learning_curve(model: Union["Autoencoder", FaultDetector],
+                        ax: plt.Axes = None,
+                        label: str = '',
                         **subplot_kwargs) -> Tuple[plt.Figure, plt.Axes]:
     """Plot the learning curve of the specified model.
 
@@ -31,7 +33,6 @@ def plot_learning_curve(model: Union[Autoencoder, FaultDetector], ax: plt.Axes =
     Returns:
         Tuple[plt.Figure, plt.Axes]: The figure and axes containing the plot.
     """
-
     if ax is None:
         fig, ax = plt.subplots(**subplot_kwargs)
     else:
