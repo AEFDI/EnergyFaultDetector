@@ -65,15 +65,21 @@ def calculate_criticality(anomalies: pd.Series, normal_idx: pd.Series = None, in
         ValueError: If the lengths of the given pandas Series for anomalies and normal_idx do not match.
     """
 
+    # Ensure aligned and sorted indices
+    anomalies = anomalies.sort_index()
+
     if normal_idx is None:
+        # Assume everything is normal if not provided
         normal_idx = pd.Series(np.full(len(anomalies), True), index=anomalies.index)
+    else:
+        # Align normal_idx to anomalies index
+        normal_idx = normal_idx.sort_index()
+        normal_idx = normal_idx.reindex(anomalies.index)
+        # Treat missing values as normal operation (True)
+        normal_idx = normal_idx.fillna(True).astype(bool)
 
     if len(anomalies) != len(normal_idx):
         raise ValueError('length of given pandas series anomalies and normal idx do not match!')
-
-    # Ensure aligned and sorted indices
-    anomalies = anomalies.sort_index()
-    normal_idx = normal_idx.sort_index()
 
     # Compute step deltas efficiently with numpy
     normal_arr = normal_idx.to_numpy(dtype=bool, copy=False)
