@@ -17,6 +17,7 @@ from energy_fault_detector.data_preprocessing.duplicate_value_to_nan import Dupl
 from energy_fault_detector.data_preprocessing.counter_diff_transformer import CounterDiffTransformer
 
 
+# TODO: move legacy params handling to config and deprecate there to simplify there
 class DataPreprocessor(Pipeline, SaveLoadMixin):
     STEP_REGISTRY = {
         'duplicate_to_nan': DuplicateValuesToNan,
