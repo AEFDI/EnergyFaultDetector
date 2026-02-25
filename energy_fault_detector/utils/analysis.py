@@ -25,9 +25,16 @@ def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
     # Create a boolean mask for consecutive True values
     mask = (boolean_information != boolean_information.shift()).cumsum()
 
+    # Align boolean_information to sensor_data index
+    boolean_information = boolean_information.astype(bool)
+    boolean_information = boolean_information.reindex(sensor_data.index).fillna(False)
+
+    # Now indices match; build contiguous segments
+    mask = (boolean_information != boolean_information.shift()).cumsum()
+    bool_mask = boolean_information.groupby(mask).transform(lambda data: data.all()).fillna(False)
+
     # Group by the mask and filter groups where bool_series is True and has more
     # than consecutive_true_value_threshold consecutive True
-    bool_mask = boolean_information.groupby(mask).transform(lambda data: data.all()).fillna(False)
     grouped_sensor_data = sensor_data[bool_mask].groupby(mask)
     event_data = [group[1] for group in grouped_sensor_data if len(group[1]) >= min_event_length]
 
