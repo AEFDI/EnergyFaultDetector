@@ -7,6 +7,7 @@ from energy_fault_detector.config.base_config import BaseConfig, InvalidConfigFi
 
 logger = logging.getLogger('energy_fault_detector')
 
+# TODO: Clearer error/validation messages
 # Consider pydantic or data classes instead of cerberus
 TRAIN_SCHEMA = {
     'anomaly_score': {

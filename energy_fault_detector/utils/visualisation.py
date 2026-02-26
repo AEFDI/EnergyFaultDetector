@@ -91,8 +91,25 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
         else:
             warnings.warn(f'No reconstruction available for column {col}.')
         ax_.legend(loc='upper left')
+
         if original_scale:
-            ax_.set_ylim(data[col].min() - data[col].std(), data[col].max() + data[col].std())
+            s = data[col].dropna()  # use finite values only
+            if s.empty:
+                # nothing to scale
+                continue
+
+            vmin = s.min()
+            vmax = s.max()
+            vstd = s.std()
+            if not np.isfinite(vmin) and not np.isfinite(vmax):
+                continue
+
+            if not np.isfinite(vstd) or vstd == 0:
+                # constant: add a small margin
+                margin = 1.0 if vmin == 0 else 0.1 * abs(vmin)
+                ax_.set_ylim(vmin - margin, vmax + margin)
+            else:
+                ax_.set_ylim(vmin - vstd, vmax + vstd)
 
     plt.tight_layout()
     return fig, ax
