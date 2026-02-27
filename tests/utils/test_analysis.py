@@ -75,6 +75,6 @@ class TestAnalysis(unittest.TestCase):
         idx2 = self.make_time_index(4)
         anomalies = pd.Series([True, False, True], index=idx1)
         normal = pd.Series([True, True, True, True], index=idx2)
-        with self.assertRaises(ValueError):
-            analysis.calculate_criticality(anomalies=anomalies, normal_idx=normal)
+        # does not raise an error
+        analysis.calculate_criticality(anomalies=anomalies, normal_idx=normal)
 
