@@ -35,6 +35,7 @@ class Seq2OneAutoencoder(Autoencoder):
 
         super().__init__(**ae_kwargs)
         self.sequence_builder = sequence_builder
+        self.is_sequential: bool = True
 
     def create_model(
         self,
@@ -248,10 +249,11 @@ class Seq2OneAutoencoder(Autoencoder):
             main_columns = list(x.columns)
 
         target_timestamps = window_timestamps[:, -1]
+        target_index = self._timestamps_to_index(target_timestamps, x.index)
 
         reconstruction = pd.DataFrame(
             data=predictions,
-            index=target_timestamps,
+            index=target_index,
             columns=main_columns,
         )
         if return_conditions and self.conditional_features:
@@ -305,6 +307,19 @@ class Seq2OneAutoencoder(Autoencoder):
                 f"{self.__class__.__name__} requires a 'sequence_builder' to be set. "
                 "When training a new model, configure 'sequence_builder' under "
                 "'train.autoencoder.params.sequence_builder' in the config. "
-                "When loading an existing model, call 'FaultDetector.load_models' "
-                "before calling fit/predict."
+                "When loading an existing model, call 'FaultDetector.load_models' before calling fit/predict."
             )
+
+    @staticmethod
+    def _timestamps_to_index(target_timestamps: np.ndarray, ref_index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+        """Convert numpy datetime64 timestamps to a DatetimeIndex compatible with ref_index.
+
+        - If ref_index is tz-naive: return tz-naive index.
+        - If ref_index is tz-aware: interpret target_timestamps as UTC instants
+          (as produced by ref_index.values) and convert to ref_index.tz.
+        """
+
+        idx = pd.DatetimeIndex(target_timestamps)
+        if isinstance(ref_index, pd.DatetimeIndex) and ref_index.tz is not None and idx.tz is None:
+            idx = idx.tz_localize("UTC").tz_convert(ref_index.tz)
+        return idx
