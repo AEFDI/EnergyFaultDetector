@@ -201,7 +201,8 @@ class Arcana:
             if self.sequence_based:
                 # Each row in the bias sequence corresponds to a window.
                 # We return the bias of the reconstructed timestep (the last one).
-                return pd.DataFrame(data=xb[:, -1, :], columns=feature_names, index=window_timestamps)
+                idx = Seq2OneAutoencoder._timestamps_to_index(window_timestamps, x.index)
+                return pd.DataFrame(data=xb[:, -1, :], columns=feature_names, index=idx)
             else:
                 return pd.DataFrame(data=xb, columns=feature_names, index=timestamps)
 

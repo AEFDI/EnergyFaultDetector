@@ -57,10 +57,6 @@ class TestCNNSeq2OneAutoencoder(unittest.TestCase):
 
         self.autoencoder = CNNSeq2OneAutoencoder(**self.params)
 
-    # ------------------------------------------------------------------ #
-    # Basic fit / predict (no conditional features)
-    # ------------------------------------------------------------------ #
-
     def test_fit_builds_model_and_history(self) -> None:
         """Model and history should be created after fit."""
         self.autoencoder.fit(self.df)
@@ -95,10 +91,6 @@ class TestCNNSeq2OneAutoencoder(unittest.TestCase):
         # Index: last timestamp of each window
         expected_index = self.df.index[self.sequence_length - 1 :]
         self.assertTrue(reconstruction.index.equals(expected_index))
-
-    # ------------------------------------------------------------------ #
-    # Conditional features
-    # ------------------------------------------------------------------ #
 
     def test_fit_and_predict_with_conditional_features(self) -> None:
         """When using conditional features, model should have two inputs and predict only main features."""
@@ -155,6 +147,43 @@ class TestCNNSeq2OneAutoencoder(unittest.TestCase):
         # CNNSeq2OneAutoencoder.create_model uses a list for inputs if conditional
         self.assertEqual(len(ae_cond.model.inputs), 2)
         self.assertEqual(len(ae_cond.encoder.inputs), 2)
+
+    def test_timezone_aware_index_supported(self) -> None:
+        """CNNSeq2OneAutoencoder should handle tz-aware DatetimeIndex correctly."""
+        # Use same shape but with a tz-aware index (Europe/Berlin)
+        timestamps_tz = pd.date_range(
+            "2025-01-01",
+            periods=40,
+            freq="10min",
+            tz="Europe/Berlin",
+        )
+        df_tz = pd.DataFrame(
+            np.random.random(size=(40, 3)),
+            index=timestamps_tz,
+            columns=["f1", "f2", "f3"],
+        )
+
+        # Fresh autoencoder instance
+        ae_tz = CNNSeq2OneAutoencoder(**self.params)
+
+        # Fit should not fail with tz-aware index
+        ae_tz.fit(df_tz)
+
+        # predict() should return one row per window with tz-aware index matching df_tz
+        reconstruction = ae_tz.predict(df_tz)
+        n_windows = len(df_tz) - self.sequence_length + 1
+
+        self.assertEqual(reconstruction.shape, (n_windows, df_tz.shape[1]))
+        self.assertListEqual(list(reconstruction.columns), list(df_tz.columns))
+
+        expected_index = df_tz.index[self.sequence_length - 1 :]
+        self.assertEqual(reconstruction.index.tz, df_tz.index.tz)
+        self.assertTrue(reconstruction.index.equals(expected_index))
+
+        # get_reconstruction_error() should align with reconstruction index and preserve tz
+        recon_error = ae_tz.get_reconstruction_error(df_tz)
+        self.assertEqual(recon_error.index.tz, df_tz.index.tz)
+        self.assertTrue(recon_error.index.equals(reconstruction.index))
 
 
 if __name__ == "__main__":
