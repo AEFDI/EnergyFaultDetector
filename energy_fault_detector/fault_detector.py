@@ -131,7 +131,7 @@ class FaultDetector(FaultDetectionModel):
 
         # save the models
         if save_models:
-            model_path, model_date = self.save_models(overwrite=overwrite_models)
+            model_path, model_date = self.save(overwrite=overwrite_models)
         else:
             model_date = datetime.now().strftime("%Y%m%d_%H%M%S")
         return ModelMetadata(
@@ -188,7 +188,7 @@ class FaultDetector(FaultDetectionModel):
             self.config['train']['threshold_selector']['fit_on_val'] = False
 
         if pretrained_model_path is not None:
-            self.load_models(model_path=pretrained_model_path)
+            self._load_from_path(model_path=pretrained_model_path)
         else:
             if self.autoencoder is None:
                 raise ValueError('No models loaded and no pretrained_model_path provided!')
@@ -234,7 +234,7 @@ class FaultDetector(FaultDetectionModel):
         model_path = None
         if save_models:
             model_name = tune_method + '_tuned_model'
-            model_path, model_date = self.save_models(model_name=model_name, overwrite=overwrite_models)
+            model_path, model_date = self.save(model_name=model_name, overwrite=overwrite_models)
         else:
             model_date = datetime.now().strftime("%Y%m%d_%H%M%S")
         return ModelMetadata(
@@ -274,7 +274,7 @@ class FaultDetector(FaultDetectionModel):
         x = sensor_data.sort_index()
 
         if model_path is not None:
-            self.load_models(model_path=model_path)
+            self._load_from_path(model_path=model_path)
         else:
             if self.data_preprocessor is None:
                 raise ValueError('No models loaded and no model_path provided!')

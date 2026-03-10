@@ -58,7 +58,7 @@ from energy_fault_detector.config import generate_quickstart_config
 generate_quickstart_config(output_path="base_config.yaml")
 # 2) Train and predict using the generated config
 fault_detector = FaultDetector(config=Config('base_config.yaml'))
-model_data = fault_detector.train(sensor_data=sensor_data, normal_index=normal_index)
+model_data = fault_detector.fit(sensor_data=sensor_data, normal_index=normal_index)
 results = fault_detector.predict(sensor_data=test_sensor_data)
 ```
 
@@ -67,6 +67,12 @@ pandas `Series` `normal_index` indicates which timestamps are considered 'normal
 a normal behaviour model. The [`base_config.yaml`](energy_fault_detector/base_config.yaml) file contains the model 
 settings, an example is found [here](energy_fault_detector/base_config.yaml).
 
+You can load a saved model from a directory using:
+```python
+from energy_fault_detector import FaultDetector
+
+fault_detector = FaultDetector.load('path_to_model')
+```
 
 ## Background
 This project was initially developed by the research team AEFDI at the Fraunhofer IEE in the research project ADWENTURE (funded by the German Federal Ministry for Economic Affairs and Climate Action (BMWK)), 
