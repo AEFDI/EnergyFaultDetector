@@ -53,8 +53,7 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         self.assertEqual(expected_path, model_path)
 
         # Create a new FaultDetector instance and load the saved models
-        loaded_fault_detector = FaultDetector(config=self.conf, model_directory=self.test_dir)
-        loaded_fault_detector.load_models(model_path=model_path)
+        loaded_fault_detector = FaultDetector.load(model_path=model_path)
 
         # Compare the attributes of the original and loaded models
         self.assertIsNotNone(self.fault_detector.autoencoder)
@@ -84,11 +83,11 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
                                           overwrite_models=True)
         self.assertEqual(self.test_dir, results.model_path)
         # Check path with a model name
-        model_path, _ = self.fault_detector.save_models('my_model', overwrite=False)
+        model_path, _ = self.fault_detector.save('my_model', overwrite=False)
         expected_path = os.path.join(self.test_dir, 'my_model', self.fault_detector.save_timestamps[-1])
         self.assertEqual(expected_path, model_path)
         # and when overwrite = True
-        model_path, _ = self.fault_detector.save_models('my_model', overwrite=True)
+        model_path, _ = self.fault_detector.save('my_model', overwrite=True)
         expected_path = os.path.join(self.test_dir, 'my_model')
         self.assertEqual(expected_path, model_path)
 
@@ -148,7 +147,7 @@ class TestFaultDetector(unittest.TestCase):
         fault_detector = self._create_fault_detector(self.conf)
 
         asset_id = 1
-        path, dt = fault_detector.save_models(model_name=asset_id)
+        path, dt = fault_detector.save(model_name=asset_id)
 
         model_objects = [mock_score, mock_data_preprocessor, mock_autoencoder, mock_threshold]
         names = ['anomaly_score', 'data_preprocessor', 'autoencoder', 'threshold_selector']
@@ -161,15 +160,19 @@ class TestFaultDetector(unittest.TestCase):
         self.assertEqual(fault_detector.config.write_config.call_args[0][0],
                          os.path.join(fault_detector.model_directory, str(asset_id), dt, 'config.yaml'))
 
-    def test_load_models(self):
-        fault_detector = self._create_fault_detector(self.conf)
-        fault_detector._load_pickled_model = MagicMock()
-        fault_detector._load_pickled_model.side_effect = [mock_data_preprocessor,
-                                                          mock_autoencoder,
-                                                          mock_threshold,
-                                                          mock_score]
+    @patch("energy_fault_detector.core.fault_detection_model.FaultDetectionModel._load_pickled_model")
+    def test_load_models(self, mock_load_pickled_model):
+        mock_load_pickled_model.side_effect = [
+            mock_data_preprocessor,
+            mock_autoencoder,
+            mock_threshold,
+            mock_score,
+        ]
 
-        fault_detector.load_models(model_path='path_to_saved_models')
+        fault_detector = FaultDetector.load("path_to_saved_models")
+
+        # Assert: we got a FaultDetector instance
+        self.assertIsInstance(fault_detector, FaultDetector)
         names = ['data_preprocessor', 'autoencoder', 'threshold_selector', 'anomaly_score']
         for call_args, name in zip(fault_detector._load_pickled_model.call_args_list, names):
             self.assertEqual(call_args[1]['model_type'], name)
@@ -243,7 +246,7 @@ class TestFaultDetector(unittest.TestCase):
     @patch('energy_fault_detector.root_cause_analysis.arcana.Arcana.find_arcana_bias')
     def test_predict(self, mock_find_arcana_bias):
         fault_detector = self._create_fault_detector(self.conf)
-        fault_detector.load_models = MagicMock()  # ensures we use the mock model objects
+        fault_detector._load_from_path = MagicMock()  # ensures we use the mock model objects
 
         # set up test
         mock_data_preprocessor.transform.return_value = self.sensor_data
@@ -272,7 +275,6 @@ class TestFaultDetector(unittest.TestCase):
 
     def test__fit_threshold(self):
         fault_detector = self._create_fault_detector(self.conf)
-        fault_detector.load_models = MagicMock()  # ensures we use the mock model objects
 
         # set up test
         mock_data_preprocessor.transform.return_value = self.sensor_data
@@ -354,8 +356,7 @@ class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
         self.assertEqual(sb.pad_value, 0.0)
 
         # Load into a fresh FaultDetector
-        fd2 = FaultDetector(model_directory=self.tmp_dir)
-        fd2.load_models(model_path=model_path)
+        fd2 = FaultDetector.load(model_path=model_path)
 
         # Autoencoder type and sequence_builder attributes should match
         self.assertIsInstance(fd2.autoencoder, LSTMSeq2OneAutoencoder)

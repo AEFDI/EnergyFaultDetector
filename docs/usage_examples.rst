@@ -105,15 +105,14 @@ with the following information:
 * tracked_bias: List of pandas DataFrames. None if ARCANA was not run.
 
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
-trained models using the :py:obj:`FaultDetector.load_models <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load_models>` method. In this case, you do not need to provide a ``model_path``
-in the :py:obj:`predict <energy_fault_detector.fault_detector.FaultDetector.predict>` method.
+trained models using the :py:obj:`FaultDetector.load <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load>` class method.
+In this case, you do not need to provide a ``model_path`` in the :py:obj:`predict <energy_fault_detector.fault_detector.FaultDetector.predict>` method.
 
 .. code-block:: python
 
     from energy_fault_detector.fault_detector import FaultDetector
 
-    fault_detector = FaultDetector()
-    fault_detector.load_models('path_to_trained_models')
+    fault_detector = FaultDetector.load('path_to_trained_models')
 
     # get data from database / csv / API ...
     sensor_data = ...

@@ -69,7 +69,7 @@ class TestVisualisation(unittest.TestCase):
 
     def test_plot_reconstruction_with_model(self):
         # Synthetic data
-        idx = pd.date_range("2025-01-01", periods=10, freq="H")
+        idx = pd.date_range("2025-01-01", periods=10, freq="h")
         data = pd.DataFrame(
             {
                 "a": np.arange(10, dtype=float),
