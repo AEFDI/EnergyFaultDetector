@@ -51,8 +51,7 @@ def train_or_get_model(event_id: int, dataset: PreDistDataset, manufacturer: int
     model_path = Path(f'./models/m{manufacturer}/event_{event_id}/{model_name}')
 
     if model_path.exists() and load_from_file:
-        model = FaultDetector()
-        model.load_models(model_path)
+        model = FaultDetector.load(model_path)
         if (model_path / 'ts_features.txt').exists():
             with open(model_path / 'ts_features.txt', 'r') as f:
                 ts_features = f.read().splitlines()
@@ -198,8 +197,7 @@ def get_arcana_importances(manufacturer: int, event_id: int, config_name: str, d
     """Get ARCANA importances for a given event."""
 
     model_path = Path(f'models/m{manufacturer}/event_{event_id}/{config_name}')
-    model = FaultDetector()
-    model.load_models(model_path)
+    model = FaultDetector.load(model_path)
 
     # Load the time features and add them to the data if available (for the conditional autoencoders)
     if (model_path / 'ts_features.txt').exists():

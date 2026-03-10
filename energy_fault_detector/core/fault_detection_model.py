@@ -3,6 +3,7 @@
 import os
 from abc import ABC, abstractmethod
 from typing import Optional, Union, List, Tuple, TYPE_CHECKING
+import warnings
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -201,7 +202,38 @@ class FaultDetectionModel(ABC):
 
         return os.path.abspath(model_dir), current_datetime
 
+    def save(self, model_name: Union[str, int] = None, overwrite: bool = False) -> Tuple[str, str]:
+        """Save this model instance to disk.
+
+        Preferred public API; wraps `save_models`.
+        """
+        return self.save_models(model_name=model_name, overwrite=overwrite)
+
+    @classmethod
+    def load(cls, model_path: PathLike) -> "FaultDetectionModel":
+        """Create an instance and load saved models from the given path.
+
+        Usage:
+            model = FaultDetector.load("/path/to/model_dir")
+        """
+        model_path = Path(model_path)
+        instance = cls(config=None, model_directory=model_path)
+
+        instance._load_from_path(model_path)
+        return instance
+
     def load_models(self, model_path: PathLike) -> None:
+        """Deprecated: use `ClassName.load(model_path)` instead."""
+        warnings.warn(
+            f"{self.__class__.__name__}.load_models(...) is deprecated; "
+            f"use {self.__class__.__name__}.load(model_path) instead. "
+            "This method will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._load_from_path(model_path)
+
+    def _load_from_path(self, model_path: PathLike) -> None:
         """Load saved models given the model path.
 
         Args:
