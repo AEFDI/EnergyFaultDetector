@@ -5,6 +5,7 @@ on:
     branches:
     - main
     - develop
+    - time-series-handling
 
 jobs:
   sync:
