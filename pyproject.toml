@@ -67,7 +67,8 @@ quick_fault_detector = "energy_fault_detector.main:main"
 "energy_fault_detector" = [
     "logging.yaml",
     "c2c_options.yaml",
-    "base_config.yaml"
+    "base_config.yaml",
+    "cnn_config.yaml",
 ]
 
 [tool.pytest.ini_options]

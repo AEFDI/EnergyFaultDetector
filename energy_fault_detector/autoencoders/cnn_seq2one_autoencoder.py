@@ -34,7 +34,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
 
     Args:
             sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
-            filters: List of integers indicating the number of filters of the convolutional layers in the encoder.
+            layers: List of integers indicating the number of filters of the convolutional layers in the encoder.
                 Defaults to [128, 64, 32] if None.
             kernel_size: Specifies the length of the 1D convolution window.
             strides: Stride length of the 1D convolution window.
@@ -63,7 +63,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
     def __init__(
         self,
         sequence_builder: SequenceDatasetBuilder = None,
-        filters: Optional[List[int]] = None,
+        layers: Optional[List[int]] = None,
         code_size: int = 32,
         kernel_size: int = 3,
         strides: int = 1,
@@ -72,7 +72,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
     ):
         """Initialize a CNN-based seq2one autoencoder."""
 
-        self.filters = filters or [128, 64, 32]
+        self.layers = layers or [128, 64, 32]
         self.code_size = code_size
         self.kernel_size = kernel_size
         self.strides = strides
@@ -117,7 +117,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         # Encoder - Conv Stack
         x = encoder_input
-        for i, n_filters in enumerate(self.filters):
+        for i, n_filters in enumerate(self.layers):
             x = Conv1D(
                 filters=n_filters,
                 kernel_size=self.kernel_size,
@@ -129,11 +129,8 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             if self.dropout_rate > 0:
                 x = Dropout(rate=self.dropout_rate)(x)
 
-        # Store the shape for the symmetric decoder
+        # Store the shape to reshape back in the decoder
         # x.shape is (batch, sequence_length / strides^num_layers, filters)
-        # We need to remember this to reshape back in the decoder.
-        # However, in Keras functional API, we can't easily get the shape
-        # including None for batch size, but we can get it from the tensor.
         conv_shape = x.shape[1:]  # (T_enc, F_enc)
         flat_dim = int(conv_shape[0] * conv_shape[1])
         flat = Flatten()(x)
@@ -160,7 +157,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         # Decoder - Conv Transpose Stack
         y = z
-        for n_filters in self.filters[-2::-1] + [n_main_features]:
+        for n_filters in self.layers[-2::-1] + [n_main_features]:
             y = Conv1DTranspose(
                 filters=n_filters,
                 kernel_size=self.kernel_size,
