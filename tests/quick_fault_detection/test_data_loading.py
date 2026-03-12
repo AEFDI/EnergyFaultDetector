@@ -36,6 +36,11 @@ class TestQuickFaultDetectionDataLoading(unittest.TestCase):
         df_2.to_csv(self.csv_path_2, encoding='ascii', sep=',')
         df_3.to_csv(self.csv_path_3, sep=';')
 
+    def tearDown(self) -> None:
+        os.remove(self.csv_path_1)
+        os.remove(self.csv_path_2)
+        os.remove(self.csv_path_3)
+
     def test_detect_encoding(self):
         encoding_1 = detect_encoding(self.csv_path_1)
         encoding_2 = detect_encoding(self.csv_path_2)

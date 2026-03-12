@@ -111,7 +111,7 @@ class TestCNNSeq2OneAutoencoder(unittest.TestCase):
 
         ae_cond = CNNSeq2OneAutoencoder(
             sequence_builder=builder,
-            filters=[16, 8],
+            layers=[16, 8],
             kernel_size=3,
             strides=1,
             dropout_rate=0.0,
