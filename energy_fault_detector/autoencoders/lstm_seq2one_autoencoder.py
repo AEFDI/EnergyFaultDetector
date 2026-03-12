@@ -119,6 +119,7 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             stateful=self.stateful,
             kernel_regularizer=regularizers.l2(self.regularization),
         )(encoder_input)
+        # TODO: code_size?
         encoder_output = Dropout(rate=self.dropout_rate)(encoder_output)
 
         for layer_size in self.layers[1:-1]:
