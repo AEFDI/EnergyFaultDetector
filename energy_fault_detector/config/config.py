@@ -1,6 +1,7 @@
 """Configuration object for anomaly detection"""
 
 import logging
+from pathlib import Path
 from typing import Dict, Optional, List, Callable, Any
 
 from energy_fault_detector.config.base_config import BaseConfig, InvalidConfigFile
@@ -155,7 +156,7 @@ class Config(BaseConfig):
     Reads a yaml file with the anomaly detection configuration and sets corresponding settings.
     """
 
-    def __init__(self, config_filename: str = None, config_dict: Dict[str, Any] = None):
+    def __init__(self, config_filename: str | Path = None, config_dict: Dict[str, Any] = None):
         super().__init__(config_filename=config_filename, config_dict=config_dict)
         self._schema = CONFIG_SCHEMA
         self._extra_validation_checks: List[Callable[[Dict], Dict]] = [_parse_timedelta,
