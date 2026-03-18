@@ -107,6 +107,13 @@ class BaseConfig(ABC):
         with open(file_name, 'w', encoding='utf-8') as f:
             yaml.safe_dump(conf_dict_to_save, f)
 
+    def save(self, file_name: str, overwrite: bool = False) -> None:
+        """Save the configuration to a yaml file.
+
+        Wrapper for write_config so API is similar to other objects.
+        """
+        self.write_config(file_name, overwrite)
+
     @staticmethod
     def _parse_dates(dates: List, dt_format: str = '%Y-%m-%d') -> List:
         """Parse given string dates"""
