@@ -2,6 +2,7 @@
 
 from collections import Counter, defaultdict
 from typing import List, Optional, Dict, Any, Tuple
+import warnings
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -43,15 +44,15 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "duplicate_value_to_nan": "duplicate_to_nan",
         "duplicate_values_to_nan": "duplicate_to_nan",
         "timestamp_features": "timestamp_transformer",
-        "timestamp_transform": "timestamp_transformer",
     }
 
-    def __init__(self, steps: Optional[List[Dict[str, Any]]] = None) -> None:
+    def __init__(self, steps: Optional[List[Dict[str, Any]]] = None, **params: Any) -> None:
         """A data preprocessing pipeline that allows for configurable steps based on the extended pipeline.
 
-        When no steps are provided, a default pipeline is created which removes features that are constant or binary
-        and contain more 5% missing values. Afterward, remaining missing values are imputed with the mean and the
-        features are scaled with the StandardScaler.
+        If both steps and legacy params are provided, steps take precedence and a warning is emitted.
+        When neither steps nor legacy params are provided, a default "old-style" pipeline is created which removes
+        features that are constant or just binary and contain more 5% missing values. Afterward, remaining missing
+        values are imputed with the mean and the features are scaled with the StandardScaler.
 
         Args:
             steps: Optional list of step specifications. Each item is a dict with:
@@ -61,6 +62,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
                 - params: dict of constructor arguments for the step.
                 - step_name: optional explicit pipeline name (defaults to name).
 
+            **params: Legacy parameters used when steps is None (see _legacy_keys()).
+
         Notes:
             Enforced ordering in steps mode:
 
@@ -69,7 +72,6 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
               3) Other steps
               4) SimpleImputer placed before scaler (always present; mean strategy by default),
               5) Scaler always last (StandardScaler by default).
-              6) TimestampTransformer (if present).
 
         Configuration example:
 
@@ -100,12 +102,30 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         """
 
         self.steps_spec_: Optional[List[Dict[str, Any]]] = steps
+        self.params_: Dict[str, Any] = dict(params)
+
+        # Warn if legacy params are present.
+        legacy_keys = set(self._legacy_keys())
+        legacy_used = [k for k in self.params_.keys() if k in legacy_keys]
+        if legacy_used:
+            warnings.warn(
+                f"Legacy data_preprocessor arguments {legacy_used} were provided. "
+                "Please use 'steps' instead; these legacy keys will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2
+            )
 
         if steps is not None and len(steps) > 0:
+            # Warn if legacy params are present alongside steps.
+            if legacy_used:
+                warnings.warn(
+                    f"DataPreprocessor: 'steps' provided; legacy params are ignored: {legacy_used}",
+                    UserWarning
+                )
             built_steps = self._build_from_steps_spec()
         else:
-            # Build the default pipeline
-            built_steps = self._build_default_pipeline()
+            # Build the default or legacy pipeline. If params is empty, defaults are applied.
+            built_steps = self._build_from_legacy()
 
         super().__init__(steps=built_steps)
         # Ensure pandas output for supported transformers.
@@ -120,27 +140,19 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Returns:
             DataFrame with inverse scaling and angle back-transformation.
         """
-        x_ = x.copy()  # avoid modifying the original DataFrame
-
-        # Drop time features
-        timestamp_key, _ = self._find_step_by_type((TimestampTransformer,))
-        if timestamp_key is not None:
-            x_ = self.named_steps[timestamp_key].inverse_transform(x_.copy())
-
-        # Find scaler by type and reverse scaling
+        # Find scaler by type
         scaler_key, _ = self._find_step_by_type((StandardScaler, MinMaxScaler))
-        x_ = self.named_steps[scaler_key].inverse_transform(x_)
+        x_ = self.named_steps[scaler_key].inverse_transform(x.copy())
         x_ = pd.DataFrame(data=x_, columns=self.named_steps[scaler_key].get_feature_names_out())
 
-        # Try to reverse angle transformation
+        # AngleTransformer supports inverse_transform; apply if present.
         angle_key, _ = self._find_step_by_type((AngleTransformer,))
         if angle_key is not None:
             x_ = self.named_steps[angle_key].inverse_transform(x_)
 
-        # Keep original index
+        # Keep original index (important for time series).
         if isinstance(x, pd.DataFrame):
             x_.index = x.index
-
         return x_
 
     # pylint: disable=arguments-renamed
@@ -176,6 +188,27 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
                 return name, est
         return None, None
 
+    @staticmethod
+    def _legacy_keys() -> List[str]:
+        """Return the list of supported legacy parameter keys."""
+        return [
+            "angles",
+            "imputer_strategy",
+            "imputer_fill_value",
+            "scale",
+            "include_column_selector",
+            "features_to_exclude",
+            "max_nan_frac_per_col",
+            "include_low_unique_value_filter",
+            "min_unique_value_count",
+            "max_col_zero_frac",
+            "include_duplicate_value_to_nan",
+            "value_to_replace",
+            "n_max_duplicates",
+            "duplicate_features_to_exclude",
+            "counter_columns_to_transform",
+        ]
+
     def _normalize_name(self, name: str) -> str:
         """Normalize a user-provided step name to a canonical registry key."""
         return self.NAME_ALIASES.get(name, name)
@@ -202,26 +235,115 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
                 f"{[n for n, _ in counts]}. Found duplicates: {counts}"
             )
 
-    def _build_default_pipeline(self) -> List:
-        """Build default pipeline if no steps are provided.
+    def _build_from_legacy(self) -> List:
+        """Build pipeline from legacy parameters (old behavior + enforced ordering).
 
         Steps:
-            - Column selection: A ColumnSelector object filters out columns/features with too many NaN values.
-            - Low unique value filter: Remove columns/features with <= 2 unique values.
-            - Imputation with sklearn's SimpleImputer
-            - Scaling: Apply either sklearn's StandardScaler or MinMaxScaler.
+            0. (optional) Replace any consecutive duplicate zero-values (or another value) with NaN. This step should be
+                used if 0 can also represent missing values in the data.
+            1. (optional) Normalize counters to differences.
+            2. (optional) Column selection: A ColumnSelector object filters out columns/features with too many NaN values.
+            3. (optional) Low unique value filter: Remove columns/features with a low number of unique values or
+                high fraction of zeroes. The high fraction of zeros setting should be used if 0 can also represent missing
+                values in the data.
+            4. (optional) Features containing angles are transformed to sine/cosine values.
+            5. Imputation with sklearn's SimpleImputer
+            6. Scaling: Apply either sklearn's StandardScaler or MinMaxScaler.
+
+        Use legacy parameters passed via **params. If empty, defaults are used.
+            - angles: List of angle features for transformation. Default: None (skipped).
+            - imputer_strategy: Strategy for imputation ('mean', 'median', 'most_frequent', 'constant'). Default: 'mean'.
+            - imputer_fill_value: Value to fill for imputation (if imputer_strategy=='constant').
+            - scale: Type of scaling ('standardize' or 'normalize'). Default: 'standardize'.
+            - include_column_selector: Whether to include the column selector step. Default: True.
+            - features_to_exclude: ColumnSelector option, list of features to exclude from processing.
+            - max_nan_frac_per_col: ColumnSelector option, max fraction of NaN values allowed per column. Default: 0.05.
+            - include_low_unique_value_filter: Whether to include the low unique value filter step. Default: True.
+            - min_unique_value_count: Minimum number of unique values for low unique value filter. Default: 2.
+            - max_col_zero_frac: Maximum fraction of zeroes for low unique value filter. Default: 1.0.
+            - include_duplicate_value_to_nan: Whether to include the duplicate value replacement step. Default: False.
+            - value_to_replace: Value to replace with NaN (if using duplicate value replacement). Default: None.
+            - n_max_duplicates: Max number of consecutive duplicates to replace with NaN. Default: 144.
+            - counter_columns_to_transform: List of counters to normalize to differences. Default: None (skipped).
 
         Returns:
             List of (name, estimator) tuples for the pipeline.
         """
+        steps: List = []
+        params = self.params_
 
-        steps = [
-            ("column_selector", ColumnSelector(max_nan_frac_per_col=0.05)),
-            ("low_unique_value_filter", LowUniqueValueFilter(min_unique_value_count=2, max_col_zero_frac=1.0)),
-            ("simple_imputer", SimpleImputer(strategy="mean").set_output(transform="pandas")),
-            ("standard_scaler", StandardScaler(with_mean=True, with_std=True)),
-        ]
-
+        # 0. Replace any consecutive duplicate zero-values (or another value) with NaN.
+        if params.get("include_duplicate_value_to_nan", False):
+            steps.append(
+                (
+                    "value_to_nan",
+                    DuplicateValuesToNan(value_to_replace=params.get("value_to_replace", 0),
+                                         n_max_duplicates=params.get("n_max_duplicates", 144),
+                                         features_to_exclude=params.get("duplicate_features_to_exclude")),
+                )
+            )
+        # 1. (optional) Normalize counters to differences.
+        counter_cols = params.get("counter_columns_to_transform", [])
+        if len(counter_cols) > 0:
+            steps.append(
+                (
+                    "counter_diff",
+                    CounterDiffTransformer(
+                        counters=counter_cols,
+                        compute_rate=False,
+                        reset_strategy="zero",
+                        rollover_values=None,
+                        small_negative_tolerance=0.0,
+                        fill_first="nan",
+                        keep_original=False,
+                        gap_policy="mask",
+                        max_gap_seconds=None,
+                        max_gap_factor=3.0,
+                    ),
+                )
+            )
+        # 2. ColumnSelector (default enabled)
+        if params.get("include_column_selector", True):
+            steps.append(
+                (
+                    "column_selector",
+                    ColumnSelector(max_nan_frac_per_col=params.get("max_nan_frac_per_col", 0.05),
+                                   features_to_exclude=params.get("features_to_exclude")),
+                )
+            )
+        # 3. Optional value filters and angle transforms (before imputer)
+        if params.get("include_low_unique_value_filter", True):
+            steps.append(
+                (
+                    "low_unique_value_filter",
+                    LowUniqueValueFilter(
+                        min_unique_value_count=params.get("min_unique_value_count", 2),
+                        max_col_zero_frac=params.get("max_col_zero_frac", 1.0),
+                    ),
+                )
+            )
+        # 4. Apply optional angle transformations
+        angles = params.get("angles", [])
+        if len(angles) > 0:
+            steps.append(("angle_transform", AngleTransformer(angles=angles)))
+        # 5. Impute missing values with SimpleImputer
+        steps.append(
+            (
+                "simple_imputer",
+                SimpleImputer(
+                    strategy=params.get("imputer_strategy", "mean"),
+                    fill_value=params.get("imputer_fill_value", None),
+                ).set_output(transform="pandas"),
+            )
+        )
+        # 6. Scale data
+        scale = params.get("scale", "standardize")
+        scaler = (
+            StandardScaler(with_mean=True, with_std=True)
+            if scale in ["standardize", "standard", "standardscaler"]
+            else MinMaxScaler(feature_range=(0, 1))
+        )
+        steps.append(("scaler", scaler))
         return steps
 
     def _build_from_steps_spec(self) -> List:
@@ -239,23 +361,25 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Raises:
             ValueError: If a step lacks 'name' or references an unknown step.
         """
-
         self._validate_step_spec_keys(self.steps_spec_)
-
         # Filter disabled steps first to simplify ordering.
         enabled_spec = [s for s in self.steps_spec_ if s.get("enabled", True)]
-        # Order the steps
-        ordered_spec = self._order_steps_spec(enabled_spec)
         self._validate_singletons(enabled_spec)
+        ordered_spec = self._order_steps_spec(enabled_spec)
         # Assign unique step names for duplicates or missing step_name
         ordered_spec = self._assign_unique_step_names(ordered_spec)
 
-        # Create the pipeline from the specified steps
         steps: List = []
+        scaler_defined = False
+        scaler_names = {"standard_scaler", "minmax_scaler"}
+        scaler_idx = None
         for step_idx, spec in enumerate(ordered_spec):
             name = spec.get("name")
             if name is None:
                 raise ValueError("Each step spec requires a 'name'.")
+            if name in scaler_names:
+                scaler_defined = True
+                scaler_idx = step_idx
             params = spec.get("params", {})
             cls = self.STEP_REGISTRY.get(name)
             if cls is None:
@@ -263,6 +387,19 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             estimator = cls(**params)
             step_name = spec.get("step_name", name)
             steps.append((step_name, estimator))
+
+        # Ensure an Imputer exists and is placed before the scaler.
+        if not any(n == "simple_imputer" for n, _ in steps):
+            default_imputer = SimpleImputer(strategy="mean").set_output(transform="pandas")
+            # Insert before scaler if scaler already present; else append.
+            if scaler_idx is not None:
+                steps.insert(scaler_idx, ("simple_imputer", default_imputer))
+            else:
+                steps.append(("simple_imputer", default_imputer))
+
+        # Ensure a scaler exists and is last. If missing, add StandardScaler by default.
+        if not scaler_defined:
+            steps.append(("scaler", StandardScaler(with_mean=True, with_std=True)))
 
         return steps
 
@@ -276,7 +413,6 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
           - Any imputer placed at the end, before scaler. If no imputer was defined, the SimpleImputer with imputation
             strategy 'mean' is added.
           - Scaler last (if present). If no scaler is added, the StandardScaler with default values is added.
-          - TimestampTransformer (if present).
 
         Args:
             steps_spec: List of step dictionaries.
@@ -288,7 +424,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         for s in steps_spec:
             s["name"] = self._normalize_name(s.get("name"))
 
-        # Separate groups by type
+        # Separate groups by type for easy reassembly.
         column_selector = [s for s in steps_spec if s.get("name") == "column_selector"]
         low_unique_value_filter = [s for s in steps_spec if s.get("name") == "low_unique_value_filter"]
         duplicates = [s for s in steps_spec if s.get("name") == "duplicate_to_nan"]
@@ -308,18 +444,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             } | scaler_names
         ]
 
-        # Add default scaler if empty
-        if not scalers:
-            scalers = [{'name': 'standard_scaler',
-                        'step_name': 'scaler',
-                        'params': {'with_mean': True, 'with_std': True}}]
-        # Add default imputer if empty
-        if not imputer:
-            imputer = [{'name': 'simple_imputer',
-                        'step_name': 'simple_imputer',
-                        'params': {'strategy': 'mean'}}]
-
-        # Order the preprocessing steps
+        # Keep 'others' in their original relative order.
         ordered = []
         # can add NaN avalues or add new features that may be constant
         ordered.extend(duplicates)
