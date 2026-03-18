@@ -193,6 +193,7 @@ class SequenceDatasetBuilder:
             batch_size: int,
             conditional_features: Optional[List[str]] = None,
             shuffle: bool = True,
+            predict_mode: bool = False,
     ) -> Tuple[tf.data.Dataset, np.ndarray]:
         """Create a seq2one tf.data.Dataset from a time-series DataFrame.
 
@@ -203,17 +204,24 @@ class SequenceDatasetBuilder:
             batch_size: Batch size for the dataset.
             conditional_features: Optional list of column names to treat as conditional features.
             shuffle: Whether to shuffle sequences (only relevant when ``training`` is True).
+            predict_mode: If True, the dataset is used for inference. To ensure we can predict all timestamps,
+                we set stride to 1.
 
         Returns:
             A tuple ``(dataset, window_timestamps)`` where:
 
               * ``dataset`` is a tf.data.Dataset for training or inference,
               * ``window_timestamps`` is an array of shape (n_windows, sequence_length)
-
                 with timestamps for each window.
         """
+
         if not isinstance(df.index, pd.DatetimeIndex):
             raise ValueError("DataFrame index must be a DatetimeIndex.")
+
+        original_stride = self.stride
+        if predict_mode:
+            # To ensure we can predict all timestamps after the first sequence_length - 1
+            self.stride = 1
 
         data_frame_resampled = self._resample_if_needed(df)
         timestamps = data_frame_resampled.index.values
@@ -264,5 +272,6 @@ class SequenceDatasetBuilder:
             dataset = dataset.shuffle(buffer_size=len(starts))
 
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        self.stride = original_stride
         return dataset, window_timestamps
 
