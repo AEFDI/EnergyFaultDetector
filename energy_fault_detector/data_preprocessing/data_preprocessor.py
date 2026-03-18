@@ -327,9 +327,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         ordered.extend(low_unique_value_filter)
         # other transformations
         ordered.extend(others)
-        # Imputation and scaling
-        ordered.extend(imputer)
-        ordered.extend(scalers)
+        # end with imputation and scaling
+        ordered.extend(imputer)  # may be empty; scaler gets default added later if missing
+        ordered.extend(scalers)  # may be empty; scaler gets default added later if missing
         # No scaling needed for the time features
         ordered.extend(timestamp_step)
         return ordered
