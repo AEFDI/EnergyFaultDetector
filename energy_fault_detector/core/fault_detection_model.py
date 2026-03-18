@@ -55,6 +55,8 @@ class FaultDetectionModel(ABC):
         save_timestamps: a list of string timestamps, indicating when the model was saved.
     """
 
+    # TODO: can config be None? We have FaultDetector(Config) for new models and FaultDetector.load(model_path) for
+    #  loading models. Why do we allow config=None?
     def __init__(self, config: Optional[Config] = None, model_directory: PathLike = 'models'):
         self.config: Optional[Config] = config
         self.model_directory: PathLike = model_directory
@@ -70,10 +72,7 @@ class FaultDetectionModel(ABC):
 
         # build models
         self._model_factory: Optional[ModelFactory] = ModelFactory(config) if config else None
-        if config is None:
-            logger.debug('No configuration set. Load models and config from path with the `FaultDetector.load_models`'
-                         ' method.')
-        else:
+        if config:
             self._init_models()
 
     def _init_models(self):
@@ -257,10 +256,7 @@ class FaultDetectionModel(ABC):
             model_type='anomaly_score',
             model_directory=os.path.join(model_path, SCORE_DIR)
         )
-        # for backwards compatibility - check whether config was saved:
-        if os.path.exists(os.path.join(model_path, 'config.yaml')):
-            self.config = Config(os.path.join(model_path, 'config.yaml'))
-            self._model_factory = ModelFactory(self.config)
+        self.config = Config(os.path.join(model_path, 'config.yaml'))
 
     @staticmethod
     def _load_pickled_model(model_type: str, model_directory: str) -> ModelPart:
