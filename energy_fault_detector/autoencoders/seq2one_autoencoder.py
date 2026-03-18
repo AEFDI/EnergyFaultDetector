@@ -237,6 +237,7 @@ class Seq2OneAutoencoder(Autoencoder):
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
             shuffle=False,
+            predict_mode=True,
         )
         self.window_timestamps_ = window_timestamps
 

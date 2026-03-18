@@ -9,12 +9,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.impute import SimpleImputer
 
-from energy_fault_detector.core.save_load_mixin import SaveLoadMixin
-from energy_fault_detector.data_preprocessing.column_selector import ColumnSelector
-from energy_fault_detector.data_preprocessing.low_unique_value_filter import LowUniqueValueFilter
-from energy_fault_detector.data_preprocessing.angle_transformer import AngleTransformer
-from energy_fault_detector.data_preprocessing.duplicate_value_to_nan import DuplicateValuesToNan
-from energy_fault_detector.data_preprocessing.counter_diff_transformer import CounterDiffTransformer
+from ..core.save_load_mixin import SaveLoadMixin
+from .column_selector import ColumnSelector
+from .low_unique_value_filter import LowUniqueValueFilter
+from .angle_transformer import AngleTransformer
+from .duplicate_value_to_nan import DuplicateValuesToNan
+from .counter_diff_transformer import CounterDiffTransformer
+from .timestamp_transformer import TimestampTransformer
 
 
 # TODO: move legacy params handling to config and deprecate there to simplify there
@@ -28,6 +29,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         'simple_imputer': SimpleImputer,
         'standard_scaler': StandardScaler,
         'minmax_scaler': MinMaxScaler,
+        'timestamp_transformer': TimestampTransformer,
     }
 
     NAME_ALIASES: Dict[str, str] = {
@@ -41,6 +43,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "imputer": "simple_imputer",
         "duplicate_value_to_nan": "duplicate_to_nan",
         "duplicate_values_to_nan": "duplicate_to_nan",
+        "timestamp_features": "timestamp_transformer",
     }
 
     def __init__(self, steps: Optional[List[Dict[str, Any]]] = None, **params: Any) -> None:
@@ -218,6 +221,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             "column_selector",
             "low_unique_value_filter",
             "simple_imputer",
+            "timestamp_transformer",
             # scaler handled separately (standard_scaler/minmax_scaler) in your code
         }
         counts: List[Tuple[str, int]] = []
@@ -429,13 +433,14 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         scaler_names = {"standard_scaler", "minmax_scaler"}
         scalers = [s for s in steps_spec if s.get("name") in scaler_names]
         if len(scalers) > 1:
-            raise ValueError("Only one scaler can be used, two found in the steps specification: ."
-                             f"{scalers}")
+            raise ValueError(f"Only one scaler can be used, two found in the steps specification: {scalers}")
+        timestamp_step = [s for s in steps_spec if s.get("name") == "timestamp_transformer"]
+
         others = [
             s for s in steps_spec
             if s.get("name") not in {
                 "column_selector", "duplicate_to_nan", "counter_diff_transformer", "simple_imputer",
-                "low_unique_value_filter",
+                "low_unique_value_filter", "timestamp_transformer",
             } | scaler_names
         ]
 
@@ -452,6 +457,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # end with imputation and scaling
         ordered.extend(imputer)  # may be empty; scaler gets default added later if missing
         ordered.extend(scalers)  # may be empty; scaler gets default added later if missing
+        # No scaling needed for the time features
+        ordered.extend(timestamp_step)
         return ordered
 
     @staticmethod
