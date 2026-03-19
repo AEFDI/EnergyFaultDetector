@@ -72,6 +72,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
               3) Other steps
               4) SimpleImputer placed before scaler (always present; mean strategy by default),
               5) Scaler always last (StandardScaler by default).
+              6) TimestampTransformer (if present).
 
         Configuration example:
 
