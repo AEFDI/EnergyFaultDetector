@@ -135,7 +135,8 @@ class Arcana:
 
             try:
                 dataset, window_timestamps_all = sb.build_seq2one_dataset(
-                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features, shuffle=False
+                    x, batch_size=len(x), conditional_features=self.keras_model.conditional_features,
+                    shuffle=False, predict_mode=True,
                 )
             except ValueError as exc:
                 if "No valid windows found (series shorter than sequence_length)" in str(exc):
