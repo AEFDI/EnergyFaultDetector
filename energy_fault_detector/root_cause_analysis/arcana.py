@@ -42,6 +42,10 @@ class Arcana:
 
     For optimization itself the Adam Optimizer from `tensorflow.keras.optimizers` is used.
 
+    For seq2one models, ARCANA produces an importance per window, aligned to the last timestamp of each window.
+    If the input data is less than the sequence length expected by the autoencoder model, no importances can be
+    calculated. In this case, extend the input data with more context.
+
     Args:
         model: Autoencoder model to consider. Must have a __call__ method expecting input data and returns a tf.Tensor
         learning_rate: Learning rate for the adam optimizer.
