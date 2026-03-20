@@ -104,6 +104,7 @@ def _build_preprocessor_steps(
     return steps
 
 
+# TODO: Add autoencoder type option
 def generate_quickstart_config(
     output_path: Optional[Union[str, Path]] = "base_config.yaml",
     *,

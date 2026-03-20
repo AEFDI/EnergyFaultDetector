@@ -107,7 +107,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         params['layers'][1] = trial.suggest_int(
             name='layers_1', low=layers_1[0], high=layers_1[1]
         )
-        params['layers'][1] = trial.suggest_int(
+        params['layers'][2] = trial.suggest_int(
             name='layers_2', low=layers_2[0], high=layers_2[1]
         )
         params['code_size'] = trial.suggest_int(
