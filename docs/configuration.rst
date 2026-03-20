@@ -104,7 +104,7 @@ configuration dictionary via the :py:obj:`Config.update_config <energy_fault_det
   # update some parameters:
   new_config_dict = deepcopy(config.config_dict)
   new_config_dict['train']['anomaly_score']['name'] = 'mahalanobis'
-  config.update_config(new_config_dict)
+  config = Config(new_config_dict)
 
   # or create a new configuration object and model
   new_model = FaultDetector(Config(config_dict=new_config_dict))
