@@ -197,16 +197,11 @@ class TestDataPreprocessorPipeline(TestCase):
         for preprocessor in [self.standard_preprocessor, self.standard_preprocessor_old]:
             preprocessor.fit(self.test_data1)
 
-            output = preprocessor.inverse_transform(
-                preprocessor.transform(self.test_data1)
-            ).astype(float)
+            output = preprocessor.inverse_transform(preprocessor.transform(self.test_data1)).astype(float)
             expected = self.test_data1[['Sensor_1', 'Sensor_2', 'Sensor_6']].astype(float)
             expected.loc[pd.isnull(expected['Sensor_2']), 'Sensor_2'] = 5.
 
-            assert_frame_equal(
-                output.reset_index(drop=True),
-                expected.reset_index(drop=True),
-            )
+            assert_frame_equal(output.reset_index(drop=True), expected.reset_index(drop=True))
 
     def test_inverse_transform_extended(self):
         for preprocessor in [self.another_preprocessor, self.another_preprocessor_old]:
@@ -322,3 +317,46 @@ class TestDataPreprocessorPipeline(TestCase):
                     {"name": "minmax_scaler"},
                 ]
             )
+
+
+class TestDataPreprocessorPipelineWithTimestamp(TestCase):
+    def setUp(self) -> None:
+        # Pipeline including TimestampTransformer
+        self.preprocessor_with_ts = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector',
+                 'params': {'max_nan_frac_per_col': 0.2}},
+                {'name': 'timestamp_transformer',
+                 'params': {'features': ['second_of_minute', 'minute_of_hour', 'is_weekend']}},
+                {'name': 'angle_transform',
+                 'params': {'angles': ['Sensor_6']}},
+                {'name': 'duplicate_values_to_nan'},
+                {'name': 'low_unique_value_filter',}
+            ]
+        )
+
+        length = 6
+        time_index = pd.date_range(start='2021-01-01', periods=length, freq='D')
+        data = {
+            'Sensor_1': list(range(length)),
+            'Sensor_2': [None] * length,
+            'Sensor_6': list(range(length)),
+        }
+        self.test_data_with_ts = pd.DataFrame(index=time_index, data=data)
+
+    def test_fit_transform_with_timestamp(self):
+        # Fit and transform with TimestampTransformer
+        self.preprocessor_with_ts.fit(self.test_data_with_ts)
+        transformed = self.preprocessor_with_ts.transform(self.test_data_with_ts)
+
+        # Ensure transform returns a DataFrame and shape matches expectations
+        self.assertIsNotNone(transformed)
+        self.assertTrue(len(transformed) > 0)
+        self.assertEqual(transformed.shape[0], self.test_data_with_ts.shape[0])
+
+        # Check that timestamp-derived features exist
+        self.assertIn('second_of_minute_sine', transformed.columns)
+        self.assertIn('second_of_minute_cosine', transformed.columns)
+        self.assertIn('minute_of_hour_sine', transformed.columns)
+        self.assertIn('minute_of_hour_cosine', transformed.columns)
+        self.assertIn('is_weekend', transformed.columns)

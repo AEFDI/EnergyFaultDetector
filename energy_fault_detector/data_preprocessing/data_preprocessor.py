@@ -18,7 +18,7 @@ from .counter_diff_transformer import CounterDiffTransformer
 from .timestamp_transformer import TimestampTransformer
 
 
-# TODO: move legacy params handling to config and deprecate there to simplify there
+# TODO: move legacy params handling to config and deprecate there to simplify this class
 class DataPreprocessor(Pipeline, SaveLoadMixin):
     STEP_REGISTRY = {
         'duplicate_to_nan': DuplicateValuesToNan,
@@ -141,9 +141,16 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Returns:
             DataFrame with inverse scaling and angle back-transformation.
         """
+        x_ = x.copy()  # avoid modifying the original DataFrame
+
+        # Drop time features
+        timestamp_key, _ = self._find_step_by_type((TimestampTransformer,))
+        if timestamp_key is not None:
+            x_ = self.named_steps[timestamp_key].inverse_transform(x_.copy())
+
         # Find scaler by type
         scaler_key, _ = self._find_step_by_type((StandardScaler, MinMaxScaler))
-        x_ = self.named_steps[scaler_key].inverse_transform(x.copy())
+        x_ = self.named_steps[scaler_key].inverse_transform(x_)
         x_ = pd.DataFrame(data=x_, columns=self.named_steps[scaler_key].get_feature_names_out())
 
         # AngleTransformer supports inverse_transform; apply if present.
@@ -362,25 +369,23 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Raises:
             ValueError: If a step lacks 'name' or references an unknown step.
         """
+
         self._validate_step_spec_keys(self.steps_spec_)
+
         # Filter disabled steps first to simplify ordering.
         enabled_spec = [s for s in self.steps_spec_ if s.get("enabled", True)]
         self._validate_singletons(enabled_spec)
+        # Order the steps
         ordered_spec = self._order_steps_spec(enabled_spec)
         # Assign unique step names for duplicates or missing step_name
         ordered_spec = self._assign_unique_step_names(ordered_spec)
 
+        # Create the pipeline from the specified steps
         steps: List = []
-        scaler_defined = False
-        scaler_names = {"standard_scaler", "minmax_scaler"}
-        scaler_idx = None
         for step_idx, spec in enumerate(ordered_spec):
             name = spec.get("name")
             if name is None:
                 raise ValueError("Each step spec requires a 'name'.")
-            if name in scaler_names:
-                scaler_defined = True
-                scaler_idx = step_idx
             params = spec.get("params", {})
             cls = self.STEP_REGISTRY.get(name)
             if cls is None:
@@ -388,19 +393,6 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             estimator = cls(**params)
             step_name = spec.get("step_name", name)
             steps.append((step_name, estimator))
-
-        # Ensure an Imputer exists and is placed before the scaler.
-        if not any(n == "simple_imputer" for n, _ in steps):
-            default_imputer = SimpleImputer(strategy="mean").set_output(transform="pandas")
-            # Insert before scaler if scaler already present; else append.
-            if scaler_idx is not None:
-                steps.insert(scaler_idx, ("simple_imputer", default_imputer))
-            else:
-                steps.append(("simple_imputer", default_imputer))
-
-        # Ensure a scaler exists and is last. If missing, add StandardScaler by default.
-        if not scaler_defined:
-            steps.append(("scaler", StandardScaler(with_mean=True, with_std=True)))
 
         return steps
 
@@ -414,6 +406,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
           - Any imputer placed at the end, before scaler. If no imputer was defined, the SimpleImputer with imputation
             strategy 'mean' is added.
           - Scaler last (if present). If no scaler is added, the StandardScaler with default values is added.
+          - TimestampTransformer (if present).
 
         Args:
             steps_spec: List of step dictionaries.
@@ -425,7 +418,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         for s in steps_spec:
             s["name"] = self._normalize_name(s.get("name"))
 
-        # Separate groups by type for easy reassembly.
+        # Separate groups by type
         column_selector = [s for s in steps_spec if s.get("name") == "column_selector"]
         low_unique_value_filter = [s for s in steps_spec if s.get("name") == "low_unique_value_filter"]
         duplicates = [s for s in steps_spec if s.get("name") == "duplicate_to_nan"]
@@ -445,7 +438,18 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             } | scaler_names
         ]
 
-        # Keep 'others' in their original relative order.
+        # Add default scaler if empty
+        if not scalers:
+            scalers = [{'name': 'standard_scaler',
+                        'step_name': 'scaler',
+                        'params': {'with_mean': True, 'with_std': True}}]
+        # Add default imputer if empty
+        if not imputer:
+            imputer = [{'name': 'simple_imputer',
+                        'step_name': 'simple_imputer',
+                        'params': {'strategy': 'mean'}}]
+
+        # Order the preprocessing steps
         ordered = []
         # can add NaN avalues or add new features that may be constant
         ordered.extend(duplicates)
@@ -455,9 +459,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         ordered.extend(low_unique_value_filter)
         # other transformations
         ordered.extend(others)
-        # end with imputation and scaling
-        ordered.extend(imputer)  # may be empty; scaler gets default added later if missing
-        ordered.extend(scalers)  # may be empty; scaler gets default added later if missing
+        # Imputation and scaling
+        ordered.extend(imputer)
+        ordered.extend(scalers)
         # No scaling needed for the time features
         ordered.extend(timestamp_step)
         return ordered
