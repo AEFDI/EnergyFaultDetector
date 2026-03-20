@@ -31,8 +31,8 @@ This setup:
   If not provided, default ARCANA parameters are used (see :py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`).
 
 If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor: {}``), a default preprocessing pipeline
-is generated, which drops constant features, features where >5% of the data is missing, imputes remaining missing values
-with the mean value and scales the data to zero mean and unit standard deviation.
+is generated, which drops constant and binary features, features where >5% of the data is missing, imputes remaining
+missing values with the mean value and scales the data to zero mean and unit standard deviation.
 
 You can also generate this kind of configuration programmatically using
 :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
