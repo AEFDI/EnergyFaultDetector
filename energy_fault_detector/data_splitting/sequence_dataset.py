@@ -19,6 +19,9 @@ class SequenceDatasetBuilder:
       * ``build_sliding_dataset`` for seq2seq models (sequence → sequence),
       * ``build_seq2one_dataset`` for seq2one models (sequence → single timestep).
 
+    Timestamps are handled as datetime64[ns] (tz-naive, effectively UTC), and when mapping back we localize to the
+    original tz.
+
     Features:
 
       * Sliding windows with configurable overlap.
