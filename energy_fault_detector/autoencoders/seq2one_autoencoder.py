@@ -252,6 +252,7 @@ class Seq2OneAutoencoder(Autoencoder):
 
     def encode(self, x: pd.DataFrame, conditions: pd.DataFrame = None) -> np.ndarray:
         """Encode input time series into the latent space.
+        One latent vector per window, associated with the last timestamp of each window.
 
         Args:
             x: Input data as a DataFrame with DatetimeIndex.
@@ -261,11 +262,12 @@ class Seq2OneAutoencoder(Autoencoder):
             NumPy array with latent representations for each sequence window.
         """
         self._check_sequence_builder()
-        dataset, _ = self.sequence_builder.build_sliding_dataset(
+        dataset, _ = self.sequence_builder.build_seq2one_dataset(
             df=x,
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
             shuffle=False,
+            predict_mode=True,
         )
         return self.encoder.predict(dataset)
 
