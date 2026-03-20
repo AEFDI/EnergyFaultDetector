@@ -92,7 +92,7 @@ class ColumnSelector(DataTransformer):
         x = x[self.feature_names_out_]  # ensure ordering
         return x
 
-    def inverse_transform(self, x: np.array) -> pd.DataFrame:
+    def inverse_transform(self, x: np.ndarray) -> pd.DataFrame:
         """Inverse transform does nothing in case of column selector - since the columns dropped are
         not reconstructed."""
         return x
