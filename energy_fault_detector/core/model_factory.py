@@ -32,11 +32,7 @@ class ModelFactory:
         train_dict = self.config["train"]
 
         # Data preprocessor
-        data_prep_conf = train_dict.get("data_preprocessor", {}) or {}
-        self._models["data_preprocessor"] = DataPreprocessor(
-            steps=data_prep_conf.get("steps"),
-            **data_prep_conf.get("params", {}),
-        )
+        self._models["data_preprocessor"] = DataPreprocessor(steps=self.config.data_preprocessor_steps)
 
         # autoencoder
         ae_params = train_dict.get("autoencoder")
