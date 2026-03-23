@@ -153,6 +153,7 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
                 name="encoder",
             )
 
+        # TODO: decoder_layers + dense decoder network
         # Decoder: symmetric LSTM stack between encoded vector and Dense layer
         # Restore temporal dimension, then apply reversed LSTM layers
         decoder_output = RepeatVector(n=sequence_length)(encoded)
