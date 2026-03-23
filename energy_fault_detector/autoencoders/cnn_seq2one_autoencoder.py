@@ -6,7 +6,6 @@ import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
     Conv1D,
-    Conv1DTranspose,
     BatchNormalization,
     Dropout,
     Dense,
