@@ -6,13 +6,12 @@ import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
     Conv1D,
-    Conv1DTranspose,
     BatchNormalization,
     Dropout,
     Dense,
     Concatenate,
-    Flatten,
-    Reshape,
+    GlobalAveragePooling1D,
+    GlobalMaxPooling1D,
 )
 from tensorflow.keras.models import Model as KerasModel
 
@@ -36,11 +35,15 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
             layers: List of integers indicating the number of filters of the convolutional layers in the encoder.
                 Defaults to [128, 64, 32] if None.
-            kernel_size: Specifies the length of the 1D convolution window.
-            strides: Stride length of the 1D convolution window.
-            dropout_rate: Dropout rate applied after each convolutional layer.
+            decoder_layers: List of integers indicating the number of units in the layers of the decoder.
+                If not provided, the number of units in the decoder will be the same as the number of filters in the
+                encoder, in reverse order.
+            kernel_size: Specifies the length of the 1D convolution window. Default: 3.
+            strides: Stride length of the 1D convolution window. Default: 1.
+            dropout_rate: Dropout rate applied after each convolutional layer. Default: 0.
             conditional_features: Optional list of column names treated as conditional features. This will concatenate
                 the conditions to the main inputs before feeding them to the encoder.
+            pooling: Pooling strategy to use for the encoder. Either 'average' or 'max'. Default: 'average'.
             ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
                 are accepted as keyword arguments and forwarded to Autoencoder.__init__.
 
@@ -52,7 +55,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
           autoencoder:
             name: CNNSeq2OneAutoencoder
             params:
-              filters: [100, 50, 25]
+              layers: [100, 50, 25]
               kernel_size: 5
               sequence_builder:
                 sequence_length: 10
@@ -64,19 +67,25 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         self,
         sequence_builder: SequenceDatasetBuilder = None,
         layers: Optional[List[int]] = None,
+        decoder_layers: Optional[List[int]] = None,
         code_size: int = 32,
         kernel_size: int = 3,
         strides: int = 1,
         dropout_rate: float = 0.0,
+        pooling: str = 'average',
         **ae_kwargs,
     ):
         """Initialize a CNN-based seq2one autoencoder."""
 
         self.layers = layers or [128, 64, 32]
+        self.decoder_layers = decoder_layers or list(reversed(self.layers))
         self.code_size = code_size
         self.kernel_size = kernel_size
         self.strides = strides
         self.dropout_rate = dropout_rate
+        if pooling not in ['average', 'max']:
+            raise ValueError(f"pooling must be either 'average' or 'max', not {pooling}")
+        self.pooling = pooling
 
         super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
@@ -129,12 +138,12 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             if self.dropout_rate > 0:
                 x = Dropout(rate=self.dropout_rate)(x)
 
-        # Store the shape to reshape back in the decoder
-        # x.shape is (batch, sequence_length / strides^num_layers, filters)
-        conv_shape = x.shape[1:]  # (T_enc, F_enc)
-        flat_dim = int(conv_shape[0] * conv_shape[1])
-        flat = Flatten()(x)
-        encoded = Dense(self.code_size, activation="relu", name="encoded")(flat)
+        # Pool + dense for encoding
+        if self.pooling == 'max':
+            x = GlobalMaxPooling1D()(x)
+        else:
+            x = GlobalAveragePooling1D()(x)
+        encoded = Dense(self.code_size, activation="relu", name="encoded")(x)
 
         # Encoder model for latent representation
         if conditional_input is not None:
@@ -151,26 +160,13 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             )
 
         # Decoder: latent -> reconstruction
+        # TODO: tbd - do we add the conditional input again, like in the dense AE?
+        #       In that case we need to reshape the conditional inputs to 1D again
         latent_input = Input(shape=(self.code_size,), name="latent_input")
-        z = Dense(flat_dim, activation="relu")(latent_input)
-        z = Reshape(conv_shape)(z)
-
-        # Decoder - Conv Transpose Stack
-        y = z
-        for n_filters in self.layers[-2::-1] + [n_main_features]:
-            y = Conv1DTranspose(
-                filters=n_filters,
-                kernel_size=self.kernel_size,
-                padding="same",
-                strides=self.strides,
-                activation="relu",
-            )(y)
-            y = BatchNormalization()(y)
-            if self.dropout_rate > 0:
-                y = Dropout(rate=self.dropout_rate)(y)
-
-        y = Flatten()(y)
-        reconstruction = Dense(units=n_main_features, name="reconstruction")(y)
+        z = Dense(self.decoder_layers[0], activation="relu")(latent_input)
+        for layer_size in self.decoder_layers[1:]:
+            z = Dense(layer_size, activation="relu")(z)
+        reconstruction = Dense(units=n_main_features, name="reconstruction")(z)
 
         # Stand-alone decoder model
         self.decoder = tf.keras.Model(
@@ -180,15 +176,22 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         )
 
         if conditional_input is not None:
+            encoded = self.encoder(inputs=[main_input, conditional_input])
+        else:
+            encoded = self.encoder(inputs=main_input)
+
+        decoded = self.decoder(encoded)
+
+        if conditional_input is not None:
             self.model = tf.keras.Model(
                 inputs=[main_input, conditional_input],
-                outputs=self.decoder(self.encoder(inputs=[main_input, conditional_input])),
+                outputs=decoded,
                 name="cnn_seq2one_autoencoder",
             )
         else:
             self.model = tf.keras.Model(
                 inputs=main_input,
-                outputs=self.decoder(self.encoder(inputs=main_input)),
+                outputs=decoded,
                 name="cnn_seq2one_autoencoder",
             )
 
