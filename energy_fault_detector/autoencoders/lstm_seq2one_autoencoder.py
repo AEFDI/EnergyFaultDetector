@@ -19,6 +19,7 @@ from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoen
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
 
 
+# TODO: remove dense layer, keep seq2seq?
 class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
     """LSTM-based seq2one autoencoder.
 
