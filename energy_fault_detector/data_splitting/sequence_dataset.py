@@ -122,6 +122,7 @@ class SequenceDatasetBuilder:
         batch_size: int,
         conditional_features: Optional[List[str]] = None,
         shuffle: bool = True,
+        predict_mode: bool = False,
     ) -> Tuple[tf.data.Dataset, np.ndarray]:
         """Create a seq2seq tf.data.Dataset from a time-series DataFrame.
 
@@ -141,6 +142,11 @@ class SequenceDatasetBuilder:
         """
         if not isinstance(df.index, pd.DatetimeIndex):
             raise ValueError("DataFrame index must be a DatetimeIndex.")
+
+        original_stride = self.stride
+        if predict_mode:
+            # To ensure we can predict all timestamps once
+            self.stride = self.sequence_length
 
         df_resampled = self._resample_if_needed(df)
         timestamps = df_resampled.index.values
@@ -188,6 +194,7 @@ class SequenceDatasetBuilder:
             dataset = dataset.shuffle(buffer_size=len(starts))
 
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        self.stride = original_stride
         return dataset, window_timestamps
 
     def build_seq2one_dataset(

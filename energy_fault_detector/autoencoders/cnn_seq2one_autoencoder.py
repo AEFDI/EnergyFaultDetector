@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple
 import logging
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
@@ -12,7 +13,8 @@ from tensorflow.keras.layers import (
     Dense,
     Concatenate,
     Flatten,
-    Lambda
+    Lambda,
+    MaxPooling1D,
 )
 from tensorflow.keras.models import Model as KerasModel
 
@@ -29,15 +31,9 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
     the main features of the **last timestep** in that sequence. Optionally, per-timestep
     conditional features can be used as inputs.
 
-    It is designed as a *short-context* model: the Conv1D stack around the last timestep
-    captures local temporal dynamics, while global seasonality (e.g. daily/weekly patterns)
-    is expected to be provided via **conditional features** such as time-of-day and
-    day-of-week encodings.
-
-    For data with strong daily/weekly seasonality (e.g. heat pumps, wind turbines),
-    it is highly recommended to provide time-of-day and day-of-week features as
-    ``conditional_features``. The CNN encoder then focuses on local dynamics, while
-    the conditional features provide global seasonal context to the decoder.
+    It is designed as a *short-context* model: the Conv1D stack captures local temporal dynamics,
+    while global seasonality (e.g. daily/weekly patterns) is expected to be provided via
+    conditional features such as time-of-day and day-of-week encodings.
 
     Input:
         (batch_size, sequence_length, n_main_features) [+ conditional features]
@@ -56,11 +52,6 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         dropout_rate: Dropout rate applied after each convolutional layer. Default: 0.
         conditional_features: Optional list of column names treated as conditional features. This will concatenate
             the conditions to the main inputs before feeding them to the encoder.
-        encoder_aggregation: How to aggregate encoder time dimension into a vector.
-            Options:
-              - 'last': use features at the last timestep of the Conv stack (default, short-context).
-              - 'flatten': Flatten all timesteps and channels, then Dense(code_size).
-                This gives full-window context but scales poorly for long sequences.
         ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
             are accepted as keyword arguments and forwarded to Autoencoder.__init__.
 
@@ -96,36 +87,18 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         kernel_size: int = 3,
         strides: int = 1,
         dropout_rate: float = 0.0,
-        encoder_aggregation: str = 'last',
+        max_encoding_size: int = 1000,
         **ae_kwargs,
     ):
         """Initialize a CNN-based seq2one autoencoder."""
 
         self.layers = layers or [128, 64, 32]
-        self.decoder_layers = decoder_layers or list(reversed(self.layers))
+        self.decoder_layers = decoder_layers or [32, 64]
         self.code_size = code_size
         self.kernel_size = kernel_size
         self.strides = strides
         self.dropout_rate = dropout_rate
-        if pooling not in ['average', 'max']:
-            raise ValueError(f"pooling must be either 'average' or 'max', not {pooling}")
-        self.pooling = pooling
-
-        if encoder_aggregation not in ("last", "flatten"):
-            raise ValueError(f"encoder_aggregation must be 'last' or 'flatten', got {encoder_aggregation!r}")
-        self.encoder_aggregation = encoder_aggregation
-
-        if sequence_builder is not None:
-            rf = 1 + (self.kernel_size - 1) * len(self.layers)
-            if rf < sequence_builder.sequence_length and self.encoder_aggregation == 'last':
-                logger.warning(
-                    "CNNSeq2OneAutoencoder: receptive field (%d timesteps) is smaller than "
-                    "sequence_length (%d). Only the last ~%d timesteps effectively influence "
-                    "the last-timestep representation when using encoder_aggregation='last'. "
-                    "Consider reducing sequence_length, increasing kernel_size / number of "
-                    "layers, or using encoder_aggregation='flatten' for short sequences.",
-                    rf, sequence_builder.sequence_length, rf
-                )
+        self.max_encoding_size = max_encoding_size
 
         super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
@@ -168,15 +141,15 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             if self.dropout_rate > 0:
                 x = Dropout(rate=self.dropout_rate)(x)
 
-        # Encoder: Aggregate over time dimension
-        if self.encoder_aggregation == "last":
-            # short-context: last timestep only (receptive field limited by conv stack)
-            x_agg = Lambda(lambda t: t[:, -1, :], name="last_timestep")(x)
-        else:  # "flatten"
-            # full-window context: flatten all timesteps and channels, then Dense(code_size)
-            x_agg = Flatten(name="flatten")(x)
+        x = Conv1D(filters=self.code_size, kernel_size=self.kernel_size, strides=1, padding="same")(x)
+        if self.code_size * self.sequence_builder.sequence_length > self.max_encoding_size:
+            factor = self.code_size * self.sequence_builder.sequence_length / self.max_encoding_size
+            for i in range(np.ceil(np.log2(factor))):
+                # Reduce until encoding size is below max_encoding_size
+                x = MaxPooling1D(pool_size=2)(x)
+                x = Conv1D(filters=self.code_size, kernel_size=self.kernel_size, strides=1, padding="same")(x)
 
-        encoded = Dense(self.code_size, activation="relu", name="encoded")(x_agg)
+        encoded = Flatten(name='encoding')(x)
 
         # Encoder model for latent representation
         if conditional_input is not None:
