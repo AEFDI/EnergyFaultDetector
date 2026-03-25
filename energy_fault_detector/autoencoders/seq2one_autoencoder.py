@@ -12,7 +12,7 @@ from ..core.autoencoder import Autoencoder
 
 
 class Seq2OneAutoencoder(Autoencoder):
-    """Base class for causal sequence-to-one autoencoders.
+    """Base class for causal sequence-to-one (half) autoencoders.
 
     This class trains models that map a sequence of length ``sequence_length`` to a single
     output vector (typically corresponding to the last timestep in the window).
