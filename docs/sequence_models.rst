@@ -4,6 +4,7 @@ Sequence-based models
 This section explains how to use the sequence-to-one autoencoders:
 
 - :class:`~energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder`
+- :class:`~energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder`
 - :class:`~energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder`
 
 These models take **windows** of time-series data and reconstruct the
@@ -27,6 +28,7 @@ usually sufficient.
 The package provides:
 
 - :py:class:`LSTMSeq2OneAutoencoder <energy_fault_detector.autoencoders.lstm_seq2one_autoencoder.LSTMSeq2OneAutoencoder>`
+- :py:class:`BidirectionalLSTMSeq2OneAutoencoder <energy_fault_detector.autoencoders.bidirectional_lstm_seq2one_autoencoder.BidirectionalLSTMSeq2OneAutoencoder>`
 - :py:class:`CNNSeq2OneAutoencoder <energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder>`
 
 Configuration
@@ -71,6 +73,9 @@ Important points:
   strings like ``"30s"``, ``"10m"`` into ``numpy.timedelta64``.
 - ``pad_incomplete``: if ``true``, the data is resampled to a regular
   grid at ``ts_freq`` and missing timestamps are filled with ``pad_value``.
+- ``merge_mode``: only used by ``BidirectionalLSTMSeq2OneAutoencoder`` and controls how forward and backward encoder
+  outputs are merged. Supported values are ``"concat"``, ``"sum"``, ``"ave"`` and ``"mul"``.
+  The recommended setting for this implementation is ``"sum"``.
 
 Data requirements
 -----------------
@@ -110,6 +115,26 @@ Training and prediction are identical to the dense autoencoder case:
 
    # Each prediction is aligned to the **last timestamp** of its window:
    print(results.reconstruction.index[:5])
+
+
+Bidirectional encoder variant
+-----------------------------
+
+The bidirectional variant uses the same ``sequence_builder`` configuration and adds the
+parameter ``merge_mode``:
+
+.. code-block:: yaml
+
+   train:
+     autoencoder:
+       name: BidirectionalLSTMSeq2OneAutoencoder
+       params:
+         sequence_builder:
+           sequence_length: 36
+           stride: 1
+           ts_freq: "30s"
+         layers: [64, 32]
+         merge_mode: "sum"
 
 
 Conditional features
