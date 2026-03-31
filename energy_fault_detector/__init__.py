@@ -27,6 +27,11 @@ register(module_path='energy_fault_detector.autoencoders.lstm_seq2one_autoencode
          class_type='autoencoder',
          class_names=['LSTMSeq2OneAutoencoder', 'LSTMSeq2One', 'lstm_seq2one', 'lstm_seq2one_autoencoder',
                       'lstm'])
+register(module_path='energy_fault_detector.autoencoders.bidirectional_lstm_seq2one_autoencoder.'
+                     'BidirectionalLSTMSeq2OneAutoencoder',
+         class_type='autoencoder',
+         class_names=['BidirectionalLSTMSeq2OneAutoencoder', 'BidirectionalLSTMSeq2One', 'bilstm_seq2one',
+                      'bidirectional_lstm_seq2one', 'bidirectional_lstm', 'bilstm'])
 register(module_path='energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder',
          class_type='autoencoder',
          class_names=['CNNSeq2OneAutoencoder', 'CNNSeq2One', 'cnn_seq2one', 'cnn_seq2one_autoencoder',

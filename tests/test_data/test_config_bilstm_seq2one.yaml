@@ -1,0 +1,45 @@
+train:
+  anomaly_score:
+    name: 'mahalanobis'
+    params:
+      pca: true
+      pca_min_var: 0.85
+  data_preprocessor:
+  autoencoder:
+    name: 'BidirectionalLSTMSeq2OneAutoencoder'
+    verbose: 0
+    params:
+      sequence_builder:
+        sequence_length: 36
+        stride: 1
+        ts_freq: "30s"
+        pad_incomplete: false
+        pad_value: 0.0
+      layers: [64, 32]
+      dropout_rate: 0.0
+      regularization: 0.01
+      stateful: false
+      merge_mode: "sum"
+      learning_rate: 0.001
+      batch_size: 32
+      epochs: 2
+      loss_name: "mean_squared_error"
+      metrics: ["mean_absolute_error"]
+      early_stopping: false
+      noise: 0.0
+  threshold_selector:
+    name: 'FDR'
+    params:
+      target_false_discovery_rate: 0.8
+  data_splitter:
+    type: train_test_split
+    validation_split: 0.2
+    shuffle: false
+  data_clipping:
+    lower_percentile: 0.01
+    upper_percentile: 0.99
+
+root_cause_analysis:
+  alpha: 0.8
+  init_x_bias: recon
+  num_iter: 200
