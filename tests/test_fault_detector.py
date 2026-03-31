@@ -10,7 +10,11 @@ import pandas as pd
 import numpy as np
 
 from energy_fault_detector.fault_detector import FaultDetector, Config
-from energy_fault_detector.autoencoders import ConditionalAE, LSTMSeq2OneAutoencoder
+from energy_fault_detector.autoencoders import (
+    BidirectionalLSTMSeq2OneAutoencoder,
+    ConditionalAE,
+    LSTMSeq2OneAutoencoder,
+)
 
 mock_autoencoder = MagicMock()
 mock_data_preprocessor = MagicMock()
@@ -313,6 +317,11 @@ class TestFaultDetectorModelCreation(unittest.TestCase):
         model = FaultDetector(config, model_directory=self.test_model_dir)
         self.assertIsInstance(model.autoencoder, LSTMSeq2OneAutoencoder)
 
+    def test_bidirectional_sequential_model_created(self):
+        config = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_bilstm_seq2one.yaml'))
+        model = FaultDetector(config, model_directory=self.test_model_dir)
+        self.assertIsInstance(model.autoencoder, BidirectionalLSTMSeq2OneAutoencoder)
+
 
 class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
     """Round-trip saving/loading for a sequence AE + FaultDetector."""
@@ -370,4 +379,55 @@ class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
             np.testing.assert_allclose(a, b, atol=1e-6)
 
         # Config should round-trip as well
+        self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
+
+
+class TestFaultDetectorBidirectionalSequenceSaveLoad(unittest.TestCase):
+    """Round-trip saving/loading for a bidirectional sequence AE + FaultDetector."""
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_config_bilstm_seq2one.yaml')
+        self.conf = Config(self.config_path)
+
+        self.tmp_dir = tempfile.mkdtemp()
+
+        n = 200
+        index = pd.date_range("2025-01-01", periods=n, freq="30s")
+        np.random.seed(42)
+        self.sensor_data = pd.DataFrame(
+            np.random.randn(n, 3), index=index, columns=["f1", "f2", "f3"]
+        )
+        self.normal_index = pd.Series(True, index=index)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp_dir)
+
+    def test_sequence_model_save_and_load_roundtrip(self) -> None:
+        fd = FaultDetector(config=self.conf, model_directory=self.tmp_dir)
+        result = fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index)
+        model_path = result.model_path
+
+        self.assertIsInstance(fd.autoencoder, BidirectionalLSTMSeq2OneAutoencoder)
+        sb = fd.autoencoder.sequence_builder
+        self.assertEqual(sb.sequence_length, 36)
+        self.assertEqual(sb.stride, 1)
+        self.assertEqual(sb.pad_incomplete, False)
+        self.assertEqual(sb.pad_value, 0.0)
+
+        fd2 = FaultDetector.load(model_path=model_path)
+
+        self.assertIsInstance(fd2.autoencoder, BidirectionalLSTMSeq2OneAutoencoder)
+        sb2 = fd2.autoencoder.sequence_builder
+        self.assertEqual(sb2.sequence_length, sb.sequence_length)
+        self.assertEqual(sb2.stride, sb.stride)
+        self.assertEqual(sb2.pad_incomplete, sb.pad_incomplete)
+        self.assertEqual(sb2.pad_value, sb.pad_value)
+        self.assertEqual(sb2.ts_freq, sb.ts_freq)
+
+        w1 = fd.autoencoder.model.get_weights()
+        w2 = fd2.autoencoder.model.get_weights()
+        self.assertEqual(len(w1), len(w2))
+        for a, b in zip(w1, w2):
+            np.testing.assert_allclose(a, b, atol=1e-6)
+
         self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)

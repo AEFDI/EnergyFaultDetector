@@ -141,6 +141,7 @@ Besides the dense :py:class:`MultilayerAutoencoder <energy_fault_detector.autoen
 the package also provides sequence-based autoencoders such as:
 
 - :py:class:`LSTMSeq2OneAutoencoder <energy_fault_detector.autoencoders.lstm_seq2one_autoencoder.LSTMSeq2OneAutoencoder>`
+- :py:class:`BidirectionalLSTMSeq2OneAutoencoder <energy_fault_detector.autoencoders.bidirectional_lstm_seq2one_autoencoder.BidirectionalLSTMSeq2OneAutoencoder>`
 - :py:class:`CNNSeq2OneAutoencoder <energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder>`
 
 These models operate on **windows** of time-series data and reconstruct the **last timestep** in each window.
