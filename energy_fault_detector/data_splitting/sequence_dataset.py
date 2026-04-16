@@ -146,7 +146,7 @@ class SequenceDatasetBuilder:
         original_stride = self.stride
         if predict_mode:
             # To ensure we can predict all timestamps once
-            self.stride = self.sequence_length
+            self.stride = 1
 
         df_resampled = self._resample_if_needed(df)
         timestamps = df_resampled.index.values
