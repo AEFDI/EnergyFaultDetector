@@ -52,6 +52,8 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         dropout_rate: Dropout rate applied after each convolutional layer. Default: 0.
         conditional_features: Optional list of column names treated as conditional features. This will concatenate
             the conditions to the main inputs before feeding them to the encoder.
+        max_encoding_size: Maximum size of the encoded vector. If the encoded vector is larger, it will be reduced
+            by a factor of 2 (using max pooling) until it reaches this size. Default: 1000.
         ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
             are accepted as keyword arguments and forwarded to Autoencoder.__init__.
 
@@ -66,7 +68,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
               layers: [64, 64, 32]
               code_size: 8
               kernel_size: 3
-              encoder_aggregation: "last"
+              max_encoding_size: 1000
               sequence_builder:
                 sequence_length: 36
                 ts_freq: "5m"
