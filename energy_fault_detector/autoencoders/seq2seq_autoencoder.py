@@ -7,13 +7,12 @@ import pandas as pd
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import Model as KerasModel
 
-from energy_fault_detector.core.autoencoder import Autoencoder
-from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
+from .seq2one_autoencoder import Seq2OneAutoencoder
+from ..data_splitting.sequence_dataset import SequenceDatasetBuilder
 from energy_fault_detector.autoencoders._sequence_utils import sequences_to_dataframe
 
 
-# TODO: Do we need this class?
-class Seq2SeqAutoencoder(Autoencoder):
+class Seq2SeqAutoencoder(Seq2OneAutoencoder):
     """Base class for sequence autoencoders (e.g. LSTM, CNN) on time-series data.
 
     This class works directly with Pandas DataFrames that have a DatetimeIndex. It:
@@ -34,137 +33,19 @@ class Seq2SeqAutoencoder(Autoencoder):
     def __init__(
         self,
         sequence_builder: SequenceDatasetBuilder = None,
-        conditional_features: Optional[List[str]] = None,
-        learning_rate: float = 0.001,
-        batch_size: int = 32,
-        epochs: int = 10,
-        loss_name: str = "mean_squared_error",
-        metrics: Optional[List[str]] = None,
-        decay_rate: float = None,
-        decay_steps: float = None,
-        early_stopping: bool = False,
-        patience: int = 3,
-        min_delta: float = 1e-4,
-        noise: float = 0.0,
-        **kwargs,
+        **ae_kwargs
     ):
         """Initialize a sequence autoencoder.
 
         Args:
             sequence_builder: SequenceDatasetBuilder instance used to create sliding-window datasets.
-            conditional_features: Optional list of column names to treat as conditional features.
-            learning_rate: Initial learning rate for the optimizer.
-            batch_size: Batch size during training.
-            epochs: Number of epochs for initial training.
-            loss_name: Loss function name passed to ``model.compile``.
-            metrics: Additional metrics to track during training.
-            decay_rate: Exponential decay rate for the learning rate (optional).
-            decay_steps: Number of steps over which to apply learning rate decay (optional).
-            early_stopping: If True, enable EarlyStopping in the base Autoencoder.
-            patience: Patience for EarlyStopping (number of epochs without improvement).
-            min_delta: Minimum change in monitored quantity for EarlyStopping to qualify as an improvement.
-            noise: Standard deviation of Gaussian noise applied to inputs during training (denoising AE).
-            **kwargs: Additional keyword arguments passed to ``Autoencoder.__init__``.
+            **ae_kwargs: Additional keyword arguments passed to ``Autoencoder.__init__``.
         """
-        super().__init__(
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            epochs=epochs,
-            loss_name=loss_name,
-            metrics=metrics,
-            decay_rate=decay_rate,
-            decay_steps=decay_steps,
-            early_stopping=early_stopping,
-            patience=patience,
-            min_delta=min_delta,
-            noise=noise,
-            conditional_features=conditional_features,
-            **kwargs,
-        )
+        super().__init__(**ae_kwargs)
 
+        self.is_seq2one: bool = False
         self.sequence_builder = sequence_builder
-        self.conditional_features = conditional_features or []
         self.window_timestamps_: Optional[np.ndarray] = None
-
-    def create_model(
-        self,
-        input_dimension: Tuple[int, int],
-        condition_dimension: Optional[int] = None,
-        **kwargs,
-    ) -> KerasModel:
-        """Create the underlying Keras model.
-
-        Subclasses must implement this method and set ``self.model`` (and optionally ``self.encoder``).
-
-        Args:
-            input_dimension: Tuple ``(sequence_length, n_main_features)``.
-            condition_dimension: Number of conditional features, or ``None`` if no conditions are used.
-            **kwargs: Additional keyword arguments for model creation.
-
-        Returns:
-            The created Keras model.
-        """
-        raise NotImplementedError
-
-    def fit(
-        self,
-        x: pd.DataFrame,
-        x_val: Optional[pd.DataFrame] = None,
-        **kwargs,
-    ) -> Seq2SeqAutoencoder:
-        """Fit the sequence autoencoder on time-series data.
-
-        Args:
-            x: Training data as a DataFrame with DatetimeIndex.
-            x_val: Optional validation data as a DataFrame with DatetimeIndex.
-            **kwargs: Additional keyword arguments passed to ``model.fit``.
-
-        Returns:
-            The fitted ``Seq2SeqAutoencoder`` instance.
-        """
-        self._check_sequence_builder()
-        self._ensure_model_created_from(x)
-
-        return self._fit_internal(
-            x=x,
-            x_val=x_val,
-            total_epochs=self.epochs,
-            initial_epoch=0,
-            learning_rate=None,
-            **kwargs,
-        )
-
-    def tune(
-        self,
-        x: pd.DataFrame,
-        x_val: Optional[pd.DataFrame] = None,
-        learning_rate: float = 0.001,
-        tune_epochs: int = 5,
-        **kwargs,
-    ) -> "Seq2SeqAutoencoder":
-        """Fine-tune the sequence autoencoder on additional data.
-
-        This extends training for ``tune_epochs`` epochs, optionally with a new learning rate.
-
-        Args:
-            x: Training data as a DataFrame with DatetimeIndex.
-            x_val: Optional validation data as a DataFrame with DatetimeIndex.
-            learning_rate: Learning rate to use during tuning.
-            tune_epochs: Number of additional epochs to run.
-            **kwargs: Additional keyword arguments passed to ``model.fit``.
-
-        Returns:
-            The tuned ``Seq2SeqAutoencoder`` instance.
-        """
-        self._check_sequence_builder()
-        return self._fit_internal(
-            x=x,
-            x_val=x_val,
-            total_epochs=self.epochs + tune_epochs,
-            initial_epoch=self.epochs,
-            learning_rate=learning_rate,
-            **kwargs,
-        )
 
     def _predict(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
         """Reconstruct main features from input time series.
@@ -182,6 +63,7 @@ class Seq2SeqAutoencoder(Autoencoder):
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
             shuffle=False,
+            predict_mode=True,
         )
         self.window_timestamps_ = window_timestamps
 
@@ -215,6 +97,7 @@ class Seq2SeqAutoencoder(Autoencoder):
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
             shuffle=False,
+            predict_mode=True,
         )
         return self.encoder.predict(dataset)
 
@@ -284,6 +167,7 @@ class Seq2SeqAutoencoder(Autoencoder):
                 batch_size=self.batch_size,
                 conditional_features=self.conditional_features,
                 shuffle=False,
+                predict_mode=True,
             )
 
         callbacks: List[Callback] = list(self.callbacks)

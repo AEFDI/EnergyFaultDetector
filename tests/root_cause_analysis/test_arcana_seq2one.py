@@ -93,6 +93,7 @@ class TestArcanaSeq2One(unittest.TestCase):
             layers=[16, 8],
             epochs=1,
             batch_size=32,
+            verbose=0
         )
         model_tz.fit(df_tz)
 
