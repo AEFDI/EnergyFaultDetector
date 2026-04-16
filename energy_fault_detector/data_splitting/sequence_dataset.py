@@ -143,10 +143,12 @@ class SequenceDatasetBuilder:
         if not isinstance(df.index, pd.DatetimeIndex):
             raise ValueError("DataFrame index must be a DatetimeIndex.")
 
+        df, original_tz = self._strip_tz(df)
+
         original_stride = self.stride
         if predict_mode:
             # To ensure we can predict all timestamps once
-            self.stride = self.sequence_length
+            self.stride = 1
 
         df_resampled = self._resample_if_needed(df)
         timestamps = df_resampled.index.values
@@ -194,6 +196,7 @@ class SequenceDatasetBuilder:
             dataset = dataset.shuffle(buffer_size=len(starts))
 
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        window_timestamps = self._restore_tz(window_timestamps, original_tz)
         self.stride = original_stride
         return dataset, window_timestamps
 
@@ -227,6 +230,8 @@ class SequenceDatasetBuilder:
 
         if not isinstance(df.index, pd.DatetimeIndex):
             raise ValueError("DataFrame index must be a DatetimeIndex.")
+
+        df, original_tz = self._strip_tz(df)
 
         original_stride = self.stride
         if predict_mode:
@@ -282,6 +287,33 @@ class SequenceDatasetBuilder:
             dataset = dataset.shuffle(buffer_size=len(starts))
 
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        window_timestamps = self._restore_tz(window_timestamps, original_tz)
         self.stride = original_stride
         return dataset, window_timestamps
 
+    def _strip_tz(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, object]:
+        """Strip timezone from the DataFrame index, preserving local time values.
+
+        Returns:
+            Tuple of (tz-naive DataFrame, original tz or None).
+        """
+        tz = df.index.tz
+        if tz is not None:
+            df = df.copy()
+            df.index = df.index.tz_localize(None)
+        return df, tz
+
+    def _restore_tz(self, window_timestamps: np.ndarray, tz) -> np.ndarray:
+        """Re-attach timezone to a window_timestamps array.
+
+        Args:
+            window_timestamps: Array of shape (n_windows, sequence_length).
+            tz: Timezone to restore, or None (no-op).
+
+        Returns:
+            window_timestamps with timezone restored (dtype=object if tz is not None).
+        """
+        if tz is not None:
+            flat = pd.DatetimeIndex(window_timestamps.ravel()).tz_localize(tz)
+            window_timestamps = np.array(flat, dtype=object).reshape(window_timestamps.shape)
+        return window_timestamps

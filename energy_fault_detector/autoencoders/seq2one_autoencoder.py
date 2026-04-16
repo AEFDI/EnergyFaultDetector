@@ -36,6 +36,7 @@ class Seq2OneAutoencoder(Autoencoder):
         super().__init__(**ae_kwargs)
         self.sequence_builder = sequence_builder
         self.is_sequential: bool = True
+        self.is_seq2one: bool = True
 
     # Child classes must still implement create_model, but with seq2one output shape
     def create_model(

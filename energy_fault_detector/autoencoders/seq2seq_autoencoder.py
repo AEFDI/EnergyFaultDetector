@@ -12,7 +12,7 @@ from ..data_splitting.sequence_dataset import SequenceDatasetBuilder
 from energy_fault_detector.autoencoders._sequence_utils import sequences_to_dataframe
 
 
-class SeqAutoencoder(Seq2OneAutoencoder):
+class Seq2SeqAutoencoder(Seq2OneAutoencoder):
     """Base class for sequence autoencoders (e.g. LSTM, CNN) on time-series data.
 
     This class works directly with Pandas DataFrames that have a DatetimeIndex. It:
@@ -43,6 +43,7 @@ class SeqAutoencoder(Seq2OneAutoencoder):
         """
         super().__init__(**ae_kwargs)
 
+        self.is_seq2one: bool = False
         self.sequence_builder = sequence_builder
         self.window_timestamps_: Optional[np.ndarray] = None
 
@@ -133,7 +134,7 @@ class SeqAutoencoder(Seq2OneAutoencoder):
         initial_epoch: int = 0,
         learning_rate: Optional[float] = None,
         **kwargs,
-    ) -> "SeqAutoencoder":
+    ) -> "Seq2SeqAutoencoder":
         """Internal training helper working with tf.data.Datasets.
 
         Args:

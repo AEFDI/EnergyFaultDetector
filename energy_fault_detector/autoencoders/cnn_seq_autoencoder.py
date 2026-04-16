@@ -1,26 +1,22 @@
 from __future__ import annotations
 
 from typing import List, Optional, Tuple
-import logging
 
-import numpy as np
-import tensorflow as tf
 from tensorflow.keras.layers import (
     Input,
     Conv1D,
     Conv1DTranspose,
     BatchNormalization,
     Dropout,
-    Dense,
-    Concatenate,
+    Concatenate
 )
 from tensorflow.keras.models import Model as KerasModel
 
-from .seq2seq_autoencoder import SeqAutoencoder
+from .seq2seq_autoencoder import Seq2SeqAutoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
 
 
-class CNNAutoencoder(SeqAutoencoder):
+class CNNAutoencoder(Seq2SeqAutoencoder):
     """CNN-based Seq2Seq autoencoder
 
     Args:
@@ -75,17 +71,33 @@ class CNNAutoencoder(SeqAutoencoder):
 
         super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
-    def create_model(self, input_dimension: Tuple[int, int, int], **kwargs) -> KerasModel:
-        """Create ConvAE Model
+    def create_model(self, input_dimension: Tuple[int, int], condition_dimension: Optional[int] = None,
+                     **kwargs) -> KerasModel:
+        """Create ConvAE Model.
 
         Args:
-            input_dimension: tuple (n_samples, sequence_len, n_features)
+            input_dimension: Tuple ``(sequence_length, n_main_features)``.
+            condition_dimension: Number of conditional features per timestep, or None.
         """
 
-        inputs = Input(shape=(input_dimension[1], input_dimension[2]), name="main_input")
+        sequence_length, n_main_features = input_dimension
+        n_conditional_features = condition_dimension or 0
+
+        # Main input
+        main_input = Input(shape=(sequence_length, n_main_features), name="main_input")
+        encoder_input = main_input
+
+        # Optional conditional input — concatenated channel-wise before encoder
+        conditional_input = None
+        if n_conditional_features > 0:
+            conditional_input = Input(
+                shape=(sequence_length, n_conditional_features),
+                name="cond_input",
+            )
+            encoder_input = Concatenate(axis=-1)([main_input, conditional_input])
 
         # Encoder
-        x = inputs
+        x = encoder_input
         for nf in self.layers:
             x = Conv1D(
                 filters=nf,
@@ -99,6 +111,10 @@ class CNNAutoencoder(SeqAutoencoder):
                 x = Dropout(rate=self.dropout_rate)(x)
 
         encoded = BatchNormalization(name="encoded")(x)
+
+        # Encoder model (for latent representations)
+        encoder_inputs = [main_input, conditional_input] if conditional_input is not None else main_input
+        self.encoder = KerasModel(inputs=encoder_inputs, outputs=encoded, name="encoder")
 
         # Decoder
         x = encoded
@@ -115,12 +131,13 @@ class CNNAutoencoder(SeqAutoencoder):
                 x = Dropout(rate=self.dropout_rate)(x)
 
         outputs = Conv1DTranspose(
-            filters=input_dimension[2],
+            filters=n_main_features,
             kernel_size=self.kernel_size,
             strides=1,
             padding="same",
             name="reconstruction",
         )(x)
 
-        self.model = KerasModel(inputs=inputs, outputs=outputs)
+        model_inputs = [main_input, conditional_input] if conditional_input is not None else main_input
+        self.model = KerasModel(inputs=model_inputs, outputs=outputs)
         return self.model
