@@ -19,6 +19,7 @@ from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoen
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
 
 
+# TODO: remove dense layer, keep seq2seq?
 class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
     """LSTM-based seq2one autoencoder.
 
@@ -111,7 +112,7 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             )
             encoder_input = Concatenate(axis=-1)([main_input, conditional_input])
 
-        # Encoder: same pattern as LSTMSeqAutoencoder
+        # Encoder:
         first_hidden_units = self.layers[0]
         encoder_output = LSTM(
             units=first_hidden_units,
@@ -153,7 +154,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
                 name="encoder",
             )
 
-        # TODO: decoder_layers + dense decoder network
         # Decoder: symmetric LSTM stack between encoded vector and Dense layer
         # Restore temporal dimension, then apply reversed LSTM layers
         decoder_output = RepeatVector(n=sequence_length)(encoded)
