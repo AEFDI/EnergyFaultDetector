@@ -168,7 +168,9 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             )
 
         # Decoder: latent (+ last conditionas) -> reconstruction
-        latent_input = Input(shape=(self.code_size,), name="latent_input")
+        # Use the actual encoded dimension for the decoder input
+        latent_dim = int(encoded.shape[-1])
+        latent_input = Input(shape=(latent_dim,), name="latent_input")
 
         if n_conditional_features > 0:
             # Decoder gets the last timestep of the conditional features as context
@@ -208,6 +210,8 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
                 name="cnn_seq2one_autoencoder",
             )
         else:
+            encoded = self.encoder(main_input)
+            decoded = self.decoder(encoded)
             self.model = tf.keras.Model(
                 inputs=main_input,
                 outputs=decoded,
