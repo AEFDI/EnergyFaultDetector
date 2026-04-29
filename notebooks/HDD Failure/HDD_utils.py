@@ -1,20 +1,22 @@
 
+from typing import Union
 import os
 import pandas as pd
+from pathlib import Path
 
-def load_disk_data_example(data_dir_path: str) -> pd.DataFrame:
+def load_disk_data_example(data_dir_path: Union[str, Path]) -> pd.DataFrame:
     """ Extracts a data from a specific disk from given Backblaze Drive Stat data.
 
     Args:
-        data_dir_path (str): path to the data directory
+        data_dir_path (Union[str, Path]): path to the data directory.
 
     Returns:
         pd.DataFrame: All datapoints for disk model 'ST4000DM000' with serial number 'S301KWJY'
     """
+    data_dir = Path(data_dir_path)
     dfs = []
-    for file in os.listdir(data_dir_path):
-        if os.path.isfile(os.path.join(data_dir_path, file)):
-            file_path = os.path.join(data_dir_path, file)
+    for file_path in data_dir.iterdir():
+        if file_path.is_file():
             df = pd.read_csv(file_path, parse_dates=['date'],
                              usecols=['date', 'serial_number', 'model', 'failure',
                                       'smart_4_raw', 'smart_7_raw', 'smart_9_raw',
