@@ -7,10 +7,14 @@ import logging
 from pathlib import Path
 import requests
 import zipfile
+import tempfile
+
+from urllib.parse import urljoin
 
 logger = logging.getLogger('energy_fault_detector')
 
 API_BASE = "https://zenodo.org/api"
+BACKBLAZE_PAGE = "https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data"
 
 
 def parse_record_id(identifier: str) -> str:
@@ -286,3 +290,206 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
             redundant_dir.rmdir()
 
     return out_dir
+
+
+def _build_backblaze_zip_url_map(session: requests.Session) -> dict[str, str]:
+    """Build a mapping of Backblaze archive identifiers to their ZIP URLs.
+
+    Scans the Backblaze drive stats page for links of the form 'data_*.zip' and
+    maps the identifier between 'data_' and '.zip' to the absolute ZIP URL.
+
+    Args:
+        session: A requests.Session used to fetch the Backblaze index page.
+
+    Returns:
+        A dictionary mapping archive identifiers (e.g., 'Q1_2020') to absolute ZIP URLs.
+
+    Raises:
+        requests.HTTPError: If the Backblaze index page cannot be fetched.
+        RuntimeError: If no suitable ZIP links are found.
+    """
+    logger.info(f"Fetching Backblaze index page: {BACKBLAZE_PAGE}")
+    resp = session.get(BACKBLAZE_PAGE, timeout=60)
+    resp.raise_for_status()
+    html = resp.text
+
+    href_pattern = re.compile(
+        r'href=[\'"]([^\'"]*data_[^\'"]*\.zip)[\'"]',
+        re.IGNORECASE
+    )
+
+    url_map: dict[str, str] = {}
+    for match in href_pattern.finditer(html):
+        href = match.group(1)
+        code_match = re.search(r"data_([^/]+)\.zip", href)
+        if not code_match:
+            continue
+        code = code_match.group(1)  # e.g. "Q1_2020", "2019"
+        url_map[code] = urljoin(BACKBLAZE_PAGE, href)
+
+    if not url_map:
+        raise RuntimeError("No Backblaze 'data_*.zip' links found on index page.")
+
+    return url_map
+
+
+def _normalize_backblaze_names(names: Union[List[str], str]) -> list[str]:
+    """Normalize Backblaze archive identifiers.
+
+    Removes an optional 'data_' prefix and '.zip' suffix, strips whitespace,
+    and removes duplicates while preserving order.
+
+    Args:
+        names: Single identifier or list of identifiers, e.g. 'Q1_2020',
+            'data_Q1_2020.zip', or ['Q1_2020', 'Q2_2020'].
+
+    Returns:
+        A list of normalized identifiers such as ['Q1_2020', 'Q2_2020'].
+    """
+    if isinstance(names, str):
+        raw = [names]
+    else:
+        raw = list(names)
+
+    result: list[str] = []
+    seen: set[str] = set()
+    for n in raw:
+        s = n.strip()
+        if not s:
+            continue
+        s = re.sub(r"^data_", "", s, flags=re.IGNORECASE)
+        s = re.sub(r"\.zip$", "", s, flags=re.IGNORECASE)
+        if s and s not in seen:
+            seen.add(s)
+            result.append(s)
+    return result
+
+
+def _remove_macosx_dirs(root_dir: Path) -> None:
+    """Remove macOS metadata directories (_MACOSX / __MACOSX) under a root directory.
+
+    Args:
+        root_dir: Directory tree to clean.
+
+    Raises:
+        OSError: If removal of a directory fails (logged as a warning).
+    """
+    for path in root_dir.rglob("*"):
+        if path.is_dir() and path.name in ("_MACOSX", "__MACOSX"):
+            try:
+                shutil.rmtree(path)
+            except OSError as e:
+                logger.warning(f"Could not remove macOS metadata directory {path}: {e}")
+
+
+def _move_csv_files_to_dest(source_root: Path, dest_dir: Path, overwrite: bool) -> list[Path]:
+    """Move all CSV files under source_root into dest_dir.
+
+    Flattens any directory structure by placing all CSV files directly in dest_dir.
+
+    Args:
+        source_root: Directory tree containing extracted files.
+        dest_dir: Destination directory where CSV files will be placed.
+        overwrite: If True, existing files with the same name in dest_dir are overwritten.
+            If False, existing files are left unchanged and skipped.
+
+    Returns:
+        A list of Paths to the CSV files in dest_dir that were moved or overwritten.
+
+    Raises:
+        OSError: If moving files fails.
+    """
+    moved: list[Path] = []
+    for csv_path in source_root.rglob("*.csv"):
+        destination = dest_dir / csv_path.name
+        if destination.exists() and not overwrite:
+            logger.info(f"File exists and overwrite=False, skipping: {destination.name}")
+            continue
+        try:
+            if destination.exists():
+                logger.info(f"Overwriting existing file: {destination.name}")
+            shutil.move(str(csv_path), str(destination))
+            moved.append(destination)
+        except OSError as e:
+            logger.error(f"Failed to move CSV {csv_path} -> {destination}: {e}")
+    return moved
+
+
+def download_backblaze_data(names: Union[List[str], str],
+                            dest: Path = "./downloads",
+                            overwrite: bool = False) -> Path:
+    """Download Backblaze drive stats archives and collect CSV files.
+
+    Downloads specified 'data_*.zip' archives from the Backblaze drive stats page,
+    extracts them to a temporary location, removes macOS metadata directories,
+    and moves all CSV files into a single destination directory.
+
+    The final destination directory contains only the CSV files (no ZIP files or
+    _MACOSX directories generated by this function).
+
+    Args:
+        names: One or more archive identifiers corresponding to 'data_<name>.zip'
+            on the Backblaze page (e.g., "Q1_2020", "Q2_2020", or "data_Q1_2020.zip").
+        dest (Path): Destination directory where CSV files will be stored.
+        overwrite (bool): If True, existing CSV files in dest with the same name
+            will be overwritten. If False, existing files are left unchanged.
+
+    Returns:
+        Path: The absolute path to the destination directory containing the CSV files.
+
+    Raises:
+        ValueError: If no valid archive identifiers are provided.
+        RuntimeError: If no CSV files could be downloaded from the requested archives.
+        requests.HTTPError: If fetching the Backblaze index page or a ZIP file fails.
+        zipfile.BadZipFile: If an archive is invalid.
+        OSError: If filesystem operations fail.
+    """
+    session = requests.Session()
+
+    normalized_names = _normalize_backblaze_names(names)
+    if not normalized_names:
+        raise ValueError("No valid Backblaze archive names provided.")
+
+    dest_dir = Path(dest)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    zip_url_map = _build_backblaze_zip_url_map(session)
+
+    downloaded_csvs: list[Path] = []
+    missing_archives: list[str] = []
+
+    with tempfile.TemporaryDirectory() as tmpdir_str:
+        tmpdir = Path(tmpdir_str)
+
+        for code in normalized_names:
+            zip_url = zip_url_map.get(code)
+            if not zip_url:
+                logger.warning(f"Backblaze archive not found on index page: data_{code}.zip")
+                missing_archives.append(code)
+                continue
+
+            zip_path = tmpdir / f"data_{code}.zip"
+            logger.info(f"Downloading Backblaze archive data_{code}.zip from {zip_url}")
+            download_file(session, zip_url, zip_path)
+
+            extract_dir = tmpdir / f"extracted_{code}"
+            logger.info(f"Extracting Backblaze archive {zip_path.name} to {extract_dir}")
+            try:
+                safe_extract_zip(zip_path, extract_dir)
+            except Exception as e:
+                logger.error(f"Extraction failed for {zip_path.name}: {e}")
+                continue
+
+            _remove_macosx_dirs(extract_dir)
+            csvs = _move_csv_files_to_dest(extract_dir, dest_dir, overwrite=overwrite)
+            downloaded_csvs.extend(csvs)
+
+    if missing_archives:
+        logger.warning(f"The following Backblaze archives were not found: {', '.join(missing_archives)}")
+
+    if not downloaded_csvs:
+        raise RuntimeError("No CSV files were downloaded from the requested Backblaze archives.")
+
+    logger.info(f"Download of Backblaze data successful. CSV files available in {dest_dir.resolve()}")
+
+    return dest_dir.resolve()
