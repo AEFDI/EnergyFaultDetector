@@ -9,11 +9,10 @@ authors = [
 ]
 description = "Automated fault detection in renewable energy assets and power grids."
 readme = "README.md"
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.10,<3.12"
 classifiers = [
     'Development Status :: 4 - Beta',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     "Operating System :: OS Independent",

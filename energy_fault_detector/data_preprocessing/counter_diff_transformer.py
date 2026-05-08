@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.data_transformer import DataTransformer
+from energy_fault_detector.utils.index_utils import resolve_groupby_level
 
 
 class CounterDiffTransformer(DataTransformer):
@@ -44,7 +45,8 @@ class CounterDiffTransformer(DataTransformer):
             If provided, transformations are applied per group. Use this for MultiIndex data where
             you want to compute diffs/rates separately per device/group.
             If 'auto' (default), automatically detects the non-datetime level in a MultiIndex.
-            Set to None to disable grouping entirely.
+            Set to None to disable grouping entirely. For MultiIndex with more than one non-datetime level,
+            it is recommended to set ``groupby_level`` explicitly.
 
     Notes:
         - A DatetimeIndex is required if compute_rate=True or gap_policy='mask'.
@@ -122,7 +124,7 @@ class CounterDiffTransformer(DataTransformer):
         self.n_features_in_ = len(x.columns)
 
         # Resolve groupby_level (handles 'auto' detection)
-        self.groupby_level_ = self._resolve_groupby_level(x)
+        self.groupby_level_ = resolve_groupby_level(x.index, self.groupby_level)
 
         # DatetimeIndex is required for rates or for gap masking
         if self.compute_rate or self.gap_policy == "mask":
@@ -149,44 +151,6 @@ class CounterDiffTransformer(DataTransformer):
         # Track columns dropped when keep_original is False (for introspection/testing)
         self.columns_dropped_ = [] if self.keep_original else [c for c in self.counters_]
         return self
-
-    def _resolve_groupby_level(self, x: pd.DataFrame) -> Optional[str]:
-        """Resolve the groupby level from the user parameter or auto-detect.
-
-        Args:
-            x: Input DataFrame.
-
-        Returns:
-            The resolved groupby level (name or position), or None if no grouping.
-        """
-        if self.groupby_level is None:
-            return None
-
-        if self.groupby_level != 'auto':
-            return self.groupby_level
-
-        # Auto-detect: find non-datetime level in MultiIndex
-        if not isinstance(x.index, pd.MultiIndex):
-            return None  # Simple index, no grouping needed
-
-        # Find datetime and non-datetime levels
-        datetime_level_idx = None
-        non_datetime_levels = []
-
-        for i, level in enumerate(x.index.levels):
-            if isinstance(level, pd.DatetimeIndex):
-                datetime_level_idx = i
-            else:
-                non_datetime_levels.append(i)
-
-        if datetime_level_idx is None:
-            return None  # No datetime level found
-
-        if len(non_datetime_levels) == 0:
-            return None  # Only datetime levels, no grouping needed
-
-        # Use the first non-datetime level as groupby level
-        return non_datetime_levels[0]
 
     def _validate_datetime_index(self, x: pd.DataFrame) -> None:
         """Validate that the DataFrame has a suitable datetime index.

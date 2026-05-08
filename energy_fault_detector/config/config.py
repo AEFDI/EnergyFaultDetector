@@ -84,6 +84,7 @@ ROOT_CAUSE_ANALYSIS_SCHEMA = {
     'num_iter': {'type': 'integer', 'required': False},
     'epsilon': {'type': 'float', 'required': False},
     'verbose': {'type': 'boolean', 'required': False},
+    'max_sample_threshold': {'type': 'integer', 'required': False},
 }
 
 PREDICT_SCHEMA = {
@@ -129,6 +130,8 @@ def _parse_timedelta(config_dict: Dict[str, Any]) -> Dict[str, Any]:
     Expects `ts_freq` under: train.autoencoder.params.sequence_builder.ts_freq
     and supports strings like '10m', '1h', '30s'.
     """
+    UNIT_MAP = {"min": "m", "sec": "s", "hr": "h", "hour": "h"}
+
     train_cfg = config_dict.get("train", {})
     ae_cfg = train_cfg.get("autoencoder", {}) or {}
     params_cfg = ae_cfg.get("params", {}) or {}
@@ -139,6 +142,7 @@ def _parse_timedelta(config_dict: Dict[str, Any]) -> Dict[str, Any]:
         # Parse '10m', '1h', etc.
         digits = "".join(ch for ch in ts_freq if ch.isdigit())
         unit = "".join(ch for ch in ts_freq if not ch.isdigit())
+        unit = UNIT_MAP.get(unit, unit)
         if not digits or not unit:
             raise ValueError(f"Unexpected value for `ts_freq`: {ts_freq!r}. Expected format like '10m', '1h'.")
         import numpy as np  # noqa: F401
