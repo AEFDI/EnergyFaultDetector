@@ -360,6 +360,154 @@ class TestCounterDiffTransformer(unittest.TestCase):
         back = tr.inverse_transform(out.copy())
         pd.testing.assert_frame_equal(out, back)
 
+    def test_multiindex_explicit_groupby(self) -> None:
+        """MultiIndex with explicit groupby_level computes diffs per group."""
+        # Create MultiIndex: (device, timestamp)
+        devices = ['device_1', 'device_2']
+        times = pd.date_range(self.t0, periods=3, freq='1s', tz='UTC')
+        idx = pd.MultiIndex.from_product([devices, times], names=['device_id', 'timestamp'])
+
+        df = pd.DataFrame({
+            'counter_a': [10, 12, 15,  # device_1
+                         20, 25, 28]   # device_2
+        }, index=idx)
+
+        tr = CounterDiffTransformer(
+            counters=['counter_a'],
+            compute_rate=False,
+            groupby_level='device_id',
+            fill_first='zero',
+            gap_policy='ignore',
+        ).fit(df)
+
+        out = tr.transform(df)
+
+        # Expected: first row per device = 0, then diffs within each device
+        expected = pd.Series([0, 2, 3, 0, 5, 3], index=idx, name='counter_a_diff')
+        pd.testing.assert_series_equal(out['counter_a_diff'], expected, check_dtype=False)
+
+    def test_multiindex_auto_detection(self) -> None:
+        """MultiIndex with groupby_level='auto' automatically detects grouping."""
+        # Create MultiIndex: (device, timestamp)
+        devices = ['turbine_a', 'turbine_b']
+        times = pd.date_range(self.t0, periods=4, freq='2s', tz='UTC')
+        idx = pd.MultiIndex.from_product([devices, times], names=['turbine_id', 'timestamp'])
+
+        df = pd.DataFrame({
+            'counter_a': [100, 105, 112, 120,  # turbine_a
+                         50, 58, 65, 70]        # turbine_b
+        }, index=idx)
+
+        tr = CounterDiffTransformer(
+            counters=['counter_a'],
+            compute_rate=True,
+            groupby_level='auto',  # Auto-detect
+            fill_first='zero',
+            gap_policy='ignore',
+        ).fit(df)
+
+        # Check that auto-detection resolved to first non-datetime level (position 0)
+        self.assertEqual(tr.groupby_level_, 0)
+
+        out = tr.transform(df)
+
+        # Expected rates: increment / dt (dt = 2 seconds per group)
+        # turbine_a: [0, 5, 7, 8] -> rates [0, 2.5, 3.5, 4.0]
+        # turbine_b: [0, 8, 7, 5] -> rates [0, 4.0, 3.5, 2.5]
+        expected = pd.Series(
+            [0.0, 2.5, 3.5, 4.0, 0.0, 4.0, 3.5, 2.5],
+            index=idx,
+            name='counter_a_rate'
+        )
+        pd.testing.assert_series_equal(out['counter_a_rate'], expected, check_dtype=False)
+
+    def test_multiindex_with_reset_per_group(self) -> None:
+        """MultiIndex handles counter resets independently per group."""
+        devices = ['dev_1', 'dev_2']
+        times = pd.date_range(self.t0, periods=4, freq='1s', tz='UTC')
+        idx = pd.MultiIndex.from_product([devices, times], names=['device', 'timestamp'])
+
+        df = pd.DataFrame({
+            'counter_a': [10, 15, 5, 10,    # dev_1: reset at position 2
+                         20, 25, 30, 0]      # dev_2: reset at position 7
+        }, index=idx)
+
+        tr = CounterDiffTransformer(
+            counters=['counter_a'],
+            compute_rate=False,
+            reset_strategy='zero',
+            groupby_level='auto',
+            fill_first='zero',
+            gap_policy='ignore',
+        ).fit(df)
+
+        out = tr.transform(df)
+
+        # Expected diffs with reset handling per device:
+        # dev_1: [0, 5, 5 (reset), 5]
+        # dev_2: [0, 5, 5, 0 (reset)]
+        expected = pd.Series([0, 5, 5, 5, 0, 5, 5, 0], index=idx, name='counter_a_diff')
+        pd.testing.assert_series_equal(out['counter_a_diff'], expected, check_dtype=False)
+
+    def test_multiindex_gap_masking_per_group(self) -> None:
+        """Gap masking works independently per group in MultiIndex."""
+        devices = ['sensor_1', 'sensor_2']
+        # sensor_1: regular intervals, sensor_2: has a gap
+        times_1 = pd.date_range(self.t0, periods=3, freq='1s', tz='UTC')
+        times_2 = pd.DatetimeIndex([
+            self.t0,
+            self.t0 + timedelta(seconds=1),
+            self.t0 + timedelta(seconds=10)  # Big gap
+        ], tz='UTC')
+
+        idx = pd.MultiIndex.from_arrays([
+            ['sensor_1', 'sensor_1', 'sensor_1', 'sensor_2', 'sensor_2', 'sensor_2'],
+            times_1.tolist() + times_2.tolist()
+        ], names=['sensor', 'timestamp'])
+
+        df = pd.DataFrame({
+            'counter_a': [10, 12, 15, 20, 22, 30]
+        }, index=idx)
+
+        tr = CounterDiffTransformer(
+            counters=['counter_a'],
+            compute_rate=False,
+            groupby_level='auto',
+            gap_policy='mask',
+            max_gap_seconds=5.0,
+            fill_first='zero',
+        ).fit(df)
+
+        out = tr.transform(df)
+
+        # sensor_1: all normal [0, 2, 3]
+        # sensor_2: last value masked due to gap [0, 2, NaN]
+        self.assertEqual(out['counter_a_diff'].iloc[0], 0.0)
+        self.assertEqual(out['counter_a_diff'].iloc[1], 2.0)
+        self.assertEqual(out['counter_a_diff'].iloc[2], 3.0)
+        self.assertEqual(out['counter_a_diff'].iloc[3], 0.0)
+        self.assertEqual(out['counter_a_diff'].iloc[4], 2.0)
+        self.assertTrue(np.isnan(out['counter_a_diff'].iloc[5]))
+
+    def test_simple_index_still_works_with_auto(self) -> None:
+        """With simple DatetimeIndex, groupby_level='auto' resolves to None."""
+        df = self._df(values_a=[10, 15, 20])
+
+        tr = CounterDiffTransformer(
+            counters=['counter_a'],
+            compute_rate=False,
+            groupby_level='auto',  # Should resolve to None for simple index
+            fill_first='zero',
+            gap_policy='ignore',
+        ).fit(df)
+
+        # Auto-detection should resolve to None (no grouping)
+        self.assertIsNone(tr.groupby_level_)
+
+        out = tr.transform(df)
+        expected = pd.Series([0, 5, 5], index=df.index, name='counter_a_diff')
+        pd.testing.assert_series_equal(out['counter_a_diff'], expected, check_dtype=False)
+
 
 if __name__ == "__main__":
     unittest.main()
