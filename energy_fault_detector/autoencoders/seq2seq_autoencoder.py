@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.models import Model as KerasModel
 
 from .seq2one_autoencoder import Seq2OneAutoencoder
 from ..data_splitting.sequence_dataset import SequenceDatasetBuilder
 from energy_fault_detector.autoencoders._sequence_utils import sequences_to_dataframe
 
 
+# TODO: fix class hierarchy
 class Seq2SeqAutoencoder(Seq2OneAutoencoder):
     """Base class for sequence autoencoders (e.g. LSTM, CNN) on time-series data.
 

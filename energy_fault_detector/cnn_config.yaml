@@ -13,7 +13,7 @@ train:
       - name: standard_scaler
 
   autoencoder:
-    name: cnn
+    name: cnn_seq2seq
     params:
       sequence_builder:
         sequence_length: 10

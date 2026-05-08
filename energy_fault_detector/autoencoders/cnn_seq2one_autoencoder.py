@@ -146,7 +146,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         x = Conv1D(filters=self.code_size, kernel_size=self.kernel_size, strides=1, padding="same")(x)
         if self.code_size * self.sequence_builder.sequence_length > self.max_encoding_size:
             factor = self.code_size * self.sequence_builder.sequence_length / self.max_encoding_size
-            for i in range(np.ceil(np.log2(factor))):
+            for i in range(int(np.ceil(np.log2(factor)))):
                 # Reduce until encoding size is below max_encoding_size
                 x = MaxPooling1D(pool_size=2)(x)
                 x = Conv1D(filters=self.code_size, kernel_size=self.kernel_size, strides=1, padding="same")(x)

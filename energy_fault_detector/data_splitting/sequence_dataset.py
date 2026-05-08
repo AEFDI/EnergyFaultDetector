@@ -126,11 +126,17 @@ class SequenceDatasetBuilder:
     ) -> Tuple[tf.data.Dataset, np.ndarray]:
         """Create a seq2seq tf.data.Dataset from a time-series DataFrame.
 
+        Supports a simple DatetimeIndex or a MultiIndex with exactly one
+        datetime-like level. In the MultiIndex case, windows are built per group
+        (first non-datetime level) and concatenated.
+
         Args:
             df: Time-series data with DatetimeIndex, already preprocessed.
             batch_size: Batch size for the dataset.
             conditional_features: Optional list of column names to treat as conditional features.
             shuffle: Whether to shuffle sequences (only relevant when ``training`` is True).
+            predict_mode: If True, the dataset is used for inference. To ensure we can predict all timestamps,
+                we set stride to 1. TODO: consider stride = sequence_length.
 
         Returns:
             A tuple ``(dataset, window_timestamps)`` where:
@@ -140,62 +146,31 @@ class SequenceDatasetBuilder:
 
                 with timestamps for each window.
         """
-        if not isinstance(df.index, pd.DatetimeIndex):
-            raise ValueError("DataFrame index must be a DatetimeIndex.")
-
-        df, original_tz = self._strip_tz(df)
+        if isinstance(df.index, pd.DatetimeIndex):
+            df, original_tz = self._strip_tz(df)
+        else:
+            original_tz = None  # MultiIndex or other, we don't handle tz here
 
         original_stride = self.stride
         if predict_mode:
-            # To ensure we can predict all timestamps once
             self.stride = 1
 
-        df_resampled = self._resample_if_needed(df)
-        timestamps = df_resampled.index.values
+        (main_arr, cond_arr), window_timestamps = self._build_arrays_sliding(
+            df, conditional_features=conditional_features
+        )
 
-        gap_handler = DataGapHandler(timestamps, self.ts_freq)
-        starts, window_timestamps = self._compute_valid_windows(timestamps, gap_handler)
-
-        if conditional_features:
-            cond_cols = list(conditional_features)
-            input_cols = [c for c in df_resampled.columns if c not in cond_cols]
-
-            main_values = df_resampled[input_cols].values.astype("float32")
-            cond_values = df_resampled[cond_cols].values.astype("float32")
-
-            main_values_tf = tf.convert_to_tensor(main_values, dtype=tf.float32)
-            cond_values_tf = tf.convert_to_tensor(cond_values, dtype=tf.float32)
-
-            def map_fn(start_idx: tf.Tensor):
-                start_idx = tf.cast(start_idx, tf.int32)
-                end_idx = start_idx + self.sequence_length
-
-                main_seq = main_values_tf[start_idx:end_idx]  # (T, F_main)
-                cond_seq = cond_values_tf[start_idx:end_idx]  # (T, F_cond)
-                inputs = (main_seq, cond_seq)
-                targets = main_seq
-                return inputs, targets
-
+        if cond_arr is not None:
+            inputs = (main_arr, cond_arr)
+            targets = main_arr
         else:
-            values = df_resampled.values.astype("float32")
-            values_tf = tf.convert_to_tensor(values, dtype=tf.float32)
+            inputs = main_arr
+            targets = main_arr
 
-            def map_fn(start_idx: tf.Tensor):
-                start_idx = tf.cast(start_idx, tf.int32)
-                end_idx = start_idx + self.sequence_length
-
-                main_seq = values_tf[start_idx:end_idx]  # (T, F)
-                inputs = main_seq
-                targets = main_seq
-                return inputs, targets
-
-        starts_ds = tf.data.Dataset.from_tensor_slices(starts)
-        dataset = starts_ds.map(map_fn, num_parallel_calls=tf.data.AUTOTUNE)
-
+        dataset = tf.data.Dataset.from_tensor_slices((inputs, targets))
         if shuffle:
-            dataset = dataset.shuffle(buffer_size=len(starts))
-
+            dataset = dataset.shuffle(buffer_size=len(window_timestamps))
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
         window_timestamps = self._restore_tz(window_timestamps, original_tz)
         self.stride = original_stride
         return dataset, window_timestamps
@@ -210,7 +185,12 @@ class SequenceDatasetBuilder:
     ) -> Tuple[tf.data.Dataset, np.ndarray]:
         """Create a seq2one tf.data.Dataset from a time-series DataFrame.
 
-        Inputs are sequences of length ``sequence_length``, target is the last timestep of each sequence.
+        Inputs are sequences of length ``sequence_length``, targets are the main features
+        at the last timestep of each sequence.
+
+        Supports a simple DatetimeIndex or a MultiIndex with exactly one
+        datetime-like level. In the MultiIndex case, windows are built per group
+        (first non-datetime level) and concatenated.
 
         Args:
             df: Time-series data with DatetimeIndex, already preprocessed.
@@ -218,7 +198,7 @@ class SequenceDatasetBuilder:
             conditional_features: Optional list of column names to treat as conditional features.
             shuffle: Whether to shuffle sequences (only relevant when ``training`` is True).
             predict_mode: If True, the dataset is used for inference. To ensure we can predict all timestamps,
-                we set stride to 1.
+                we set stride to 1. TODO: consider stride = sequence_length.
 
         Returns:
             A tuple ``(dataset, window_timestamps)`` where:
@@ -227,66 +207,29 @@ class SequenceDatasetBuilder:
               * ``window_timestamps`` is an array of shape (n_windows, sequence_length)
                 with timestamps for each window.
         """
-
-        if not isinstance(df.index, pd.DatetimeIndex):
-            raise ValueError("DataFrame index must be a DatetimeIndex.")
-
-        df, original_tz = self._strip_tz(df)
+        if isinstance(df.index, pd.DatetimeIndex):
+            df, original_tz = self._strip_tz(df)
+        else:
+            original_tz = None
 
         original_stride = self.stride
         if predict_mode:
-            # To ensure we can predict all timestamps after the first sequence_length - 1
             self.stride = 1
 
-        data_frame_resampled = self._resample_if_needed(df)
-        timestamps = data_frame_resampled.index.values
-
-        gap_handler = DataGapHandler(timestamps, self.ts_freq)
-        starts, window_timestamps = self._compute_valid_windows(timestamps, gap_handler)
-
-        if conditional_features:
-            conditional_columns = list(conditional_features)
-            input_columns = [c for c in data_frame_resampled.columns if c not in conditional_columns]
-
-            main_values = data_frame_resampled[input_columns].values.astype("float32")
-            conditional_values = data_frame_resampled[conditional_columns].values.astype("float32")
-
-            main_values_tf = tf.convert_to_tensor(main_values, dtype=tf.float32)
-            conditional_values_tf = tf.convert_to_tensor(conditional_values, dtype=tf.float32)
-
-            def map_fn(start_idx: tf.Tensor):
-                start_idx = tf.cast(start_idx, tf.int32)
-                end_idx = start_idx + self.sequence_length
-
-                main_seq = main_values_tf[start_idx:end_idx]  # (T, F_main)
-                cond_seq = conditional_values_tf[start_idx:end_idx]  # (T, F_cond)
-                inputs = (main_seq, cond_seq)
-                target = main_seq[-1, :]  # (F_main,)
-                return inputs, target
-
-        else:
-            values = data_frame_resampled.values.astype("float32")
-            values_tf = tf.convert_to_tensor(values, dtype=tf.float32)
-
-            def map_fn(start_idx: tf.Tensor):
-                start_idx = tf.cast(start_idx, tf.int32)
-                end_idx = start_idx + self.sequence_length
-
-                main_seq = values_tf[start_idx:end_idx]  # (T, F)
-                inputs = main_seq
-                target = main_seq[-1, :]  # (F,)
-                return inputs, target
-
-        starts_ds = tf.data.Dataset.from_tensor_slices(starts)
-        dataset = starts_ds.map(
-            map_fn,
-            num_parallel_calls=tf.data.AUTOTUNE,
+        (main_arr, cond_arr), target_arr, window_timestamps = self._build_arrays_seq2one(
+            df, conditional_features=conditional_features
         )
 
-        if shuffle:
-            dataset = dataset.shuffle(buffer_size=len(starts))
+        if cond_arr is not None:
+            inputs = (main_arr, cond_arr)
+        else:
+            inputs = main_arr
 
+        dataset = tf.data.Dataset.from_tensor_slices((inputs, target_arr))
+        if shuffle:
+            dataset = dataset.shuffle(buffer_size=len(window_timestamps))
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
         window_timestamps = self._restore_tz(window_timestamps, original_tz)
         self.stride = original_stride
         return dataset, window_timestamps
@@ -317,3 +260,166 @@ class SequenceDatasetBuilder:
             flat = pd.DatetimeIndex(window_timestamps.ravel()).tz_localize(tz)
             window_timestamps = np.array(flat, dtype=object).reshape(window_timestamps.shape)
         return window_timestamps
+
+    @staticmethod
+    def _extract_datetime_and_group(df: pd.DataFrame) -> Tuple[pd.DataFrame, Optional[int], Optional[int]]:
+        """Normalize index handling for DatetimeIndex and MultiIndex.
+
+        Returns:
+            df_sorted: DataFrame sorted by index.
+            datetime_level_idx: index of datetime level if MultiIndex, otherwise None.
+            group_level_idx: index of non-datetime level used for grouping (if MultiIndex), otherwise None.
+        """
+        df = df.sort_index()
+
+        if isinstance(df.index, pd.DatetimeIndex):
+            return df, None, None
+
+        if not isinstance(df.index, pd.MultiIndex):
+            raise ValueError(
+                "DataFrame index must be a DatetimeIndex or MultiIndex with a datetime level."
+            )
+
+        datetime_level_idx = None
+        non_datetime_levels = []
+        for i, lvl in enumerate(df.index.levels):
+            if isinstance(lvl, pd.DatetimeIndex):
+                datetime_level_idx = i
+            else:
+                non_datetime_levels.append(i)
+
+        if datetime_level_idx is None:
+            raise ValueError(
+                "MultiIndex must contain at least one DatetimeIndex level for sequence models."
+            )
+
+        group_level_idx = non_datetime_levels[0] if non_datetime_levels else None
+        return df, datetime_level_idx, group_level_idx
+
+    def _build_arrays_sliding(
+            self,
+            df: pd.DataFrame,
+            conditional_features: Optional[List[str]] = None,
+    ) -> Tuple[Tuple[np.ndarray, Optional[np.ndarray]], np.ndarray]:
+        """Build arrays (inputs, targets, timestamps) for seq2seq from DataFrame.
+
+        Handles both DatetimeIndex and MultiIndex (per-group).
+        """
+        df, dt_level_idx, group_level_idx = self._extract_datetime_and_group(df)
+
+        all_main_seqs: List[np.ndarray] = []
+        all_cond_seqs: List[np.ndarray] = []
+        all_timestamps: List[np.ndarray] = []
+
+        def _process_one(frame: pd.DataFrame) -> None:
+            frame_resampled = self._resample_if_needed(frame)
+            timestamps = frame_resampled.index.values
+            gap_handler = DataGapHandler(timestamps, self.ts_freq)
+            starts, window_ts = self._compute_valid_windows(timestamps, gap_handler)
+
+            if conditional_features:
+                cond_cols = list(conditional_features)
+                input_cols = [c for c in frame_resampled.columns if c not in cond_cols]
+
+                main_vals = frame_resampled[input_cols].values.astype("float32")
+                cond_vals = frame_resampled[cond_cols].values.astype("float32")
+
+                window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
+                all_main_seqs.append(main_vals[window_idx])
+                all_cond_seqs.append(cond_vals[window_idx])
+            else:
+                vals = frame_resampled.values.astype("float32")
+                window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
+                all_main_seqs.append(vals[window_idx])
+
+            all_timestamps.append(window_ts)
+
+        if dt_level_idx is None:
+            # simple DatetimeIndex
+            _process_one(df)
+        else:
+            # MultiIndex – process per group if group_level_idx exists
+            if group_level_idx is None:
+                # Only datetime levels – treat as one series
+                frame = df.copy()
+                frame.index = frame.index.get_level_values(dt_level_idx)
+                _process_one(frame)
+            else:
+                for _, frame in df.groupby(level=group_level_idx):
+                    frame_single = frame.copy()
+                    frame_single.index = frame_single.index.get_level_values(dt_level_idx)
+                    _process_one(frame_single)
+
+        main_arr = np.vstack(all_main_seqs)
+        cond_arr = np.vstack(all_cond_seqs) if all_cond_seqs else None
+        ts_arr = np.vstack(all_timestamps)
+        return (main_arr, cond_arr), ts_arr
+
+    def _build_arrays_seq2one(
+            self,
+            df: pd.DataFrame,
+            conditional_features: Optional[List[str]] = None,
+    ) -> Tuple[Tuple[np.ndarray, Optional[np.ndarray]], np.ndarray, np.ndarray]:
+        """Build arrays (inputs, targets, timestamps) for seq2one from DataFrame.
+
+        Handles both DatetimeIndex and MultiIndex (per-group).
+        """
+        df, dt_level_idx, group_level_idx = self._extract_datetime_and_group(df)
+
+        all_main_seqs: List[np.ndarray] = []
+        all_cond_seqs: List[np.ndarray] = []
+        all_targets: List[np.ndarray] = []
+        all_timestamps: List[np.ndarray] = []
+        all_group_keys: List[np.ndarray] = []
+
+        def _process_one(frame: pd.DataFrame, group_key=None) -> None:
+            frame_resampled = self._resample_if_needed(frame)
+            timestamps = frame_resampled.index.values
+            gap_handler = DataGapHandler(timestamps, self.ts_freq)
+            starts, window_ts = self._compute_valid_windows(timestamps, gap_handler)
+
+            if conditional_features:
+                cond_cols = list(conditional_features)
+                input_cols = [c for c in frame_resampled.columns if c not in cond_cols]
+
+                main_vals = frame_resampled[input_cols].values.astype("float32")
+                cond_vals = frame_resampled[cond_cols].values.astype("float32")
+
+                window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
+                main_seqs = main_vals[window_idx]  # (N, T, F_main)
+                targets = main_seqs[:, -1, :]  # (N, F_main)
+
+                all_main_seqs.append(main_seqs)
+                all_cond_seqs.append(cond_vals[window_idx])
+                all_targets.append(targets)
+            else:
+                vals = frame_resampled.values.astype("float32")
+                window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
+                main_seqs = vals[window_idx]  # (N, T, F)
+                targets = main_seqs[:, -1, :]  # (N, F)
+
+                all_main_seqs.append(main_seqs)
+                all_targets.append(targets)
+
+            all_timestamps.append(window_ts)
+            if group_key is not None:
+                all_group_keys.append(np.full(len(starts), group_key))
+
+        if dt_level_idx is None:
+            _process_one(df)
+        else:
+            if group_level_idx is None:
+                frame = df.copy()
+                frame.index = frame.index.get_level_values(dt_level_idx)
+                _process_one(frame)
+            else:
+                for _, frame in df.groupby(level=group_level_idx):
+                    frame_single = frame.copy()
+                    frame_single.index = frame_single.index.get_level_values(dt_level_idx)
+                    _process_one(frame_single)
+
+        main_arr = np.vstack(all_main_seqs)
+        cond_arr = np.vstack(all_cond_seqs) if all_cond_seqs else None
+        target_arr = np.vstack(all_targets)
+        ts_arr = np.vstack(all_timestamps)
+        return (main_arr, cond_arr), target_arr, ts_arr

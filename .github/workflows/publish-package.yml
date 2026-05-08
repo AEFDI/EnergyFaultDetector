@@ -62,7 +62,7 @@ jobs:
           name: release-dists
           path: dist/
 
-      - name: Publish release distributions to TestPyPI
+      - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/

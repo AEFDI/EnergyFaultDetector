@@ -1,4 +1,4 @@
-"""The anomaly-detection-iee package"""
+"""The energy-fault-detector package"""
 
 from .__about__ import __version__
 from energy_fault_detector.core._logs import setup_logging
@@ -25,8 +25,7 @@ register(module_path='energy_fault_detector.autoencoders.conditional_autoencoder
                       'conditional_autoencoder'])
 register(module_path='energy_fault_detector.autoencoders.lstm_seq2one_autoencoder.LSTMSeq2OneAutoencoder',
          class_type='autoencoder',
-         class_names=['LSTMSeq2OneAutoencoder', 'LSTMSeq2One', 'lstm_seq2one', 'lstm_seq2one_autoencoder',
-                      'lstm'])
+         class_names=['LSTMSeq2OneAutoencoder', 'LSTMSeq2One', 'lstm_seq2one', 'lstm_seq2one_autoencoder'])
 register(module_path='energy_fault_detector.autoencoders.bidirectional_lstm_seq2one_autoencoder.'
                      'BidirectionalLSTMSeq2OneAutoencoder',
          class_type='autoencoder',
@@ -34,8 +33,13 @@ register(module_path='energy_fault_detector.autoencoders.bidirectional_lstm_seq2
                       'bidirectional_lstm_seq2one', 'bidirectional_lstm', 'bilstm'])
 register(module_path='energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder',
          class_type='autoencoder',
-         class_names=['CNNSeq2OneAutoencoder', 'CNNSeq2One', 'cnn_seq2one', 'cnn_seq2one_autoencoder',
-                      'cnn'])
+         class_names=['CNNSeq2OneAutoencoder', 'CNNSeq2One', 'cnn_seq2one', 'cnn_seq2one_autoencoder'])
+register(module_path='energy_fault_detector.autoencoders.cnn_seq_autoencoder.CNNAutoencoder',
+         class_type='autoencoder',
+         class_names=['CNNAutoencoder', 'cnn_seq2seq', 'CNNSeq2Seq', 'cnn_seq2seq_autoencoder'])
+register(module_path='energy_fault_detector.autoencoders.lstm_seq2seq_autoencoder.LSTMSeqAutoencoder',
+         class_type='autoencoder',
+         class_names=['LSTMSeqAutoencoder', 'LSTMSeq2Seq', 'lstm_seq2seq', 'lstm_seq2seq_autoencoder'])
 
 # scores
 register(module_path='energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore',
