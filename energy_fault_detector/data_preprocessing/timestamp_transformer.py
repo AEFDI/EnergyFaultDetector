@@ -114,6 +114,10 @@ class TimestampTransformer(DataTransformer):
              "is_weekend", "year"]
         timestamp_col (Optional[str]): The column name of the DataFrame containing timestamps.
             If None, the index is assumed to be the timestamp.
+        groupby_level (Optional[str]): Optional index level name or position for grouping (e.g., 'device_id' or 0).
+            If provided and a MultiIndex is used, timestamp features are extracted correctly per group.
+            If 'auto', automatically detects the non-datetime level in a MultiIndex.
+            Default: None (no grouping).
 
     Configuration example:
 
@@ -132,14 +136,20 @@ class TimestampTransformer(DataTransformer):
 
     """
 
-    def __init__(self, features: List[str] = None, timestamp_col: Optional[str] = None):
+    def __init__(self, features: List[str] = None, timestamp_col: Optional[str] = None,
+                 groupby_level: Optional[str] = 'auto'):
         super().__init__()
         self.features: List[str] = features if features is not None else []
         self.timestamp_col: Optional[str] = timestamp_col
+        self.groupby_level: Optional[str] = groupby_level
+        self.groupby_level_: Optional[str] = None  # Will be set during fit
 
-    def _resolve_index(self, x: pd.DataFrame) -> pd.DatetimeIndex:
-        """Return the DatetimeIndex to use, based on timestamp_col or the index."""
+    def _resolve_index(self, x: pd.DataFrame):
+        """Return the DatetimeIndex accessor to use, based on timestamp_col or the index.
 
+        Returns:
+            A pandas DatetimeIndex accessor (.dt) suitable for extracting time features.
+        """
         if self.timestamp_col is not None:
             if self.timestamp_col not in x.columns:
                 raise ValueError(f"TimestampTransformer: column '{self.timestamp_col}' not found in DataFrame.")
@@ -148,10 +158,27 @@ class TimestampTransformer(DataTransformer):
                 raise ValueError(f"TimestampTransformer: column '{self.timestamp_col}' must be datetime64.")
             return ts.dt
 
-        if not isinstance(x.index, pd.DatetimeIndex):
-            raise ValueError("TimestampTransformer: DataFrame index must be a DatetimeIndex "
-                             "if no 'timestamp_col' is provided.")
-        return x.index.to_series().dt
+        # Handle index - could be DatetimeIndex or MultiIndex with DatetimeIndex level
+        if isinstance(x.index, pd.DatetimeIndex):
+            return x.index.to_series().dt
+        elif isinstance(x.index, pd.MultiIndex):
+            # Find the datetime level
+            datetime_level_idx = None
+            for i, level in enumerate(x.index.levels):
+                if isinstance(level, pd.DatetimeIndex):
+                    datetime_level_idx = i
+                    break
+            if datetime_level_idx is None:
+                raise ValueError(
+                    "TimestampTransformer: MultiIndex must contain at least one DatetimeIndex level "
+                    "if no 'timestamp_col' is provided."
+                )
+            return pd.Series(x.index.get_level_values(datetime_level_idx), index=x.index).dt
+        else:
+            raise ValueError(
+                "TimestampTransformer: DataFrame index must be a DatetimeIndex or MultiIndex with "
+                "DatetimeIndex level if no 'timestamp_col' is provided."
+            )
 
     def fit(self, x: Union[np.ndarray, pd.DataFrame], y: Optional[np.ndarray] = None) -> 'TimestampTransformer':
         """Validate configuration and record feature names.
@@ -162,6 +189,9 @@ class TimestampTransformer(DataTransformer):
         """
 
         _ = self._resolve_index(x)  # validate input
+
+        # Resolve groupby_level (handles 'auto' detection)
+        self.groupby_level_ = self._resolve_groupby_level(x)
 
         # Validate requested features
         supported_features = set(_PERIODIC_FEATURES.keys()) | set(_NON_PERIODIC_FEATURES.keys())
@@ -186,6 +216,44 @@ class TimestampTransformer(DataTransformer):
         self.feature_names_out_ = self.feature_names_in_ + self.feature_names_added_
         self._is_fitted = True
         return self
+
+    def _resolve_groupby_level(self, x: pd.DataFrame) -> Optional[str]:
+        """Resolve the groupby level from the user parameter or auto-detect.
+
+        Args:
+            x: Input DataFrame.
+
+        Returns:
+            The resolved groupby level (name or position), or None if no grouping.
+        """
+        if self.groupby_level is None:
+            return None
+
+        if self.groupby_level != 'auto':
+            return self.groupby_level
+
+        # Auto-detect: find non-datetime level in MultiIndex
+        if not isinstance(x.index, pd.MultiIndex):
+            return None  # Simple index, no grouping needed
+
+        # Find datetime and non-datetime levels
+        datetime_level_idx = None
+        non_datetime_levels = []
+
+        for i, level in enumerate(x.index.levels):
+            if isinstance(level, pd.DatetimeIndex):
+                datetime_level_idx = i
+            else:
+                non_datetime_levels.append(i)
+
+        if datetime_level_idx is None:
+            return None  # No datetime level found
+
+        if len(non_datetime_levels) == 0:
+            return None  # Only datetime levels, no grouping needed
+
+        # Use the first non-datetime level as groupby level
+        return non_datetime_levels[0]
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """

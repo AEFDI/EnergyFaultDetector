@@ -23,9 +23,9 @@ predictive maintenance of renewable energy assets.
 
 ## Main Features
 - **User-friendly interface**: Easy to use and quick to demo using the [command line interface](#Quick-fault-detection).
-- **Data Preprocessing Module**: Prepares numerical operational data for analysis with the `EnergyFaultDetector`, 
+- **Data Preprocessing Module**: Prepares numerical operational data for analysis with the `EnergyFaultDetector`,
   with many options such as data clipping, imputation, signal hangers and column selection based on variance and
-  missing values. 
+  missing values.
 - **Fault Detection**: Uses autoencoder architectures to model normal operational behavior and identify deviations.
 - **Root Cause Analysis**: Pinpoints the specific sensor values responsible for detected anomalies using [ARCANA](https://doi.org/10.1016/j.egyai.2021.100065).
 - **Scalability**: Algorithms can easily be adapted to various datasets and trained models can be transferred to and

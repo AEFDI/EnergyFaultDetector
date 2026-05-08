@@ -40,6 +40,11 @@ class CounterDiffTransformer(DataTransformer):
             max_gap_factor.
         max_gap_factor: If max_gap_seconds is None, use threshold = factor * median(dt).
             Default is 3.0.
+        groupby_level: Optional index level name or position for grouping (e.g., 'device_id' or 0).
+            If provided, transformations are applied per group. Use this for MultiIndex data where
+            you want to compute diffs/rates separately per device/group.
+            If 'auto' (default), automatically detects the non-datetime level in a MultiIndex.
+            Set to None to disable grouping entirely.
 
     Notes:
         - A DatetimeIndex is required if compute_rate=True or gap_policy='mask'.
@@ -49,6 +54,22 @@ class CounterDiffTransformer(DataTransformer):
     Examples:
         - Diffs: [0, 1, 3, 0 (reset), 2] -> [NaN|0, 1, 2, 0|NaN, 2]
         - Rates: increment / dt (in seconds), with large-gap rows optionally masked to NaN.
+
+        Multi-device data with MultiIndex::
+
+            import pandas as pd
+            from energy_fault_detector.data_preprocessing.counter_diff_transformer import CounterDiffTransformer
+
+            # Create multi-device data with MultiIndex (device_id, timestamp)
+            devices = ['turbine_1', 'turbine_2']
+            times = pd.date_range('2024-01-01', periods=5, freq='1h')
+            idx = pd.MultiIndex.from_product([devices, times], names=['device_id', 'timestamp'])
+            df = pd.DataFrame({'energy_total': range(10)}, index=idx)
+
+            # Automatic grouping detection (default)
+            transformer = CounterDiffTransformer(counters=['energy_total'], compute_rate=True)
+            transformer.fit(df)  # Auto-detects 'device_id' as groupby level
+            df_transformed = transformer.transform(df)  # Computes rates per device
     """
 
     def __init__(
@@ -63,6 +84,7 @@ class CounterDiffTransformer(DataTransformer):
         gap_policy: str = "mask",
         max_gap_seconds: Optional[float] = None,
         max_gap_factor: float = 3.0,
+        groupby_level: Optional[str] = "auto",
     ) -> None:
         super().__init__()
         self.counters = counters or []
@@ -75,6 +97,8 @@ class CounterDiffTransformer(DataTransformer):
         self.gap_policy = gap_policy
         self.max_gap_seconds = max_gap_seconds
         self.max_gap_factor = float(max_gap_factor)
+        self.groupby_level = groupby_level
+        self.groupby_level_ = None  # Will be set during fit
 
     def fit(self, x: pd.DataFrame, y: Optional[pd.Series] = None) -> "CounterDiffTransformer":
         """Validate inputs and compute output schema.
@@ -84,7 +108,8 @@ class CounterDiffTransformer(DataTransformer):
         reproduce the same order deterministically.
 
         Args:
-            x: Input DataFrame. Requires a DatetimeIndex if compute_rate=True or gap_policy='mask'.
+            x: Input DataFrame. Requires a DatetimeIndex (or MultiIndex with DatetimeIndex level)
+               if compute_rate=True or gap_policy='mask'.
             y: Unused. Present for estimator interface compatibility.
 
         Returns:
@@ -96,13 +121,13 @@ class CounterDiffTransformer(DataTransformer):
         self.feature_names_in_ = x.columns.to_list()
         self.n_features_in_ = len(x.columns)
 
+        # Resolve groupby_level (handles 'auto' detection)
+        self.groupby_level_ = self._resolve_groupby_level(x)
+
         # DatetimeIndex is required for rates or for gap masking
         if self.compute_rate or self.gap_policy == "mask":
-            if not isinstance(x.index, pd.DatetimeIndex):
-                raise ValueError(
-                    "CounterDiffTransformer: DatetimeIndex required (rate or gap masking)."
-                )
-            if not x.index.is_monotonic_increasing:
+            self._validate_datetime_index(x)
+            if self.groupby_level_ is None and not x.index.is_monotonic_increasing:
                 raise ValueError("CounterDiffTransformer: index must be monotonic increasing.")
 
         # Keep only counters present in the DataFrame
@@ -125,11 +150,77 @@ class CounterDiffTransformer(DataTransformer):
         self.columns_dropped_ = [] if self.keep_original else [c for c in self.counters_]
         return self
 
+    def _resolve_groupby_level(self, x: pd.DataFrame) -> Optional[str]:
+        """Resolve the groupby level from the user parameter or auto-detect.
+
+        Args:
+            x: Input DataFrame.
+
+        Returns:
+            The resolved groupby level (name or position), or None if no grouping.
+        """
+        if self.groupby_level is None:
+            return None
+
+        if self.groupby_level != 'auto':
+            return self.groupby_level
+
+        # Auto-detect: find non-datetime level in MultiIndex
+        if not isinstance(x.index, pd.MultiIndex):
+            return None  # Simple index, no grouping needed
+
+        # Find datetime and non-datetime levels
+        datetime_level_idx = None
+        non_datetime_levels = []
+
+        for i, level in enumerate(x.index.levels):
+            if isinstance(level, pd.DatetimeIndex):
+                datetime_level_idx = i
+            else:
+                non_datetime_levels.append(i)
+
+        if datetime_level_idx is None:
+            return None  # No datetime level found
+
+        if len(non_datetime_levels) == 0:
+            return None  # Only datetime levels, no grouping needed
+
+        # Use the first non-datetime level as groupby level
+        return non_datetime_levels[0]
+
+    def _validate_datetime_index(self, x: pd.DataFrame) -> None:
+        """Validate that the DataFrame has a suitable datetime index.
+
+        Args:
+            x: Input DataFrame.
+
+        Raises:
+            ValueError: If no DatetimeIndex is found or it's not properly formatted.
+        """
+        if isinstance(x.index, pd.DatetimeIndex):
+            return  # Simple DatetimeIndex is valid
+
+        if isinstance(x.index, pd.MultiIndex):
+            # Check if any level is a DatetimeIndex
+            datetime_levels = [i for i, level in enumerate(x.index.levels)
+                             if isinstance(level, pd.DatetimeIndex)]
+            if not datetime_levels:
+                raise ValueError(
+                    "CounterDiffTransformer: MultiIndex requires at least one DatetimeIndex level "
+                    "when compute_rate=True or gap_policy='mask'."
+                )
+            return
+
+        raise ValueError(
+            "CounterDiffTransformer: DatetimeIndex (or MultiIndex with DatetimeIndex level) "
+            "required when compute_rate=True or gap_policy='mask'."
+        )
+
     def _time_deltas_seconds(self, x: pd.DataFrame) -> Optional[pd.Series]:
         """Compute per-row time delta in seconds, or None if not needed.
 
-        Returns NaN for the first row and when dt is 0 seconds (zero dt is masked to NaN to avoid
-        division by zero for rate calculations).
+        Returns NaN for the first row (per group if groupby_level is set) and when dt is 0 seconds
+        (zero dt is masked to NaN to avoid division by zero for rate calculations).
 
         Args:
             x: Input DataFrame.
@@ -142,13 +233,31 @@ class CounterDiffTransformer(DataTransformer):
         """
         if not (self.compute_rate or self.gap_policy == "mask"):
             return None
-        if not isinstance(x.index, pd.DatetimeIndex):
-            raise ValueError("CounterDiffTransformer: DatetimeIndex required for rate or gap masking.")
-        if not x.index.is_monotonic_increasing:
-            raise ValueError("CounterDiffTransformer: index must be monotonic increasing.")
 
-        # Create a series of timestamps to keep the original index for alignment
-        dt = pd.Series(x.index, index=x.index).diff().dt.total_seconds()
+        self._validate_datetime_index(x)
+
+        # Extract timestamp series from index
+        if isinstance(x.index, pd.DatetimeIndex):
+            ts_series = pd.Series(x.index, index=x.index)
+        elif isinstance(x.index, pd.MultiIndex):
+            # Find the datetime level
+            datetime_level_idx = None
+            for i, level in enumerate(x.index.levels):
+                if isinstance(level, pd.DatetimeIndex):
+                    datetime_level_idx = i
+                    break
+            ts_series = pd.Series(x.index.get_level_values(datetime_level_idx), index=x.index)
+        else:
+            raise ValueError("CounterDiffTransformer: DatetimeIndex required for rate or gap masking.")
+
+        # Compute time deltas per group if groupby_level is set
+        if self.groupby_level_ is not None:
+            dt = ts_series.groupby(level=self.groupby_level_).diff().dt.total_seconds()
+        else:
+            if not x.index.is_monotonic_increasing:
+                raise ValueError("CounterDiffTransformer: index must be monotonic increasing.")
+            dt = ts_series.diff().dt.total_seconds()
+
         # Prevent division by zero when computing rates
         dt = dt.mask(dt == 0, np.nan)
         return dt
@@ -179,6 +288,7 @@ class CounterDiffTransformer(DataTransformer):
         s: pd.Series,
         strategy: str,
         rollover_value: Optional[float],
+        groupby_level: Optional[str] = None,
     ) -> pd.Series:
         """Compute per-sample increment for a counter series with reset handling.
 
@@ -189,6 +299,7 @@ class CounterDiffTransformer(DataTransformer):
             s: Input counter Series.
             strategy: Reset strategy ('zero', 'rollover', 'nan', 'auto').
             rollover_value: Known rollover maximum (used by 'rollover' or 'auto').
+            groupby_level: Optional index level for grouping. If provided, diffs are computed per group.
 
         Returns:
             Series of increments aligned to s.index, with the first element filled according to
@@ -206,8 +317,14 @@ class CounterDiffTransformer(DataTransformer):
                 "CounterDiffTransformer: non-numeric values found in counter series. "
                 "Ensure all counter values are numeric or NaN."
             )
-        prev = v.shift(1)
-        diff = v.diff()
+
+        # Compute diffs per group if groupby_level is set
+        if groupby_level is not None:
+            prev = v.groupby(level=groupby_level).shift(1)
+            diff = v.groupby(level=groupby_level).diff()
+        else:
+            prev = v.shift(1)
+            diff = v.diff()
 
         # Clamp small negative diffs to zero (treat as noise)
         if self.small_negative_tolerance > 0:
@@ -266,12 +383,21 @@ class CounterDiffTransformer(DataTransformer):
         new_cols = {}
         for c in self.counters_:
             increment = self._compute_increment(
-                x_[c], strategy=self.reset_strategy, rollover_value=self.rollover_values.get(c)
+                x_[c],
+                strategy=self.reset_strategy,
+                rollover_value=self.rollover_values.get(c),
+                groupby_level=self.groupby_level_
             )
             series = (increment / dt) if self.compute_rate and dt is not None else increment
 
-            # Ensure first sample respects fill_first setting
-            series.iloc[0] = 0.0 if self.fill_first == "zero" else np.nan
+            # Ensure first sample per group respects fill_first setting
+            if self.groupby_level_ is not None:
+                # Set first row per group
+                first_idx = x_.groupby(level=self.groupby_level_).head(1).index
+                series.loc[first_idx] = 0.0 if self.fill_first == "zero" else np.nan
+            else:
+                # Set first row overall
+                series.iloc[0] = 0.0 if self.fill_first == "zero" else np.nan
 
             # Mask large gaps for both diffs and rates to avoid misleading values
             if gap_thr is not None:
