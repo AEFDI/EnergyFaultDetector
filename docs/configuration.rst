@@ -138,6 +138,8 @@ Allowed step names and aliases:
 +-------------------------+-----------------------------------------------+------------------------------------------------+
 | counter_diff_transformer| Convert counters to differences/rates         | counter_diff, counter_diff_transform           |
 +-------------------------+-----------------------------------------------+------------------------------------------------+
+| timestamp_transformer   | Extract time features (hour, day, etc.)       | timestamp_transform                            |
++-------------------------+-----------------------------------------------+------------------------------------------------+
 | simple_imputer          | Impute missing values                         | imputer                                        |
 +-------------------------+-----------------------------------------------+------------------------------------------------+
 | standard_scaler         | Standardize features (z-score)                | standardize, standardscaler, standard          |
@@ -149,6 +151,30 @@ Allowed step names and aliases:
 
 For detailed documentation of the data preprocessor pipeline, refer to the
 :py:obj:`DataPreprocessor <energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor>` docs.
+
+**Multi-device data (MultiIndex support)**
+
+Both ``counter_diff_transformer`` and ``timestamp_transformer`` support multi-device data via pandas MultiIndex.
+By default (``groupby_level='auto'``), they automatically detect and group by non-datetime index levels:
+
+.. code-block:: yaml
+
+    train:
+      data_preprocessor:
+        steps:
+          - name: counter_diff_transformer
+            params:
+              counters: ['energy_total']
+              compute_rate: true
+              groupby_level: 'auto'  # Default: auto-detects device_id from (device_id, timestamp)
+          - name: timestamp_transformer
+            params:
+              features: ['hour_of_day', 'day_of_week']
+              groupby_level: 'auto'  # Default: auto-detects device_id
+
+For a MultiIndex like ``(device_id, timestamp)``, this automatically computes counter diffs and time features
+per device. You can also specify the level explicitly: ``groupby_level: 'device_id'`` or ``groupby_level: 0``.
+Set ``groupby_level: null`` to disable grouping for single-device data with a simple DatetimeIndex.
 
 Other training configuration sections
 """""""""""""""""""""""""""""""""""""
