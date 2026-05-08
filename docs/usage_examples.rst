@@ -7,6 +7,37 @@ refer to the example notebooks in the repository's notebooks folder.
     :depth: 3
     :local:
 
+Expected input data format
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Most examples in this documentation assume that your data is already loaded into
+pandas objects with the following structure:
+
+* ``sensor_data``: ``pd.DataFrame`` in **wide format**
+
+  * index:
+
+    - either a unique, sorted ``DatetimeIndex`` (no duplicate timestamps), or
+    - a ``MultiIndex`` with one datetime-like level and one non-datetime grouping
+      level (e.g. ``(asset_id, timestamp)``)
+
+  * columns: one column per sensor / feature (numeric, or castable to numeric)
+
+* ``normal_index`` (optional): ``pd.Series``
+
+  * index: same as ``sensor_data.index``
+  * values: boolean – ``True`` indicates normal operation, ``False`` indicates
+    non‑normal operation (faults, maintenance, curtailment, etc.)
+
+If you do not provide ``normal_index``, the models assume that all samples in
+``sensor_data`` represent normal behaviour. In that case you cannot use
+label-based threshold selectors such as :class:`FbetaSelector` or :class:`FDRSelector`,
+but you can still use the quantile-based (default) or adaptive threshold.
+
+For sequence-based models, a :class:`pandas.DatetimeIndex` or a compatible
+``MultiIndex`` is required as described above; windows are built per group
+(when a grouping level is present) and then concatenated.
+
 Minimal end-to-end example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -21,6 +52,7 @@ create a configuration, train a model and predict.
 
     # 1. Load your data
     df = pd.read_csv("my_data.csv", parse_dates=["timestamp"], index_col="timestamp")
+    df = df.sort_index()  # ensure sorted
     # Keep only numeric sensor columns
     sensor_data = df[["power", "wind_speed", "pitch"]]  # adapt to your dataset
 
@@ -48,8 +80,8 @@ For more configuration options and details (e.g. updating at runtime and listing
 see :ref:`configuration_guide`.
 
 
-Standard `FaulDetector` usage
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Standard `FaultDetector` usage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The main interface for the `energy-fault-detector` package is the :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` class, which
 needs a configuration object :py:obj:`Config <energy_fault_detector.config.config.Config>`.
 
@@ -72,7 +104,7 @@ To train new models, you need to provide the input data and call the :py:obj:`Fa
     normal_index = ...  # a pandas Series with timestamp as index and booleans indicating normal behaviour
     # NOTE: The normal_index is optional; it is used to select training data for the autoencoder.
     # If not provided, we assume all data represents normal behaviour.
-    # If you do not have any labels, you cannot use th F-beta-score- and FDR-based thresholds.
+    # If you do not have any labels, you cannot use the F-beta-score- and FDR-based thresholds.
     # In that case, use the quantile-based threshold (default) or AdaptiveThreshold.
 
     # If you do not use the models for time series, the index can also be a standard RangeIndex,
@@ -147,7 +179,9 @@ the package also provides sequence-based autoencoders such as:
 These models operate on **windows** of time-series data and reconstruct the **last timestep** in each window.
 They require:
 
-- a :class:`pandas.DatetimeIndex` on ``sensor_data``,
+- either a :class:`pandas.DatetimeIndex` on ``sensor_data`` or a MultiIndex with
+  one datetime-like level and one non-datetime grouping level (e.g.
+  ``(asset_id, timestamp)``); windows are built per group and concatenated,
 - a ``sequence_builder`` section in the config (with ``sequence_length``, ``stride``, ``ts_freq``, etc.).
 
 A full description and examples are given in :doc:`sequence_models`.
@@ -198,9 +232,21 @@ method runs the ARCANA algorithm on a trained model and returns per-feature bias
 
 For a dedicated explanation and examples, see :ref:`arcana_docs`.
 
-Evaluation
-^^^^^^^^^^
-Please check the example notebooks for evaluation examples.
+Evaluation and CARE-Score
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For evaluation, the package provides:
+
+- :func:`energy_fault_detector.utils.analysis.create_events` to aggregate
+  point-wise anomaly predictions into contiguous anomaly events, and
+- :class:`energy_fault_detector.evaluation.care_score.CAREScore` to compute
+  the CARE-Score for early fault detection (Coverage, Accuracy, Reliability,
+  Earliness), as introduced in the CARE2Compare paper.
+
+For now, we recommend using the example notebooks for a full
+walkthrough of the evaluation workflow (event creation, criticality, CARE-Score
+on benchmark datasets such as CARE2Compare and PreDist). A higher-level
+evaluation helper/script may be added in a future version.
 
 Creating new model classes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -218,7 +264,7 @@ you can import the data preprocessor, autoencoder, anomaly score and threshold s
 
     from energy_fault_detector.data_preprocessing import DataPreprocessor, DataClipper
     from energy_fault_detector.autoencoders import MultilayerAutoencoder
-    from energy_fault_detector.anomaly_score import MahalanobisScore
+    from energy_fault_detector.anomaly_scores import MahalanobisScore
     from energy_fault_detector.threshold_selectors import FbetaSelector
 
 This allows you to add additional steps or use different data preprocessing pipelines.

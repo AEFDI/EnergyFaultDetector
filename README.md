@@ -62,10 +62,10 @@ model_data = fault_detector.fit(sensor_data=sensor_data, normal_index=normal_ind
 results = fault_detector.predict(sensor_data=test_sensor_data)
 ```
 
-The pandas `DataFrame` `sensor_data` contains the operational data in wide format with the timestamp as index, the
-pandas `Series` `normal_index` indicates which timestamps are considered 'normal' operation and can be used to create
-a normal behaviour model. The [`base_config.yaml`](energy_fault_detector/base_config.yaml) file contains the model 
-settings, an example is found [here](energy_fault_detector/base_config.yaml).
+The pandas `DataFrame` `sensor_data` contains the operational data in wide format with a time index (typically a
+timestamp, or a MultiIndex such as `(asset_id, timestamp)`), and the pandas `Series` `normal_index` indicates which
+timestamps are considered 'normal' operation and can be used to create a normal behaviour model.
+The [`base_config.yaml`](energy_fault_detector/base_config.yaml) file contains the model settings, an example is found [here](energy_fault_detector/base_config.yaml).
 
 You can load a saved model from a directory using:
 ```python

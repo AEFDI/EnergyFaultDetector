@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core import DataTransformer
+from energy_fault_detector.utils.index_utils import resolve_groupby_level
 
 
 # noinspection PyAttributeOutsideInit
@@ -35,7 +36,7 @@ class DuplicateValuesToNan(DataTransformer):
     """
 
     def __init__(self, value_to_replace: float = 0., n_max_duplicates: int = 144,
-                 features_to_exclude: List[str] = None):
+                 features_to_exclude: List[str] = None, groupby_level: Optional[str] = "auto"):
         """
         Initialize the DuplicateValuesToNan transformer.
 
@@ -47,6 +48,8 @@ class DuplicateValuesToNan(DataTransformer):
         self.value_to_replace = value_to_replace
         self.n_max_duplicates = n_max_duplicates
         self.features_to_exclude: List[str] = features_to_exclude if features_to_exclude is not None else []
+        self.groupby_level = groupby_level
+        self.groupby_level_ = None
 
     def fit(self, x: Union[np.array, pd.DataFrame], y: Optional[np.array] = None) -> 'DuplicateValuesToNan':
         """
@@ -61,7 +64,7 @@ class DuplicateValuesToNan(DataTransformer):
         """
         self.feature_names_in_ = x.columns.to_list()
         self.feature_names_out_ = x.columns.to_list()
-
+        self.groupby_level_ = resolve_groupby_level(x.index, self.groupby_level)
         return self
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
@@ -84,9 +87,13 @@ class DuplicateValuesToNan(DataTransformer):
                 to_replace[column] = False
                 continue
 
-            # Create a boolean mask to identify consecutive duplicates
-            mask = x[column] != x[column].shift(1)
-            # Use cumulative sum to assign a unique ID to each consecutive group
+            col_series = x[column]
+            if self.groupby_level_ is not None:
+                shifted = col_series.groupby(level=self.groupby_level_).shift(1)
+            else:
+                shifted = col_series.shift(1)
+
+            mask = col_series != shifted
             groups = mask.cumsum()
             # create counter for each group
             counter = groups.groupby(groups).cumcount()

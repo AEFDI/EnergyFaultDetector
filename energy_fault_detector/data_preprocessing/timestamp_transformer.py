@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, List, Union, Tuple, Callable
-from calendar import isleap
-import datetime as dt
+from typing import Optional, List, Union, Callable
 
 import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.data_transformer import DataTransformer
+from energy_fault_detector.utils.index_utils import resolve_groupby_level
 
 logger = logging.getLogger("energy_fault_detector")
 
@@ -117,7 +116,8 @@ class TimestampTransformer(DataTransformer):
         groupby_level (Optional[str]): Optional index level name or position for grouping (e.g., 'device_id' or 0).
             If provided and a MultiIndex is used, timestamp features are extracted correctly per group.
             If 'auto', automatically detects the non-datetime level in a MultiIndex.
-            Default: None (no grouping).
+            Default: None (no grouping). For MultiIndex with more than one non-datetime level,
+            it is recommended to set ``groupby_level`` explicitly.
 
     Configuration example:
 
@@ -191,7 +191,7 @@ class TimestampTransformer(DataTransformer):
         _ = self._resolve_index(x)  # validate input
 
         # Resolve groupby_level (handles 'auto' detection)
-        self.groupby_level_ = self._resolve_groupby_level(x)
+        self.groupby_level_ = resolve_groupby_level(x.index, self.groupby_level)
 
         # Validate requested features
         supported_features = set(_PERIODIC_FEATURES.keys()) | set(_NON_PERIODIC_FEATURES.keys())
@@ -216,44 +216,6 @@ class TimestampTransformer(DataTransformer):
         self.feature_names_out_ = self.feature_names_in_ + self.feature_names_added_
         self._is_fitted = True
         return self
-
-    def _resolve_groupby_level(self, x: pd.DataFrame) -> Optional[str]:
-        """Resolve the groupby level from the user parameter or auto-detect.
-
-        Args:
-            x: Input DataFrame.
-
-        Returns:
-            The resolved groupby level (name or position), or None if no grouping.
-        """
-        if self.groupby_level is None:
-            return None
-
-        if self.groupby_level != 'auto':
-            return self.groupby_level
-
-        # Auto-detect: find non-datetime level in MultiIndex
-        if not isinstance(x.index, pd.MultiIndex):
-            return None  # Simple index, no grouping needed
-
-        # Find datetime and non-datetime levels
-        datetime_level_idx = None
-        non_datetime_levels = []
-
-        for i, level in enumerate(x.index.levels):
-            if isinstance(level, pd.DatetimeIndex):
-                datetime_level_idx = i
-            else:
-                non_datetime_levels.append(i)
-
-        if datetime_level_idx is None:
-            return None  # No datetime level found
-
-        if len(non_datetime_levels) == 0:
-            return None  # Only datetime levels, no grouping needed
-
-        # Use the first non-datetime level as groupby level
-        return non_datetime_levels[0]
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """

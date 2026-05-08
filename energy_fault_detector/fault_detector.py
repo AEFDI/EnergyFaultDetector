@@ -280,6 +280,9 @@ class FaultDetector(FaultDetectionModel):
                 raise ValueError('No models loaded and no model_path provided!')
             logger.debug('No model_path provided; using existing model instances.')
 
+        if not x.loc[x.index.duplicated()].empty:
+            raise ValueError('There are duplicated indices in the input dataframe `sensor_data`.')
+
         x_prepped = self.data_preprocessor.transform(x).sort_index()
         x_prepped = x_prepped.astype(self.config.dtype)
         column_order = x_prepped.columns
@@ -389,7 +392,9 @@ class FaultDetector(FaultDetectionModel):
                 logger.warning('No validation data available, fit threshold on full training data.')
                 x_val = x
 
-            x_val_all = x_prepped_all.sort_index().loc[x_val.index.min():]  # including known anomalies
+            # Select all prepped data whose index is in the validation set
+            val_mask = x_prepped_all.index.isin(x_val.index)
+            x_val_all = x_prepped_all[val_mask]
             re_val = self.autoencoder.get_reconstruction_error(x_val_all)
             scores = self.anomaly_score.transform(re_val)
 
