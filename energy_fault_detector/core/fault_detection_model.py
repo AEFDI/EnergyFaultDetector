@@ -34,6 +34,7 @@ DataType = Union[pd.DataFrame, np.ndarray, List]
 PathLike = Union[str, Path]
 ModelPart = Union[DataPreprocessor, "Autoencoder", AnomalyScore, ThresholdSelector]
 
+_MODEL_EXTENSIONS = ('.pkl', '.attrs', '.model', '.encoder')
 
 class NoTrainingData(Exception):
     """Raised when no training data is available."""
@@ -261,7 +262,12 @@ class FaultDetectionModel(ABC):
     @staticmethod
     def _load_pickled_model(model_type: str, model_directory: str) -> ModelPart:
         """Load a pickled model of given type, using file name (which is the class name)."""
-        model_class_name = os.listdir(model_directory)[0].split('.')[0]
+        model_files = [model_file for model_file in os.listdir(model_directory)
+                       if any(model_file.endswith(extension) for extension in _MODEL_EXTENSIONS)]
+        if not model_files:
+            raise FileNotFoundError(f"No model files found in '{model_directory}'. "
+                                    f"Expected files with extensions: {_MODEL_EXTENSIONS}")
+        model_class_name = model_files[0].split('.')[0]
         if model_type != 'data_preprocessor':
             model_class = registry.get(model_type, model_class_name)
         else:

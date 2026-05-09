@@ -46,7 +46,7 @@ class Care2CompareDataset:
             logger.info("Downloading CARE to Compare dataset (~5 GB) from zenodo. Depending on your internet "
                         "connection this can take some time. Additionally the downloaded zip-file will be unzipped "
                         "(~20 GB) which can also take longer.")
-            path = download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=True)
+            path = download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=False)
         self.path: Path = Path(path)
 
         self.wind_farms: Dict[str, Path] = {

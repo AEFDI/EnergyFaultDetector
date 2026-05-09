@@ -168,7 +168,6 @@ def recursive_safe_extract(zip_path: Path, dest_dir: Path, remove_archives: bool
         recursive_safe_extract(item, item.parent, remove_archives=remove_archives)
 
 
-
 def prepare_output_dir(out_dir: Path, overwrite: bool) -> None:
     """Ensure the output directory is ready.
 

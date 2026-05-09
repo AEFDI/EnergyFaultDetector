@@ -67,8 +67,8 @@ class MahalanobisScore(AnomalyScore):
                 scaled_x = (x - self.mean_x_) / self.std_x_
             else:
                 scaled_x = x - self.mean_x_
-                # replace possible inf values with 0
-            x[np.isinf(x)] = 0
+            # replace possible inf values with 0
+            scaled_x[np.isinf(scaled_x)] = 0
         else:
             scaled_x = x - self.mean_x_
 

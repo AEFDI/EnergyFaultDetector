@@ -50,8 +50,6 @@ def _month_of_year(ind) -> np.ndarray:
 def _is_weekend(ind) -> np.ndarray:
     # Saturday=5, Sunday=6 -> weekend
     dow = ind.day_of_week
-    if isinstance(dow, (bool, np.bool_)):
-        return float(dow >= 5)
     return (dow >= 5).astype(float)
 
 

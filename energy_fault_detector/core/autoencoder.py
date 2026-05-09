@@ -375,9 +375,13 @@ class Autoencoder(ABC, SaveLoadMixin):
         if self.encoder is not None:
             self.encoder.save(file_path + '.encoder')
 
+        if self.decoder is not None:
+            self.decoder.save(file_path + '.decoder')
+
         ae_dict = self.__dict__.copy()
         ae_dict['model'] = None
         ae_dict['encoder'] = None
+        ae_dict['decoder'] = None
         file_name = file_path + '.attrs'
         with open(file_name, 'wb') as f:
             f.write(pickle.dumps(ae_dict))
@@ -394,6 +398,8 @@ class Autoencoder(ABC, SaveLoadMixin):
             self.model = load_keras_model(file_name + '.model')
             if os.path.exists(file_name + '.encoder'):
                 self.encoder = load_keras_model(file_name + '.encoder')
+            if os.path.exists(file_name + '.decoder'):
+                self.decoder = load_keras_model(file_name + '.decoder')
         else:
             warnings.warn('No fitted model was found.')
 

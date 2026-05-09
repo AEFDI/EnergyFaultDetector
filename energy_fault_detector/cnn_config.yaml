@@ -26,7 +26,6 @@ train:
       - 100
       - 50
       - 25
-      code_size: 25
       learning_rate: 0.001
       loss_name: mean_squared_error
 
