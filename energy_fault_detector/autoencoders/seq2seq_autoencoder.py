@@ -170,7 +170,7 @@ class Seq2SeqAutoencoder(Seq2OneAutoencoder):
                 predict_mode=True,
             )
 
-        callbacks: List[Callback] = list(self.callbacks)
+        callbacks = list(self.callbacks)
         if "callbacks" in kwargs:
             callbacks += kwargs["callbacks"]
             kwargs.pop("callbacks")

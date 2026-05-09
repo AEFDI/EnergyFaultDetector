@@ -27,6 +27,44 @@ class BidirectionalLSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
     main features of the last timestep in that window. Conditional
     features can be provided per timestep and are concatenated to the
     encoder inputs without being reconstructed.
+
+    Input:
+        (batch_size, sequence_length, n_main_features) [+ conditional features]
+    Output:
+        (batch_size, n_main_features)  (last timestep reconstruction)
+
+    Args:
+        sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
+        layers: List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.
+        dropout_rate: Dropout rate applied after each LSTM layer.
+        regularization: L2 regularization strength for the first encoder LSTM layer.
+        stateful: Whether to use stateful LSTMs.
+        merge_mode: String describing the method for combining the forward and backward layer in bidirectional layers.
+            Possible options are ['concat', 'sum', 'ave', 'mul']. Defaults to 'sum'.
+        ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+            are accepted as keyword arguments and forwarded to Autoencoder.__init__.
+
+    .. warning::
+        When ``stateful=True``, the dataset **must not be shuffled** during training,
+        as shuffling breaks inter-batch state propagation. The current implementation
+        does not enforce this constraint — the caller is responsible for setting
+        ``shuffle=False`` in the data splitter / sequence builder when using stateful mode.
+
+    Configuration example:
+
+    .. code-block:: text
+
+        train:
+          autoencoder:
+            name: BidirectionalLSTMSeq2OneAutoencoder
+            params:
+              layers: [100, 50, 25]
+              regularization: 0.01
+              sequence_builder:
+                sequence_length: 10
+                ts_freq: "10m"
+                overlap: 9
+              merge_mode: "sum"
     """
 
     def __init__(
