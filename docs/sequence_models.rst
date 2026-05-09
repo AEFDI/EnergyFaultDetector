@@ -89,6 +89,8 @@ For sequence models, your ``sensor_data`` must be:
 Any gaps larger than ``ts_freq`` are treated as **data gaps**. Windows that cross such gaps are
 dropped, so sequences always represent contiguous data.
 
+Sequence models do not (yet) support MultiIndex data (e.g. ``(asset_id, timestamp)``).
+
 Example usage
 -------------
 

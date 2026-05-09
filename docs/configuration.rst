@@ -176,6 +176,8 @@ For a MultiIndex like ``(device_id, timestamp)``, this automatically computes co
 per device. You can also specify the level explicitly: ``groupby_level: 'device_id'`` or ``groupby_level: 0``.
 Set ``groupby_level: null`` to disable grouping for single-device data with a simple DatetimeIndex.
 
+Please note that the sequence-based autoencoders do not (yet) support MultiIndex data.
+
 Other training configuration sections
 """""""""""""""""""""""""""""""""""""
 
@@ -193,6 +195,12 @@ Other training configuration sections
     valid ``validation_split`` in (0, 1), or use :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`
     with a positive ``val_block_size``.
 
+.. note::
+   **MultiIndex / multi-device data:** When using MultiIndex data ``(device_id, timestamp)`` with
+   ``shuffle: false``, the validation split is taken positionally from the end of the
+   sorted data — which may contain only one device. Set ``shuffle: true`` to ensure
+   both devices appear in the validation set, leading to more representative early
+   stopping and validation metrics.
 
 - Autoencoder (``train.autoencoder``):
 
