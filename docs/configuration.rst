@@ -66,7 +66,7 @@ configuration dictionary via the :py:obj:`Config.update_config <energy_fault_det
   # update some parameters:
   new_config_dict = deepcopy(config.config_dict)
   new_config_dict['train']['anomaly_score']['name'] = 'mahalanobis'
-  config.update_config(new_config_dict)
+  config = Config(new_config_dict)
 
   # or create a new configuration object and model
   new_model = FaultDetector(Config(config_dict=new_config_dict))
@@ -138,7 +138,7 @@ Allowed step names and aliases:
 +-------------------------+-----------------------------------------------+------------------------------------------------+
 | counter_diff_transformer| Convert counters to differences/rates         | counter_diff, counter_diff_transform           |
 +-------------------------+-----------------------------------------------+------------------------------------------------+
-| timestamp_transformer   | Extract time features (hour, day, etc.)       | timestamp_transform                            |
+| timestamp_transformer   | Extract time features (hour, day, etc.)       | timestamp_transform,timestamp_features         |
 +-------------------------+-----------------------------------------------+------------------------------------------------+
 | simple_imputer          | Impute missing values                         | imputer                                        |
 +-------------------------+-----------------------------------------------+------------------------------------------------+

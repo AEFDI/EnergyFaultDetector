@@ -172,7 +172,7 @@ class Config(BaseConfig):
         return self.config_dict[item]
 
     def __contains__(self, item):
-        return item in self.config_dict.keys() or item == 'models'
+        return item in self.config_dict
 
     @property
     def data_preprocessor_steps(self) -> List[Dict[str, Any]]:

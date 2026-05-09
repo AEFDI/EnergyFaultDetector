@@ -44,6 +44,12 @@ class BidirectionalLSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
         ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
             are accepted as keyword arguments and forwarded to Autoencoder.__init__.
 
+    .. warning::
+        When ``stateful=True``, the dataset **must not be shuffled** during training,
+        as shuffling breaks inter-batch state propagation. The current implementation
+        does not enforce this constraint — the caller is responsible for setting
+        ``shuffle=False`` in the data splitter / sequence builder when using stateful mode.
+
     Configuration example:
 
     .. code-block:: text

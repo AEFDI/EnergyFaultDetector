@@ -1,5 +1,6 @@
 
 from typing import Union
+from copy import deepcopy
 
 import optuna as op
 import pandas as pd
@@ -86,8 +87,8 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         Returns:
             MSE of the reconstruction on validation data.
         """
-
-        params = config.config_dict['train']['autoencoder']['params']
+        trial_config_dict = deepcopy(config.config_dict)  # make a copy of the config object, so we do not mutate the original config
+        params = trial_config_dict.config_dict['train']['autoencoder']['params']
 
         # sample new parameters
         params['batch_size'] = int(trial.suggest_categorical(
@@ -115,10 +116,10 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         )
 
         # update the configuration
-        config.update_config(config.config_dict)
+        trial_config = Config(config_dict=trial_config_dict)
 
         # create a new model using our new configuration and train the model
-        model = FaultDetector(config)
+        model = FaultDetector(trial_config)
         # For autoencoder optimization, we do not need to fit a threshold
         training_dict = model.fit(train_data, normal_index=normal_index, fit_autoencoder_only=True,
                                   save_models=False)

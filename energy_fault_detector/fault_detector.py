@@ -13,6 +13,7 @@ from energy_fault_detector.core.fault_detection_result import FaultDetectionResu
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
 from energy_fault_detector.data_preprocessing.data_clipper import DataClipper
 from energy_fault_detector.config import Config
+from energy_fault_detector.threshold_selectors import FbetaSelector, FDRSelector
 
 logger = logging.getLogger('energy_fault_detector')
 
@@ -112,6 +113,15 @@ class FaultDetector(FaultDetectionModel):
             logger.warning('Could not import tensorflow.keras.backend.clear_session(). Please install tensorflow.')
             raise
 
+        if normal_index is None and isinstance(self.threshold_selector, (FbetaSelector, FDRSelector)):
+            raise ValueError("FbetaSelector/FDRSelector require a `normal_index` with both True and False values. "
+                             "If your data does not have labels, consider a different threshold selector, such as "
+                             "QuantileThresholdSelector or AdaptiveThresholdSelector.")
+
+        non_numeric = sensor_data.select_dtypes(exclude='number').columns.tolist()
+        if non_numeric:
+            raise ValueError(f"`sensor_data` must be numeric. Non-numeric columns: {non_numeric}")
+
         clear_session()
         model_path = None  # default value (will be overwritten by self._save if the models are saved).
         x_prepped, x, y = self.preprocess_train_data(sensor_data=sensor_data, normal_index=normal_index,
@@ -207,13 +217,15 @@ class FaultDetector(FaultDetectionModel):
             # assume only 'normal behaviour' in x
             y = pd.Series(np.full(len(x), True), index=x.index)
 
-        x_normal = x[y.values]  # use the boolean array, so it works for multi-index series/dataframes as well
+        fit_preprocessor = True
         if data_preprocessor is not None:
             self.data_preprocessor = data_preprocessor
+            fit_preprocessor = False
 
         train_recon_error = None
         val_recon_error = None
-        x_prepped = self.data_preprocessor.transform(x_normal)
+        x_prepped, x, y = self.preprocess_train_data(sensor_data=sensor_data, normal_index=normal_index,
+                                                     fit_preprocessor=fit_preprocessor)
         x_train, x_val = self.train_val_split(x_prepped)
         if tune_method != 'threshold':
             logger.info('Tune autoencoder.')
@@ -333,7 +345,8 @@ class FaultDetector(FaultDetectionModel):
         """Predict anomalies based on anomaly scores."""
 
         if self.threshold_selector.__class__.__name__ == 'AdaptiveThresholdSelector':
-            predicted_anomalies, _ = self.threshold_selector.predict(x=scores, scaled_ae_input=x_prepped)
+            predicted_anomalies, _ = self.threshold_selector.predict(
+                x=scores, scaled_ae_input=x_prepped.loc[scores.index])
         else:
             predicted_anomalies = self.threshold_selector.predict(scores)
 
