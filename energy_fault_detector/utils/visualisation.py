@@ -57,8 +57,11 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
                         height_multiplier: float = 1.5, original_scale: bool = True) -> Tuple[plt.Figure, plt.Axes]:
     """Plots the original dataset and its reconstruction.
 
-    Note: can result in a very large plot, if the dataset contains many columns/features. Use the
-    `features_to_plot` parameter to specify which columns to plot.
+    Notes:
+        - Can result in a very large plot, if the dataset contains many columns/features. Use the
+         `features_to_plot` parameter to specify which columns to plot.
+        - For MultiIndex data (e.g. multiple devices), pass data for a single
+          group/device, i.e. ``df.loc[device_id]`` to select one device before plotting.
 
     Args:
         data (pd.DataFrame): DataFrame containing the original data.
@@ -122,6 +125,10 @@ def plot_reconstruction_with_model(model: FaultDetector, data: pd.DataFrame,
     """Plots the data and its reconstruction using the provided model. Similar to plot_reconstruction, but uses the
      'model.predict' method to get the reconstruction. Counter values are plottet as diffs or rates with their
      reconstruction.
+
+    Note:
+        For MultiIndex data (e.g. multiple devices), pass data for a single
+        group/device. Use ``df.loc[device_id]`` to select one device before plotting.
 
     Args:
         model (FaultDetector): Fitted model with data_preprocessor and autoencoder.
@@ -187,6 +194,10 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
                               threshold_color: Optional[str] = 'k', **subplot_kwargs
                               ) -> Tuple[plt.Figure, plt.Axes]:
     """Plots the anomaly scores of the AnomalyDetector model along with the threshold for the provided data.
+
+    Note:
+        For MultiIndex data (e.g. multiple devices), pass data for a single
+        group/device. Use ``df.loc[device_id]`` to select one device before plotting.
 
     Args:
         model (FaultDetector): The anomaly detection model used to compute the scores.

@@ -71,7 +71,7 @@ class FaultDetector(FaultDetectionModel):
             data_clipper.fit(x=x)
             x = data_clipper.transform(x)
 
-        x_normal = x[y]  # filter normal before data prep
+        x_normal = x[y.values]  # filter normal before data prep
         if fit_preprocessor:
             logger.info('Fit preprocessor pipeline.')
             self.data_preprocessor.fit(x_normal)

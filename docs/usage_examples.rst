@@ -19,7 +19,13 @@ pandas objects with the following structure:
 
     - either a unique, sorted ``DatetimeIndex`` (no duplicate timestamps), or
     - a ``MultiIndex`` with one datetime-like level and one non-datetime grouping
-      level (e.g. ``(asset_id, timestamp)``)
+      level (e.g. ``(asset_id, timestamp)``).
+
+      **MultiIndex limitations:**
+
+      - Sequence-based models require a single-device ``DatetimeIndex``.
+        Select one group before passing to ``fit``/``predict``.
+      - The `quick-fault-detctor` CLI expects single-device CSV files.
 
   * columns: one column per sensor / feature (numeric, or castable to numeric)
 
