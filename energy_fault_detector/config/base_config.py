@@ -77,7 +77,7 @@ class BaseConfig(ABC):
         Args:
             new_config_dict: dictionary with the new configuration.
         """
-
+        # TODO: consider returning a new instance
         new_config = self.config_dict.copy()
         new_config.update(new_config_dict)
         self._validate_config(new_config, self._schema, extra_checks=self._extra_validation_checks)

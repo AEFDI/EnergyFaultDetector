@@ -320,6 +320,7 @@ class Seq2OneAutoencoder(Autoencoder):
             The trained (or tuned) ``Seq2OneAutoencoder`` instance.
         """
         self._check_sequence_builder()
+
         if learning_rate is not None:
             self.compile_model(new_learning_rate=learning_rate)
         else:

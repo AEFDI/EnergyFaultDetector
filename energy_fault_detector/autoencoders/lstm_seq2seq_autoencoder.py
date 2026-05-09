@@ -29,72 +29,47 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
     The input to the model is a sequence of length ``sequence_length`` with shape
     ``(batch_size, sequence_length, n_main_features)`` (plus conditional features if used).
     The output is a sequence of the same length and feature dimension for the main features.
+
+
+    Args:
+        sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
+        layers: List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.
+        dropout_rate: Dropout rate applied after each LSTM layer.
+        regularization: L2 regularization strength for the first encoder LSTM layer.
+        conditional_features: Optional list of column names treated as conditional features. This will concatenate
+            the conditions to the main inputs before feeding them to the encoder.
+        ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+            are accepted as keyword arguments and forwarded to Autoencoder.__init__.
+
+    Configuration example:
+
+    .. code-block:: text
+
+        train:
+          autoencoder:
+            name: LSTMSeq2OneAutoencoder
+            params:
+              layers: [100, 50, 25]
+              regularization: 0.01
+              sequence_builder:
+                sequence_length: 10
+                ts_freq: "10m"
+                overlap: 9
     """
 
     def __init__(
         self,
-        sequence_builder: SequenceDatasetBuilder = None,
+        sequence_builder: Optional[SequenceDatasetBuilder] = None,
         layers: Optional[List[int]] = None,
         dropout_rate: float = 0.0,
         regularization: float = 0.01,
-        stateful: bool = False,
-        conditional_features: Optional[List[str]] = None,
-        learning_rate: float = 0.001,
-        batch_size: int = 32,
-        epochs: int = 10,
-        loss_name: str = "mean_squared_error",
-        metrics: Optional[List[str]] = None,
-        decay_rate: float = None,
-        decay_steps: float = None,
-        early_stopping: bool = False,
-        patience: int = 3,
-        min_delta: float = 1e-4,
-        noise: float = 0.0,
+        **ae_kwargs,
     ) -> None:
-        """Initialize an LSTM-based sequence autoencoder.
-
-        Args:
-            sequence_builder: SequenceDatasetBuilder instance used to create the sequence datasets.
-            layers: List with the number of LSTM units per layer in the encoder. The decoder
-                mirrors these layers in reverse order. Defaults to [128, 64, 32] if None.
-            dropout_rate: Dropout rate applied after each LSTM layer.
-            regularization: L2 regularization strength for the first encoder LSTM layer.
-            stateful: Whether to use stateful LSTMs.
-            conditional_features: Optional list of column names treated as conditional features.
-            learning_rate: Initial learning rate for the optimizer.
-            batch_size: Batch size during training.
-            epochs: Number of epochs for initial training.
-            loss_name: Loss function name passed to ``model.compile``.
-            metrics: Additional metrics to track during training.
-            decay_rate: Exponential decay rate for the learning rate (optional).
-            decay_steps: Number of steps over which to apply learning rate decay (optional).
-            early_stopping: If True, enable EarlyStopping in the base Autoencoder.
-            patience: Patience for EarlyStopping (number of epochs without improvement).
-            min_delta: Minimum change in monitored quantity for EarlyStopping to qualify as an improvement.
-            noise: Standard deviation of Gaussian noise applied to inputs during training (denoising AE).
-        """
         self.layers = layers or [128, 64, 32]
         self.dropout_rate = dropout_rate
         self.regularization = regularization
-        self.stateful = stateful
 
-        metrics = metrics or ["mean_absolute_error"]
-
-        super().__init__(
-            sequence_builder=sequence_builder,
-            conditional_features=conditional_features,
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            epochs=epochs,
-            loss_name=loss_name,
-            metrics=metrics,
-            decay_rate=decay_rate,
-            decay_steps=decay_steps,
-            early_stopping=early_stopping,
-            patience=patience,
-            min_delta=min_delta,
-            noise=noise,
-        )
+        super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
     def create_model(
         self,
@@ -138,7 +113,6 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
         encoder_output = LSTM(
             units=first_hidden_units,
             return_sequences=True,
-            stateful=self.stateful,
             kernel_regularizer=regularizers.l2(self.regularization),
         )(encoder_input)
         encoder_output = Dropout(rate=self.dropout_rate)(encoder_output)
@@ -147,7 +121,6 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
             encoder_output = LSTM(
                 units=layer_size,
                 return_sequences=True,
-                stateful=self.stateful,
             )(encoder_output)
             encoder_output = Dropout(rate=self.dropout_rate)(encoder_output)
 
@@ -155,7 +128,6 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
             units=self.layers[-1],
             name="encoded",
             return_sequences=False,
-            stateful=self.stateful,
         )(encoder_output)
         encoded = Dropout(rate=self.dropout_rate)(encoded)
 
@@ -179,7 +151,6 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
             decoder_output = LSTM(
                 units=layer_size,
                 return_sequences=True,
-                stateful=self.stateful,
             )(decoder_output)
             decoder_output = Dropout(rate=self.dropout_rate)(decoder_output)
 

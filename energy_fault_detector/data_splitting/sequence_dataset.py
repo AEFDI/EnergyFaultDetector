@@ -69,6 +69,7 @@ class SequenceDatasetBuilder:
         self,
         timestamps: np.ndarray,
         gap_handler: DataGapHandler,
+        stride: int = 1,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Return start-indices and timestamps for windows that do not cross gaps.
 
@@ -93,7 +94,7 @@ class SequenceDatasetBuilder:
         # Fast path: no gaps at all → all windows are valid
         if gap_handler.data_gaps is None:
             # starts: 0, step, 2*step, ...
-            starts = np.arange(0, n_samples - self.sequence_length + 1, self.stride, dtype=int)
+            starts = np.arange(0, n_samples - self.sequence_length + 1, stride, dtype=int)
             # Build an index matrix of shape (n_windows, sequence_length)
             window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
             window_timestamps = timestamps[window_idx]
@@ -102,7 +103,7 @@ class SequenceDatasetBuilder:
         starts: List[int] = []
         window_timestamps: List[np.ndarray] = []
 
-        for start_idx in range(0, n_samples - self.sequence_length + 1, self.stride):
+        for start_idx in range(0, n_samples - self.sequence_length + 1, stride):
             start_ts = timestamps[start_idx]
             end_ts = timestamps[start_idx + self.sequence_length - 1]
             if gap_handler.has_data_gaps(start_ts, end_ts):
@@ -151,12 +152,10 @@ class SequenceDatasetBuilder:
         else:
             original_tz = None  # MultiIndex or other, we don't handle tz here
 
-        original_stride = self.stride
-        if predict_mode:
-            self.stride = 1
+        stride = self.stride if not predict_mode else 1
 
         (main_arr, cond_arr), window_timestamps = self._build_arrays_sliding(
-            df, conditional_features=conditional_features
+            df, conditional_features=conditional_features, stride=stride
         )
 
         if cond_arr is not None:
@@ -172,7 +171,6 @@ class SequenceDatasetBuilder:
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
         window_timestamps = self._restore_tz(window_timestamps, original_tz)
-        self.stride = original_stride
         return dataset, window_timestamps
 
     def build_seq2one_dataset(
@@ -212,12 +210,10 @@ class SequenceDatasetBuilder:
         else:
             original_tz = None
 
-        original_stride = self.stride
-        if predict_mode:
-            self.stride = 1
+        stride = self.stride if not predict_mode else 1
 
         (main_arr, cond_arr), target_arr, window_timestamps = self._build_arrays_seq2one(
-            df, conditional_features=conditional_features
+            df, conditional_features=conditional_features, stride=stride
         )
 
         if cond_arr is not None:
@@ -231,7 +227,6 @@ class SequenceDatasetBuilder:
         dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
         window_timestamps = self._restore_tz(window_timestamps, original_tz)
-        self.stride = original_stride
         return dataset, window_timestamps
 
     def _strip_tz(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, object]:
@@ -300,6 +295,7 @@ class SequenceDatasetBuilder:
             self,
             df: pd.DataFrame,
             conditional_features: Optional[List[str]] = None,
+            stride: int = 1,
     ) -> Tuple[Tuple[np.ndarray, Optional[np.ndarray]], np.ndarray]:
         """Build arrays (inputs, targets, timestamps) for seq2seq from DataFrame.
 
@@ -315,7 +311,7 @@ class SequenceDatasetBuilder:
             frame_resampled = self._resample_if_needed(frame)
             timestamps = frame_resampled.index.values
             gap_handler = DataGapHandler(timestamps, self.ts_freq)
-            starts, window_ts = self._compute_valid_windows(timestamps, gap_handler)
+            starts, window_ts = self._compute_valid_windows(timestamps, gap_handler, stride=stride)
 
             if conditional_features:
                 cond_cols = list(conditional_features)
@@ -359,6 +355,7 @@ class SequenceDatasetBuilder:
             self,
             df: pd.DataFrame,
             conditional_features: Optional[List[str]] = None,
+            stride: int = 1,
     ) -> Tuple[Tuple[np.ndarray, Optional[np.ndarray]], np.ndarray, np.ndarray]:
         """Build arrays (inputs, targets, timestamps) for seq2one from DataFrame.
 
@@ -376,7 +373,7 @@ class SequenceDatasetBuilder:
             frame_resampled = self._resample_if_needed(frame)
             timestamps = frame_resampled.index.values
             gap_handler = DataGapHandler(timestamps, self.ts_freq)
-            starts, window_ts = self._compute_valid_windows(timestamps, gap_handler)
+            starts, window_ts = self._compute_valid_windows(timestamps, gap_handler, stride=stride)
 
             if conditional_features:
                 cond_cols = list(conditional_features)

@@ -37,7 +37,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
         layers: List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.
         dropout_rate: Dropout rate applied after each LSTM layer.
         regularization: L2 regularization strength for the first encoder LSTM layer.
-        stateful: Whether to use stateful LSTMs.
         conditional_features: Optional list of column names treated as conditional features. This will concatenate
             the conditions to the main inputs before feeding them to the encoder.
         ae_kwargs: Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
@@ -65,7 +64,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             layers: Optional[List[int]] = None,
             dropout_rate: float = 0.0,
             regularization: float = 0.01,
-            stateful: bool = False,
             **ae_kwargs,
     ):
         """Initialize an LSTM-based seq2one autoencoder.
@@ -111,7 +109,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
         self.layers = layers or [128, 64, 32]
         self.dropout_rate = dropout_rate
         self.regularization = regularization
-        self.stateful = stateful
 
         super().__init__(sequence_builder=sequence_builder, **ae_kwargs)
 
@@ -155,7 +152,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
         encoder_output = LSTM(
             units=first_hidden_units,
             return_sequences=True,
-            stateful=self.stateful,
             kernel_regularizer=regularizers.l2(self.regularization),
         )(encoder_input)
         # TODO: code_size?
@@ -166,7 +162,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
                 LSTM(
                 units=layer_size,
                 return_sequences=True,
-                stateful=self.stateful,
             )(encoder_output))
             encoder_output = Dropout(rate=self.dropout_rate)(encoder_output)
 
@@ -174,7 +169,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             units=self.layers[-1],
             name="encoded",
             return_sequences=False,
-            stateful=self.stateful,
         )(encoder_output)
         encoded = Dropout(rate=self.dropout_rate)(encoded)
 
@@ -199,7 +193,6 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             decoder_output = LSTM(
                 units=layer_size,
                 return_sequences=True,
-                stateful=self.stateful,
             )(decoder_output)
             decoder_output = Dropout(rate=self.dropout_rate)(decoder_output)
 

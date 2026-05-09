@@ -5,6 +5,7 @@ from typing import Union, List
 
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.impute import SimpleImputer
 
 from energy_fault_detector.fault_detector import FaultDetector
 from energy_fault_detector.config import Config
@@ -37,7 +38,9 @@ def select_config(train_data: pd.DataFrame, normal_index: Union[pd.Series, None]
     config = Config(config_filename=str(config_path))
     config = update_preprocessor_config(config=config, features_to_exclude=features_to_exclude, angles=angles)
     config = update_threshold_config(config=config, quantile=status_label_confidence_percentage)
-    pca_code_size = int(PCA(n_components=0.99).fit(train_data.values).n_components_)
+    imputer = SimpleImputer(strategy='mean')
+    train_data_imputed = imputer.fit_transform(train_data.select_dtypes(include='number'))
+    pca_code_size = int(PCA(n_components=0.99).fit(train_data_imputed).n_components_)
     if automatic_optimization:
         logger.info('Optimizing Hyperparameters... (this can take some time)')
         autoencoder_params = automatic_hyper_opt(config=config, train_data=train_data,
