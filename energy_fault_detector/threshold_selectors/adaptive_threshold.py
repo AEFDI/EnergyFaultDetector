@@ -8,6 +8,7 @@ import pandas as pd
 # pylint: disable=E0401,E0611
 
 from energy_fault_detector.core.threshold_selector import ThresholdSelector
+from energy_fault_detector.utils.index_utils import resolve_groupby_level
 
 logger = logging.getLogger('energy_fault_detector')
 DataType = Union[np.ndarray, pd.DataFrame]
@@ -53,7 +54,7 @@ class AdaptiveThresholdSelector(ThresholdSelector):
 
     def __init__(self, gamma: float = 0.2, nn_size: int = 10, nn_epochs: int = 300, nn_learning_rate: float = 0.001,
                  nn_batch_size: int = 128, smoothing_parameter: int = 1, early_stopping: bool = True, patience: int = 3,
-                 validation_split: float = 0.25, verbose: int = 0):
+                 validation_split: float = 0.25, verbose: int = 0, groupby_level: str = "auto"):
 
         try:
             # lazy import to avoid tensorflow imports if not needed
@@ -71,6 +72,8 @@ class AdaptiveThresholdSelector(ThresholdSelector):
                                      validation_split=self.validation_split)
         self.smoothing_parameter = smoothing_parameter
         self.verbose = verbose
+        self.groupby_level = groupby_level
+        self.groupby_level_ = None
 
     # noinspection PyMethodOverriding
     def fit(self, scaled_ae_input: DataType, anomaly_score: Array1D, normal_index: pd.Series = None
@@ -99,8 +102,12 @@ class AdaptiveThresholdSelector(ThresholdSelector):
             scaled_ae_input = pd.DataFrame(data=scaled_ae_input, index=normal_index.index)
 
         if normal_index is not None:
-            scaled_ae_input = scaled_ae_input[normal_index].copy()
-            anomaly_score = anomaly_score[normal_index].copy()
+            mask = normal_index.values if normal_index is not None else np.ones(len(scaled_ae_input), dtype=bool)
+            scaled_ae_input = scaled_ae_input[mask].copy()
+            anomaly_score = anomaly_score[mask].copy()
+
+        self.groupby_level_ = resolve_groupby_level(anomaly_score.index, self.groupby_level)
+
         if self.smoothing_parameter == 1:
             self.nn_model.fit(x=scaled_ae_input.values, y=anomaly_score.values, epochs=self.nn_epochs,
                               verbose=self.verbose)
@@ -124,18 +131,26 @@ class AdaptiveThresholdSelector(ThresholdSelector):
         self.threshold = (self.nn_model.predict(x=scaled_ae_input, verbose=self.verbose) + self.gamma).reshape(-1)
         return x > self.threshold, self.threshold
 
-    def _smooth_anomaly_score(self, anomaly_score: Union[pd.DataFrame, pd.Series]) -> tuple:
-        """ This function divides anomaly_score into segments of length self.smoothing_parameter. It then computes
-        the average for each segment and returns the timeseries of averages where the first timestamp of each segment is
-        used to represent the segment.
+    def _smooth_anomaly_score(self, anomaly_score: pd.Series) -> tuple:
+        """Smooth anomaly scores by averaging segments of length smoothing_parameter.
+        Respects device/group boundaries when a groupby level is detected."""
 
-        Args:
-            anomaly_score (Union[pd.DataFrame, pd.Series]): A time series of anomaly scores.
+        if self.groupby_level_ is not None:
+            indices = []
+            smoothed = []
+            for _, group in anomaly_score.groupby(level=self.groupby_level_):
+                idx = group.index[::self.smoothing_parameter]
+                vals = group.groupby(
+                    np.arange(len(group)) // self.smoothing_parameter
+                ).mean()
+                indices.append(idx)
+                smoothed.append(vals)
+            index = indices[0].append(indices[1:])
+            mean_anomaly_score = pd.concat(smoothed, ignore_index=True)
+            return index, mean_anomaly_score
 
-        returns:
-            index: pandas DataFrame index containing every first timestamp of each segment.
-            mean_anomaly_score: pandas Series containing the average of each segment with an integer index.
-        """
         index = anomaly_score.index[::self.smoothing_parameter].copy()
-        mean_anomaly_score = anomaly_score.groupby(np.arange(len(anomaly_score)) // self.smoothing_parameter).mean()
+        mean_anomaly_score = anomaly_score.groupby(
+            np.arange(len(anomaly_score)) // self.smoothing_parameter
+        ).mean()
         return index, mean_anomaly_score

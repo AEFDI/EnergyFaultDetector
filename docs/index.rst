@@ -28,12 +28,12 @@ To install the `energy-fault-detector` package, run:
     :maxdepth: 1
 
     usage_examples
+    quick_fault_detection
     configuration
     sequence_models
     arcana
-    quick_fault_detection
-    logging
     The EnergyFaultDetector package <modules>
+    logging
 
 Module index
 ==================
