@@ -98,7 +98,7 @@ create a configuration, as described below in the :ref:`configuration` section, 
 
     from energy_fault_detector import FaultDetector, Config
 
-    config = Config('configs/basic_config.yaml')
+    config = Config('path/to/your/configuration/file.yaml')
     fault_detector = FaultDetector(config=config, model_directory='model_directory')
 
 To train new models, you need to provide the input data and call the :py:obj:`FaultDetector.fit <energy_fault_detector.fault_detector.FaultDetector.fit>` method:

@@ -104,9 +104,8 @@ def _build_preprocessor_steps(
     return steps
 
 
-# TODO: Add autoencoder type option
 def generate_quickstart_config(
-    output_path: Optional[Union[str, Path]] = "base_config.yaml",
+    output_path: Optional[Union[str, Path]] = None,
     *,
     # Preprocessor configuration
     max_nan_frac: float = 0.05,
@@ -131,17 +130,21 @@ def generate_quickstart_config(
     """
     Generate a minimal, valid configuration for EnergyFaultDetector.
 
-    This function returns a configuration dictionary that uses the steps-based
-    DataPreprocessor and sensible defaults for training. It can also write the
-    configuration to YAML if an output path is supplied.
+    This function returns a Config object that can directly be used in the EnergyFaultDetector.
+    Optionally writes the configuration to YAML if an output path is supplied.
 
     Example:
-        from energy_fault_detector import FaultDetector, Config
-        cfg = generate_quickstart_config(output_path=None)
-        fault_detector = FaultDetector(config=Config(config_dict=cfg))
+
+        .. code-block:: python
+
+            from energy_fault_detector import FaultDetector
+            from energy_fault_detector.config import generate_quickstart_config
+
+            config = generate_quickstart_config()
+            fault_detector = FaultDetector(config=config)
 
     Args:
-        output_path (Optional[Union[str, Path]]): YAML output path; set None to return only the dict.
+        output_path (Optional[Union[str, Path]]): YAML output path; set None to skip writing. Default: None
         max_nan_frac (float): Max fraction of missing values per column for selection. Default: 0.05
         min_unique_value_count (int): Minimal unique values required to keep a column. Default: 2
         max_col_zero_frac (float): Max fraction of zeros allowed in a column. Default: 1.0
@@ -156,6 +159,7 @@ def generate_quickstart_config(
         code_size (int): Bottleneck code size. Default: 20
         epochs (int): Number of training epochs. Default: 10
         layers (Optional[List[int]]): Autoencoder layer sizes; defaults to [200, 100, 50] if None.
+            For small datasets (<20 features), consider smaller layers like [20, 10, 5].
         learning_rate (float): Optimizer learning rate.
 
     Returns:
