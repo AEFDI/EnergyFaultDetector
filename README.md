@@ -54,18 +54,21 @@ For more information, have a look at the notebook [Quick Fault Detection](./note
 from energy_fault_detector import FaultDetector, Config
 from energy_fault_detector.config import generate_quickstart_config
 
-# 1) Generate and save a base config (YAML)
-generate_quickstart_config(output_path="base_config.yaml")
+# 1) Generate a basic config
+config = generate_quickstart_config()
+
 # 2) Train and predict using the generated config
-fault_detector = FaultDetector(config=Config('base_config.yaml'))
-model_data = fault_detector.fit(sensor_data=sensor_data, normal_index=normal_index)
+fault_detector = FaultDetector(config=config)
+fault_detector.fit(sensor_data=sensor_data, normal_index=normal_index)
 results = fault_detector.predict(sensor_data=test_sensor_data)
 ```
 
 The pandas `DataFrame` `sensor_data` contains the operational data in wide format with a time index (typically a
 timestamp, or a MultiIndex such as `(asset_id, timestamp)`), and the pandas `Series` `normal_index` indicates which
 timestamps are considered 'normal' operation and can be used to create a normal behaviour model.
-The [`base_config.yaml`](energy_fault_detector/base_config.yaml) file contains the model settings, an example is found [here](energy_fault_detector/base_config.yaml).
+
+`generate_quickstart_config()` returns a default configuration. For more control, you can provide your own YAML config.
+See [`base_config.yaml`](energy_fault_detector/base_config.yaml) for an example.
 
 You can load a saved model from a directory using:
 ```python
@@ -91,7 +94,6 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 - Demo: Easy demo website
 - Extending the core models:
    - Variational autoencoders
-   - Additional options for all autoencoders (e.g. drop out, regularization)
    - Model ensembles
 - Unification, standardisation and generic improvements
    - Data preparation (e.g. extend imputation strategies).

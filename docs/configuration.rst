@@ -12,7 +12,7 @@ Quick start: minimal configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A minimal configuration that clips outliers, imputes missing values, and scales features:
 
-.. include:: basic_config.yaml
+.. include:: examples/basic_config.yaml
    :literal:
 
 This setup:
@@ -40,7 +40,8 @@ You can also generate this kind of configuration programmatically using
 .. code-block:: python
 
    from energy_fault_detector.config.quickstart_config import generate_quickstart_config
-   generate_quickstart_config(output_path="base_config.yaml")
+   # generate a Config instance and save as YAML to base_config.yaml
+   config = generate_quickstart_config(output_path="base_config.yaml")
 
 You can look up the names for the available model classes in the class registry:
 
@@ -112,7 +113,7 @@ Detailed configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 Below is a more thorough configuration. It shows how to specify preprocessing steps and more model parameters.
 
-.. include:: advanced_config.yaml
+.. include:: examples/advanced_config.yaml
    :literal:
 
 DataPreprocessor specification
