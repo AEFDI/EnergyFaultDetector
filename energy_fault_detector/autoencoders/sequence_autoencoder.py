@@ -33,7 +33,10 @@ class SequenceAutoencoder(Autoencoder):
     ) -> None:
         super().__init__(**ae_kwargs)
         self.sequence_builder = sequence_builder
+        self.is_sequential: bool = True
         self.window_timestamps_: Optional[np.ndarray] = None
+
+    # ─── Template methods (subclass contract) ───────────────────────────
 
     @abstractmethod
     def _build_dataset(
@@ -114,7 +117,7 @@ class SequenceAutoencoder(Autoencoder):
         return self._fit_internal(
             x=x,
             x_val=x_val,
-            total_epochs=self.epochs_completed + tune_epochs,
+            total_epochs=self.epochs + tune_epochs,
             initial_epoch=self.epochs_completed,
             learning_rate=learning_rate,
             **kwargs,
@@ -173,20 +176,16 @@ class SequenceAutoencoder(Autoencoder):
         kwargs.setdefault("verbose", self.verbose)
         return self._predict(x, **kwargs)
 
-    def get_reconstruction_error(self, x: pd.DataFrame, reconstruction: pd.DataFrame = None,
-                                 **kwargs) -> pd.DataFrame:
+    def get_reconstruction_error(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
         """Compute reconstruction error (predicted - actual) for main features.
 
         Args:
             x: Input data (DataFrame with DatetimeIndex).
-            reconstruction: pre-computed reconstruction. If None, predict() is called internally.
-            kwargs: other keyword args for the keras `Model.predict` method.
 
         Returns:
             DataFrame with reconstruction errors.
         """
-        if reconstruction is None:
-            reconstruction = self._predict(x, **kwargs)
+        reconstruction = self._predict(x, **kwargs)
         main_columns = self._get_main_columns(x)
         x_main = x[main_columns].loc[reconstruction.index]
         return reconstruction - x_main
@@ -206,16 +205,11 @@ class SequenceAutoencoder(Autoencoder):
         else:
             self.compile_model()
 
-        train_shuffle = True
-        if hasattr(self, 'stateful'):
-            if self.stateful:
-                train_shuffle = False
-
         train_dataset, _ = self._build_dataset(
             df=x,
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
-            shuffle=train_shuffle,
+            shuffle=True,
         )
 
         # Apply noise to training data
