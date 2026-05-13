@@ -24,6 +24,10 @@ DataType = Union[np.ndarray, pd.DataFrame]
 logger = logging.getLogger('energy_fault_detector')
 
 
+# TODO: Extract dense-specific fit/predict/encode logic into a DenseAutoencoder subclass.
+#       Currently, Autoencoder contains both the ABC contract AND dense-specific implementations
+#       (2D input assumptions). MultilayerAutoencoder and ConditionalAE should inherit from
+#       DenseAutoencoder instead of Autoencoder directly.
 class Autoencoder(ABC, SaveLoadMixin):
     """Autoencoder template. Compatible with sklearn and keras/tensorflow.
 
@@ -135,6 +139,12 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         return self.model(x)
 
+    @property
+    def epochs_completed(self) -> int:
+        if self.history is None:
+            return 0
+        return len(self.history.get('loss', []))
+
     @abstractmethod
     def create_model(self, input_dimension: Union[int, Tuple], condition_dimension: Optional[int] = None, **kwargs
                      ) -> KerasModel:
@@ -183,9 +193,9 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         self.compile_model()
 
+        callbacks = list(self.callbacks)  # copy to ensure we do not mutate the instance state
         if 'callbacks' in kwargs:
-            self.callbacks += kwargs['callbacks']
-            kwargs.pop('callbacks')
+            callbacks += kwargs.pop('callbacks')
 
         # ensure verbose default
         kwargs.setdefault("verbose", self.verbose)
@@ -247,7 +257,7 @@ class Autoencoder(ABC, SaveLoadMixin):
             x, x_val,
             epochs=tune_epochs + self.epochs,
             callbacks=self.callbacks,
-            initial_epoch=self.epochs,
+            initial_epoch=self.epochs_completed,
             **kwargs
         )
         return self

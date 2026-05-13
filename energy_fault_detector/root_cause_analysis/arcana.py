@@ -13,13 +13,13 @@ tf.get_logger().setLevel('ERROR')
 from tensorflow.keras.optimizers import Adam
 
 from energy_fault_detector.core.autoencoder import Autoencoder
-from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
+from energy_fault_detector.autoencoders.sequence_autoencoder import SequenceAutoencoder
 from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 from energy_fault_detector.autoencoders import _sequence_utils
 
 logger = logging.getLogger('energy_fault_detector')
 
-AE_TYPE = Union[Autoencoder, Seq2SeqAutoencoder, Seq2OneAutoencoder]
+AE_TYPE = Union[Autoencoder, SequenceAutoencoder]
 BIAS_RETURN_TYPE = Tuple[tf.Variable, Tuple[tf.Tensor, tf.Tensor, tf.Tensor], tf.Variable]
 
 
@@ -80,8 +80,8 @@ class Arcana:
 
         self.keras_model: AE_TYPE = model
 
-        self.sequence_based = isinstance(self.keras_model, (Seq2SeqAutoencoder, Seq2OneAutoencoder))
-        self.seq2one = True if self.sequence_based and model.is_seq2one else False
+        self.sequence_based = isinstance(self.keras_model, SequenceAutoencoder)
+        self.seq2one = isinstance(self.keras_model, Seq2OneAutoencoder)
 
         self.learning_rate: float = learning_rate
         self.epsilon: float = epsilon
