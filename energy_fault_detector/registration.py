@@ -35,12 +35,14 @@ class Registry:
         """Get a class by class_type and class_name from the registry"""
         try:
             module_path = self.registry[class_type][class_name]
-            module_name, class_name = module_path.rsplit('.', 1)
-            module = importlib.import_module(module_name)
-            class_ = getattr(module, class_name)
-            return class_
         except KeyError as e:
             raise ValueError(f'The class {class_name} of type {class_type} is not known.') from e
+        module_name, actual_class_name = module_path.rsplit('.', 1)
+        try:
+            module = importlib.import_module(module_name)
+            return getattr(module, actual_class_name)
+        except (ImportError, AttributeError) as e:
+            raise ImportError(f'Could not load {actual_class_name} from {module_name}.') from e
 
     def get_alternative_class_names(self, class_name: str) -> List[str]:
         """Get all alternative class names of the given class"""
