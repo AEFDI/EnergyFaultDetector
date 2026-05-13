@@ -88,7 +88,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
             MSE of the reconstruction on validation data.
         """
         trial_config_dict = deepcopy(config.config_dict)  # make a copy of the config object, so we do not mutate the original config
-        params = trial_config_dict.config_dict['train']['autoencoder']['params']
+        params = trial_config_dict['train']['autoencoder']['params']
 
         # sample new parameters
         params['batch_size'] = int(trial.suggest_categorical(

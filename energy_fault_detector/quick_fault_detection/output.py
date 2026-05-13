@@ -72,7 +72,8 @@ def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFr
             ax.set_title(title)
             filename = (f'./arcana_importances_{i}.png' if save_dir is None
                         else os.path.join(save_dir, f'arcana_importances_{i}.png'))
-            new_fig.savefig(filename, format='png')
+            if save_dir is not None:
+                new_fig.savefig(filename, format='png')
             plt.close(fig=new_fig)
 
         if len(arcana_losses) > 0:
@@ -90,4 +91,7 @@ def generate_output_plots(anomaly_detector: FaultDetector, train_data: pd.DataFr
     if save_dir is not None:
         fig.savefig(os.path.join(save_dir, 'results.png'), dpi=300)
 
-    plt.show()
+    if save_dir is None:
+        plt.show()
+    else:
+        plt.close(fig)
