@@ -188,6 +188,9 @@ class FaultDetector(FaultDetectionModel):
             ModelMetadata: metadata of the trained model with model_date, model_path, model reconstruction errors
             of the training and validation data.
         """
+        if self.config is None:
+            raise ValueError("Cannot tune without a configuration. Load models using FaultDetector.load() "
+                             "or provide pretrained_model_path.")
 
         if tune_method not in ['threshold', 'decoder', 'full']:
             raise ValueError(f'Unknown tune method {tune_method}.')
@@ -274,10 +277,10 @@ class FaultDetector(FaultDetectionModel):
 
         Returns:
             FaultDetectionResult: with the following DataFrames:
-                - predicted_anomalies: DataFrame with a column 'anomaly' (bool).
+                - predicted_anomalies: Series with detected anomalies (bool).
                 - reconstruction: DataFrame with reconstruction of the sensor data with timestamp as index.
-                - deviations: DataFrame with reconstruction errors.
-                - anomaly_score: DataFrame with anomaly scores for each timestamp.
+                - recon_error: DataFrame with reconstruction errors.
+                - anomaly_score: Series with anomaly scores for each timestamp.
                 - bias_data: DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.
                 - arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
                 - tracked_bias: List of DataFrames. None if ARCANA was not run.
@@ -304,7 +307,7 @@ class FaultDetector(FaultDetectionModel):
             x_predicted = x_predicted[column_order]
         else:
             x_predicted = self.autoencoder.predict(x_prepped)
-
+        # TODO: possible performance issue: autoencoder.predict is called twice.
         recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
 
         # inverse transform predictions, so they are comparable to the raw data

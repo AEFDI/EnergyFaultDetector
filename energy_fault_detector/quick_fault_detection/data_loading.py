@@ -1,3 +1,10 @@
+"""
+TODO:
+1	get_sensor_data mutates input DataFrame
+2	validate_mapping mutates input dict
+3	Call order in load_data makes boolean extraction fragile
+4	Empty file handling in detect_separator
+"""
 
 import os
 import logging
