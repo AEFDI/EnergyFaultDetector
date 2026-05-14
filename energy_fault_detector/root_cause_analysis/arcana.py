@@ -23,6 +23,7 @@ AE_TYPE = Union[Autoencoder, SequenceAutoencoder]
 BIAS_RETURN_TYPE = Tuple[tf.Variable, Tuple[tf.Tensor, tf.Tensor, tf.Tensor], tf.Variable]
 
 
+# TODO: Refactor - separate dense/seq2one/seq2seq logic
 class Arcana:
     """Anomaly root cause analysis. Tries to find which of the sensors/inputs caused
     the reconstruction error of an autoencoder model. Implementation details are found in

@@ -342,23 +342,23 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         return prediction_df
 
-    def get_reconstruction_error(self, x: DataType, **kwargs) -> DataType:
+    def get_reconstruction_error(self, x: DataType, reconstruction: DataType = None, **kwargs) -> DataType:
         """Get the reconstruction error: output - input.
 
         Args:
             x: input data
+            reconstruction: pre-computed reconstruction. If None, predict() is called internally.
             kwargs: other keyword args for the keras `Model.predict` method.
 
         Returns:
             AE reconstruction error of the input data.
         """
 
-        x_predicted = self.predict(x, **kwargs)
+        x_predicted = reconstruction if reconstruction is not None else self.predict(x, **kwargs)
 
         if self.is_conditional:
-            prediction = x_predicted
             input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
-            recon_error = prediction - input_data
+            recon_error = x_predicted - input_data
             if isinstance(x, pd.DataFrame):
                 recon_error = pd.DataFrame(recon_error, index=input_data.index, columns=input_data.columns)
             return recon_error

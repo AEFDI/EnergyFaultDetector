@@ -173,16 +173,20 @@ class SequenceAutoencoder(Autoencoder):
         kwargs.setdefault("verbose", self.verbose)
         return self._predict(x, **kwargs)
 
-    def get_reconstruction_error(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def get_reconstruction_error(self, x: pd.DataFrame, reconstruction: pd.DataFrame = None,
+                                 **kwargs) -> pd.DataFrame:
         """Compute reconstruction error (predicted - actual) for main features.
 
         Args:
             x: Input data (DataFrame with DatetimeIndex).
+            reconstruction: pre-computed reconstruction. If None, predict() is called internally.
+            kwargs: other keyword args for the keras `Model.predict` method.
 
         Returns:
             DataFrame with reconstruction errors.
         """
-        reconstruction = self._predict(x, **kwargs)
+        if reconstruction is None:
+            reconstruction = self._predict(x, **kwargs)
         main_columns = self._get_main_columns(x)
         x_main = x[main_columns].loc[reconstruction.index]
         return reconstruction - x_main
