@@ -305,10 +305,11 @@ class FaultDetector(FaultDetectionModel):
         if self.autoencoder.is_conditional:
             x_predicted = self.autoencoder.predict(x_prepped, return_conditions=True)
             x_predicted = x_predicted[column_order]
+            main_cols = [c for c in column_order if c not in self.autoencoder.conditional_features]
+            recon_error = self.autoencoder.get_reconstruction_error(x=x_prepped,reconstruction=x_predicted[main_cols])
         else:
             x_predicted = self.autoencoder.predict(x_prepped)
-        # TODO: possible performance issue: autoencoder.predict is called twice.
-        recon_error = self.autoencoder.get_reconstruction_error(x_prepped)
+            recon_error = self.autoencoder.get_reconstruction_error(x_prepped, reconstruction=x_predicted)
 
         # inverse transform predictions, so they are comparable to the raw data
         reconstruction = self.data_preprocessor.inverse_transform(x_predicted)
