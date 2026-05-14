@@ -156,6 +156,30 @@ def _parse_timedelta(config_dict: Dict[str, Any]) -> Dict[str, Any]:
     return config_dict
 
 
+def _validate_sequence_fit_on_val(config_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Warn if fit_on_val=True with a sequence model and shuffle=True."""
+
+    train_cfg = config_dict.get("train", {})
+    has_sequence_builder = "sequence_builder" in (
+        train_cfg.get("autoencoder", {}).get("params", {}) or {}
+    )
+    fit_on_val = train_cfg.get("threshold_selector", {}).get("fit_on_val", False)
+    shuffle = train_cfg.get("data_splitter", {}).get("shuffle", False)
+
+    if has_sequence_builder and fit_on_val and shuffle:
+        import warnings
+        warnings.warn(
+            "Using 'fit_on_val=True' with a sequence model and 'shuffle=True' may result in "
+            "non-contiguous validation timestamps. The sequence builder will drop windows that "
+            "cross data gaps, potentially leaving no valid windows for threshold fitting. "
+            "Consider setting 'shuffle: false' or 'fit_on_val: false'.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    return config_dict
+
+
 class Config(BaseConfig):
     """Configuration class. Either config_filename or config_dict must be provided.
     Reads a yaml file with the anomaly detection configuration and sets corresponding settings.
@@ -165,7 +189,8 @@ class Config(BaseConfig):
         super().__init__(config_filename=config_filename, config_dict=config_dict)
         self._schema = CONFIG_SCHEMA
         self._extra_validation_checks: List[Callable[[Dict], Dict]] = [_parse_timedelta,
-                                                                       _validate_early_stopping]
+                                                                       _validate_early_stopping,
+                                                                       _validate_sequence_fit_on_val]
         self.read_config()
 
     def __getitem__(self, item) -> Any:

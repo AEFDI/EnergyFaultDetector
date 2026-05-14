@@ -42,6 +42,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "duplicate_value_to_nan": "duplicate_to_nan",
         "duplicate_values_to_nan": "duplicate_to_nan",
         "timestamp_features": "timestamp_transformer",
+        "timestamp_transform": "timestamp_transformer",
     }
 
     def __init__(self, steps: Optional[List[Dict[str, Any]]] = None) -> None:
@@ -242,9 +243,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
 
         # Filter disabled steps first to simplify ordering.
         enabled_spec = [s for s in self.steps_spec_ if s.get("enabled", True)]
-        self._validate_singletons(enabled_spec)
         # Order the steps
         ordered_spec = self._order_steps_spec(enabled_spec)
+        self._validate_singletons(enabled_spec)
         # Assign unique step names for duplicates or missing step_name
         ordered_spec = self._assign_unique_step_names(ordered_spec)
 
