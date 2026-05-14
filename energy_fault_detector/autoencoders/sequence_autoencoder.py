@@ -33,10 +33,7 @@ class SequenceAutoencoder(Autoencoder):
     ) -> None:
         super().__init__(**ae_kwargs)
         self.sequence_builder = sequence_builder
-        self.is_sequential: bool = True
         self.window_timestamps_: Optional[np.ndarray] = None
-
-    # ─── Template methods (subclass contract) ───────────────────────────
 
     @abstractmethod
     def _build_dataset(
@@ -205,11 +202,16 @@ class SequenceAutoencoder(Autoencoder):
         else:
             self.compile_model()
 
+        train_shuffle = True
+        if hasattr(self, 'stateful'):
+            if self.stateful:
+                train_shuffle = False
+
         train_dataset, _ = self._build_dataset(
             df=x,
             batch_size=self.batch_size,
             conditional_features=self.conditional_features,
-            shuffle=True,
+            shuffle=train_shuffle,
         )
 
         # Apply noise to training data

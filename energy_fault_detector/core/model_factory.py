@@ -30,7 +30,7 @@ class ModelFactory:
     def _initialize_models(self) -> None:
         # runtime imports
         from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
-        from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
+        from energy_fault_detector.autoencoders.seq2one_autoencoder import SequenceAutoencoder
 
         train_dict = self.config["train"]
 
@@ -47,7 +47,7 @@ class ModelFactory:
         ae_kwargs.setdefault("verbose", ae_verbose)
 
         # If this is a sequence AE, build the SequenceDatasetBuilder from config
-        if issubclass(ae_class, Seq2OneAutoencoder):
+        if issubclass(ae_class, SequenceAutoencoder):
             builder_conf = ae_kwargs.pop("sequence_builder", None)
             if builder_conf is None:
                 raise ValueError(
