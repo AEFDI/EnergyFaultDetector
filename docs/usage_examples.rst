@@ -110,7 +110,7 @@ To train new models, you need to provide the input data and call the :py:obj:`Fa
     normal_index = ...  # a pandas Series with timestamp as index and booleans indicating normal behaviour
     # NOTE: The normal_index is optional; it is used to select training data for the autoencoder.
     # If not provided, we assume all data represents normal behaviour.
-    # If you do not have any labels, you cannot use the F-beta-score- and FDR-based thresholds.
+    # If you do not have normal_index labels, you cannot use the F-beta-score- and FDR-based thresholds.
     # In that case, use the quantile-based threshold (default) or AdaptiveThreshold.
 
     # If you do not use the models for time series, the index can also be a standard RangeIndex,
