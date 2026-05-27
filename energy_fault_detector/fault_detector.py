@@ -75,7 +75,14 @@ class FaultDetector(FaultDetectionModel):
         x_normal = x[y.values]  # filter normal before data prep
         if fit_preprocessor:
             logger.info('Fit preprocessor pipeline.')
-            self.data_preprocessor.fit(x_normal)
+            # Pass conditional features to protect them from being dropped
+            protected_features = self.autoencoder.conditional_features if self.autoencoder.is_conditional else []
+            # Build fit params for pipeline steps that support protected_features
+            fit_params = {}
+            for step_name in self.data_preprocessor.named_steps.keys():
+                if 'column_selector' in step_name or 'low_unique_value_filter' in step_name:
+                    fit_params[f'{step_name}__protected_features'] = protected_features
+            self.data_preprocessor.fit(x_normal, **fit_params)
 
         x_prepped = self.data_preprocessor.transform(x_normal)
 
