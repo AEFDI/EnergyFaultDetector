@@ -272,6 +272,14 @@ class TestFaultDetector(unittest.TestCase):
         mock_find_arcana_bias.assert_called_once()
         mock_find_arcana_bias.assert_called_with(x=self.sensor_data, track_losses=False, track_bias=False)
 
+        # Verify reconstruction was passed to get_reconstruction_error
+        mock_autoencoder.get_reconstruction_error.assert_called_once()
+        call_kwargs = mock_autoencoder.get_reconstruction_error.call_args
+        self.assertIn('reconstruction', call_kwargs.kwargs)
+
+        # predict should only be called once (not again inside get_reconstruction_error)
+        mock_autoencoder.predict.assert_called_once()
+
     def test__fit_threshold(self):
         fault_detector = self._create_fault_detector(self.conf)
 
@@ -431,3 +439,89 @@ class TestFaultDetectorBidirectionalSequenceSaveLoad(unittest.TestCase):
             np.testing.assert_allclose(a, b, atol=1e-6)
 
         self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
+
+
+class TestAutoencoderGetReconstructionError(unittest.TestCase):
+    """Test that get_reconstruction_error skips predict when reconstruction is provided."""
+
+    def setUp(self):
+        self.sensor_data = pd.DataFrame(
+            [[1., 2., 3.], [4., 5., 6.]], columns=['a', 'b', 'c']
+        )
+        self.reconstruction = pd.DataFrame(
+            [[1.1, 2.0, 3.0], [4.0, 4.9, 6.0]], columns=['a', 'b', 'c']
+        )
+
+    def test_skips_predict_when_reconstruction_provided(self):
+        """predict() should NOT be called when reconstruction is passed."""
+        from energy_fault_detector.autoencoders import MultilayerAutoencoder
+
+        ae = MultilayerAutoencoder(layers=[5], code_size=2, epochs=1)
+        ae.create_model(input_dimension=3)
+        ae.compile_model()
+        # Fit minimally so _is_fitted() passes
+        ae.history = {'loss': [0.1]}
+
+        with patch.object(ae, 'predict', wraps=ae.predict) as mock_predict:
+            result = ae.get_reconstruction_error(
+                self.sensor_data, reconstruction=self.reconstruction
+            )
+            mock_predict.assert_not_called()
+
+        expected = self.reconstruction - self.sensor_data
+        pd.testing.assert_frame_equal(result, expected)
+
+    def test_calls_predict_when_reconstruction_is_none(self):
+        """predict() should be called when reconstruction is not passed."""
+        from energy_fault_detector.autoencoders import MultilayerAutoencoder
+
+        ae = MultilayerAutoencoder(layers=[5], code_size=2, epochs=1)
+        ae.create_model(input_dimension=3)
+        ae.compile_model()
+        ae.history = {'loss': [0.1]}
+
+        with patch.object(ae, 'predict', return_value=self.reconstruction) as mock_predict:
+            result = ae.get_reconstruction_error(self.sensor_data)
+            mock_predict.assert_called_once()
+
+
+class TestFaultDetectorConditionalFeatureProtection(unittest.TestCase):
+    """Test that FaultDetector protects conditional features from being dropped during preprocessing."""
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
+        self.conf = Config(self.config_path)
+        self.test_dir = tempfile.mkdtemp()
+
+        # Create sensor data where conditional feature is constant (would normally be dropped)
+        np.random.seed(42)
+        length = 100
+        self.sensor_data = pd.DataFrame({
+            'feature_a': [180] * length,  # Constant conditional feature
+            'feature_b': np.random.random(size=length),
+            'feature_c': np.random.random(size=length),
+            'feature_d': np.random.random(size=length),
+        })
+        self.normal_index = pd.Series([True] * 80 + [False] * 20)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.test_dir)
+
+    def test_conditional_features_protected_from_dropping(self):
+        """Test that conditional features specified in the autoencoder are protected during fit."""
+        # The config specifies ConditionalAE with 'feature_a' as conditional feature
+        # It also has LowUniqueValueFilter which would normally drop constant features
+        fault_detector = FaultDetector(config=self.conf, model_directory=self.test_dir)
+
+        # Fit the model - this should NOT drop the conditional feature despite it being constant
+        fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
+
+        # Check that the conditional feature is still present after preprocessing
+        feature_names = fault_detector.data_preprocessor.get_feature_names_out()
+        self.assertIn('feature_a', feature_names,
+                      "Conditional feature 'feature_a' should be protected from dropping")
+
+        # Verify we can predict with data containing the conditional feature
+        result = fault_detector.predict(sensor_data=self.sensor_data)
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.predicted_anomalies), len(self.sensor_data))

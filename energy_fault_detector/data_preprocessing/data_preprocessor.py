@@ -174,11 +174,13 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
 
         Args:
             x: Input DataFrame.
+            **kwargs: Parameters to pass to the fit method of each step.
+                Use step_name__parameter format (e.g., column_selector__protected_features=['feature1']).
 
         Returns:
             Transformed DataFrame with the same index as input.
         """
-        super().fit(X=x)
+        super().fit(X=x, **kwargs)
         return self.transform(x)
 
     def _find_step_by_type(self, types: Tuple[type, ...]) -> Tuple[Optional[str], Optional[object]]:
