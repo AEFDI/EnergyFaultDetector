@@ -66,22 +66,33 @@ class FaultDetector(FaultDetectionModel):
             raise ValueError('There are duplicated indices in the input dataframe `sensor_data` and/or in the '
                              '`normal_index`, please check your input data.')
 
+        # Get conditional features early to protect them from transformations
+        protected_features = self.autoencoder.conditional_features if self.autoencoder.is_conditional else []
+
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
-            data_clipper = DataClipper(**self.config.data_clipping_params)
+            # Don't clip conditional features
+            clipper_params = self.config.data_clipping_params.copy()
+            if protected_features:
+                # Add conditional features to exclusion list
+                existing_exclusions = clipper_params.get('features_to_exclude', [])
+                clipper_params['features_to_exclude'] = list(set(existing_exclusions + protected_features))
+                logger.debug(f'Excluding conditional features from clipping: {protected_features}')
+            data_clipper = DataClipper(**clipper_params)
             data_clipper.fit(x=x)
             x = data_clipper.transform(x)
 
         x_normal = x[y.values]  # filter normal before data prep
         if fit_preprocessor:
             logger.info('Fit preprocessor pipeline.')
-            # Pass conditional features to protect them from being dropped
-            protected_features = self.autoencoder.conditional_features if self.autoencoder.is_conditional else []
             # Build fit params for pipeline steps that support protected_features
             fit_params = {}
             for step_name in self.data_preprocessor.named_steps.keys():
                 if 'column_selector' in step_name or 'low_unique_value_filter' in step_name:
                     fit_params[f'{step_name}__protected_features'] = protected_features
+            # Add global validation that protected features are in the output
+            if protected_features:
+                fit_params['protected_features'] = protected_features
             self.data_preprocessor.fit(x_normal, **fit_params)
 
         x_prepped = self.data_preprocessor.transform(x_normal)
