@@ -483,3 +483,45 @@ class TestAutoencoderGetReconstructionError(unittest.TestCase):
         with patch.object(ae, 'predict', return_value=self.reconstruction) as mock_predict:
             result = ae.get_reconstruction_error(self.sensor_data)
             mock_predict.assert_called_once()
+
+
+class TestFaultDetectorConditionalFeatureProtection(unittest.TestCase):
+    """Test that FaultDetector protects conditional features from being dropped during preprocessing."""
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
+        self.conf = Config(self.config_path)
+        self.test_dir = tempfile.mkdtemp()
+
+        # Create sensor data where conditional feature is constant (would normally be dropped)
+        np.random.seed(42)
+        length = 100
+        self.sensor_data = pd.DataFrame({
+            'feature_a': [180] * length,  # Constant conditional feature
+            'feature_b': np.random.random(size=length),
+            'feature_c': np.random.random(size=length),
+            'feature_d': np.random.random(size=length),
+        })
+        self.normal_index = pd.Series([True] * 80 + [False] * 20)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.test_dir)
+
+    def test_conditional_features_protected_from_dropping(self):
+        """Test that conditional features specified in the autoencoder are protected during fit."""
+        # The config specifies ConditionalAE with 'feature_a' as conditional feature
+        # It also has LowUniqueValueFilter which would normally drop constant features
+        fault_detector = FaultDetector(config=self.conf, model_directory=self.test_dir)
+
+        # Fit the model - this should NOT drop the conditional feature despite it being constant
+        fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
+
+        # Check that the conditional feature is still present after preprocessing
+        feature_names = fault_detector.data_preprocessor.get_feature_names_out()
+        self.assertIn('feature_a', feature_names,
+                      "Conditional feature 'feature_a' should be protected from dropping")
+
+        # Verify we can predict with data containing the conditional feature
+        result = fault_detector.predict(sensor_data=self.sensor_data)
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.predicted_anomalies), len(self.sensor_data))
