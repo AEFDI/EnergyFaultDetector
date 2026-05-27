@@ -184,6 +184,8 @@ class TestFaultDetector(unittest.TestCase):
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
                                                         self.sensor_data]
         mock_autoencoder.get_reconstruction_error.side_effect = [self.recon_error, self.recon_error, self.recon_error]
+        mock_autoencoder.conditional_features = []
+        mock_autoencoder.is_conditional = False
         mock_score.transform.side_effect = [pd.Series([0.1, 0.2, 0.15])] * 2
 
         results = fault_detector.fit(sensor_data=self.sensor_data,
@@ -225,6 +227,7 @@ class TestFaultDetector(unittest.TestCase):
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
                                                         self.sensor_data]
         mock_autoencoder.get_reconstruction_error.side_effect = [self.recon_error] * 9
+        mock_autoencoder.is_conditional = False
         mock_score.transform.side_effect = [pd.Series([0.1, 0.2, 0.15])] * 3
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
                                                         self.sensor_data]
