@@ -415,3 +415,24 @@ class TestDataPreprocessorProtectedFeatures(TestCase):
                       "Constant protected feature should be kept")
         self.assertIn('high_nan_feature', transformed.columns,
                       "High-NaN protected feature should be kept")
+
+    def test_validation_fails_when_protected_feature_missing_from_output(self):
+        """Test that fit raises ValueError if a protected feature is missing from output."""
+        from energy_fault_detector.data_preprocessing.angle_transformer import AngleTransformer
+
+        # Create a pipeline that transforms a protected feature
+        preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'angle_transformer',
+                 'params': {'angles': ['conditional_feature']}},  # Transforms conditional_feature
+            ]
+        )
+
+        # This should raise an error because 'conditional_feature' will be transformed to
+        # 'conditional_feature_sin' and 'conditional_feature_cos'
+        with self.assertRaises(ValueError) as context:
+            preprocessor.fit(self.test_data, protected_features=['conditional_feature'])
+
+        self.assertIn('Protected features were dropped', str(context.exception))
+        self.assertIn('conditional_feature', str(context.exception))
+        self.assertIn('AngleTransformer or CounterDiffTransformer', str(context.exception))
