@@ -169,6 +169,46 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         return pd.DataFrame(data=x_, columns=self.get_feature_names_out(), index=x.index)
 
     # pylint: disable=arguments-renamed
+    def fit(self, X: pd.DataFrame, y=None, **fit_params):
+        """Fit all transformers in the pipeline.
+
+        Args:
+            X: Input DataFrame.
+            y: Target variable (optional).
+            **fit_params: Parameters to pass to the fit method of each step.
+                Use step_name__parameter format (e.g., column_selector__protected_features=['feature1']).
+                Special parameter 'protected_features' can be used to validate that these features
+                are present in the output after fitting.
+
+        Returns:
+            self
+
+        Raises:
+            ValueError: If protected_features are specified but not all are present in output.
+        """
+        # Extract protected features for validation (if provided)
+        protected_features = fit_params.pop('protected_features', None)
+
+        # Call parent fit
+        result = super().fit(X=X, y=y, **fit_params)
+
+        # Validate that protected features are in the output
+        if protected_features:
+            output_features = self.get_feature_names_out()
+            missing_features = [f for f in protected_features if f not in output_features]
+            if missing_features:
+                raise ValueError(
+                    f"Protected features were dropped by the preprocessing pipeline: {missing_features}. "
+                    f"This may be caused by AngleTransformer or CounterDiffTransformer modifying these features. "
+                    f"Please ensure protected features (e.g., conditional features for autoencoders) are not "
+                    f"transformed by these steps or consider the transformed version of these features (e.g. "
+                    f"<feature_name>_sin, <feature_name>_cos, <feature_name>_rate, <feature_name>_diff) as "
+                    f"conditional features."
+                )
+
+        return result
+
+    # pylint: disable=arguments-renamed
     def fit_transform(self, x: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
         """Fit and transform in one step.
 
