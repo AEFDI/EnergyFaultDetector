@@ -317,14 +317,6 @@ class Arcana:
                 # x and x_bias are same shape as x_sim (standard and seq2seq)
                 target = x_corr
 
-            # target for reconstruction error
-            if self.sequence_based:
-                # seq2one: target is last timestep (N, F)
-                target = x_corr[:, -1, :]  # (N, F)
-            else:
-                # standard AE: target is full vector (N, F)
-                target = x_corr
-
             # loss part 1: measures the degree of anomaly of the ARCANA-corrected x_corrected
             loss_1 = 0.5 * tf.reduce_mean((x_sim - target) ** 2)
             # loss part 2: measures the norm of x_bias and therefore the deviation
