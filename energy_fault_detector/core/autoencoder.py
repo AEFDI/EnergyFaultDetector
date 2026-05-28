@@ -255,7 +255,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         kwargs.setdefault("verbose", self.verbose)
         self._fit_internal(
             x, x_val,
-            epochs=tune_epochs + self.epochs,
+            epochs=tune_epochs + self.epochs_completed,
             callbacks=self.callbacks,
             initial_epoch=self.epochs_completed,
             **kwargs
