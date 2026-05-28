@@ -52,7 +52,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         layers: List of integers indicating the number of filters of the convolutional layers in the encoder.
             Defaults to [128, 64, 32] if None.
         decoder_layers: List of integers indicating the number of units in the layers of the decoder.
-            If not provided, the decoder units will mirror the encoder filters in reverse order.
+            If not provided, defaults to [32, 64].
         code_size: Size of the latent representation (encoded vector).
         kernel_size: Specifies the length of the 1D convolution window. Default: 3.
         strides: Stride length of the 1D convolution window. Default: 1.
@@ -174,7 +174,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
                 name="encoder",
             )
 
-        # Decoder: latent (+ last conditionas) -> reconstruction
+        # Decoder: latent (+ last conditions) -> reconstruction
         # Use the actual encoded dimension for the decoder input
         latent_dim = int(encoded.shape[-1])
         latent_input = Input(shape=(latent_dim,), name="latent_input")
