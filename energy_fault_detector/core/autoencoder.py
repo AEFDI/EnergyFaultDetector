@@ -1,4 +1,3 @@
-
 import os
 from abc import ABC, abstractmethod
 from typing import Union, Optional, Dict, Any, Tuple, List
@@ -10,7 +9,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-tf.get_logger().setLevel('ERROR')
+tf.get_logger().setLevel("ERROR")
 
 # # pylint: disable=E0401,E0611,C0413
 from tensorflow.keras.models import load_model as load_keras_model, Model as KerasModel
@@ -21,7 +20,7 @@ from tensorflow.keras.callbacks import EarlyStopping, Callback
 from energy_fault_detector.core.save_load_mixin import SaveLoadMixin
 
 DataType = Union[np.ndarray, pd.DataFrame]
-logger = logging.getLogger('energy_fault_detector')
+logger = logging.getLogger("energy_fault_detector")
 
 
 # TODO: Extract dense-specific fit/predict/encode logic into a DenseAutoencoder subclass.
@@ -83,8 +82,13 @@ class Autoencoder(ABC, SaveLoadMixin):
             logger.warning("Unknown Autoencoder kwargs ignored: %s", list(kwargs.keys()))
 
         self.learning_rate = (
-            ExponentialDecay(initial_learning_rate=learning_rate, decay_rate=decay_rate, decay_steps=decay_steps)
-            if decay_rate and decay_steps else learning_rate
+            ExponentialDecay(
+                initial_learning_rate=learning_rate,
+                decay_rate=decay_rate,
+                decay_steps=decay_steps,
+            )
+            if decay_rate and decay_steps
+            else learning_rate
         )
 
         self.conditional_features: Optional[List[str]] = conditional_features
@@ -102,9 +106,18 @@ class Autoencoder(ABC, SaveLoadMixin):
         self.decoder: Optional[KerasModel] = None
         self.history: Any = None
 
-        self.callbacks: List[Callback] = [
-            EarlyStopping(monitor='val_loss', min_delta=min_delta, patience=patience, restore_best_weights=True)
-        ] if early_stopping else []
+        self.callbacks: List[Callback] = (
+            [
+                EarlyStopping(
+                    monitor="val_loss",
+                    min_delta=min_delta,
+                    patience=patience,
+                    restore_best_weights=True,
+                )
+            ]
+            if early_stopping
+            else []
+        )
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -133,8 +146,10 @@ class Autoencoder(ABC, SaveLoadMixin):
         """Calls the model on new inputs."""
         if self.is_conditional:
             if conditions is None:
-                raise ValueError('To call an conditional autoencoder on new input, the conditions need to be provided'
-                                 ' as well: `Autoencoder(inputs, conditions)`.')
+                raise ValueError(
+                    "To call an conditional autoencoder on new input, the conditions need to be provided"
+                    " as well: `Autoencoder(inputs, conditions)`."
+                )
             return self.model([x, conditions])
 
         return self.model(x)
@@ -162,16 +177,17 @@ class Autoencoder(ABC, SaveLoadMixin):
         """Compile (or recompile) model with Adam optimizer, optionally with a different learning rate."""
 
         if self.model is None:
-            raise ValueError('You need to create the model first by calling the `create_model` method.')
+            raise ValueError(
+                "You need to create the model first by calling the `create_model` method."
+            )
 
         learning_rate = new_learning_rate if new_learning_rate else self.learning_rate
         optimizer = Adam(learning_rate=learning_rate)
-        self.model.compile(optimizer=optimizer, loss=self.loss_name, metrics=self.metrics)
+        self.model.compile(
+            optimizer=optimizer, loss=self.loss_name, metrics=self.metrics
+        )
 
-    def fit(self,
-            x: DataType,
-            x_val: DataType = None,
-            **kwargs) -> 'Autoencoder':  # pylint: disable=W0237
+    def fit(self, x: DataType, x_val: DataType = None, **kwargs) -> "Autoencoder":  # pylint: disable=W0237
         """Fit the autoencoder model.
 
         Args:
@@ -187,8 +203,12 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         if self.model is None:
             self.create_model(
-                input_dimension=x.shape[1] - len(self.conditional_features) if self.is_conditional else x.shape[1],
-                condition_dimension=len(self.conditional_features) if self.is_conditional else None
+                input_dimension=x.shape[1] - len(self.conditional_features)
+                if self.is_conditional
+                else x.shape[1],
+                condition_dimension=len(self.conditional_features)
+                if self.is_conditional
+                else None,
             )
 
         self.compile_model()
@@ -215,7 +235,9 @@ class Autoencoder(ABC, SaveLoadMixin):
         """
 
         if self.is_conditional:
-            input_data, conditions, val_input_data, val_conditions = split_inputs(self.conditional_features, x, x_val)
+            input_data, conditions, val_input_data, val_conditions = split_inputs(
+                self.conditional_features, x, x_val
+            )
             ae_input = (self._apply_noise(input_data), conditions)
             ae_target = input_data
             val_ae_input = (val_input_data, val_conditions)
@@ -226,18 +248,25 @@ class Autoencoder(ABC, SaveLoadMixin):
             val_ae_input = val_ae_target = x_val
 
         fit_history = self.model.fit(
-            ae_input, ae_target,
+            ae_input,
+            ae_target,
             batch_size=self.batch_size,
             epochs=epochs,
             validation_data=None if x_val is None else (val_ae_input, val_ae_target),
             callbacks=callbacks,
-            **kwargs
+            **kwargs,
         )
 
         self._extend_fit_history(fit_history.history)
 
-    def tune(self, x: DataType, learning_rate: float, tune_epochs: int, x_val: DataType = None,
-             **kwargs) -> 'Autoencoder':
+    def tune(
+        self,
+        x: DataType,
+        learning_rate: float,
+        tune_epochs: int,
+        x_val: DataType = None,
+        **kwargs,
+    ) -> "Autoencoder":
         """Tune full autoencoder by extending the model fitting process by tune_epochs.
 
         Args:
@@ -262,8 +291,14 @@ class Autoencoder(ABC, SaveLoadMixin):
         )
         return self
 
-    def tune_decoder(self, x: pd.DataFrame, learning_rate: float, tune_epochs: int, x_val: pd.DataFrame = None,
-                     **kwargs) -> 'Autoencoder':
+    def tune_decoder(
+        self,
+        x: pd.DataFrame,
+        learning_rate: float,
+        tune_epochs: int,
+        x_val: pd.DataFrame = None,
+        **kwargs,
+    ) -> "Autoencoder":
         """Tune decoder only - weights of the encoder are unchanged. Weight tuning is done by extending the model
         fitting process by tune_epochs.
 
@@ -279,8 +314,10 @@ class Autoencoder(ABC, SaveLoadMixin):
         """
 
         if self.encoder is None:
-            raise ValueError("Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
-                             " attribute.")
+            raise ValueError(
+                "Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
+                " attribute."
+            )
 
         self.encoder.trainable = False
         kwargs.setdefault("verbose", self.verbose)
@@ -291,8 +328,10 @@ class Autoencoder(ABC, SaveLoadMixin):
         """Return latent representation using autoencoder."""
 
         if self.encoder is None:
-            raise ValueError("Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
-                             " attribute.")
+            raise ValueError(
+                "Encoder was not created. Update the `self.create_model` method to set the `self.encoder`"
+                " attribute."
+            )
 
         kwargs.setdefault("verbose", self.verbose)
 
@@ -311,12 +350,14 @@ class Autoencoder(ABC, SaveLoadMixin):
         """
 
         if not self._is_fitted():
-            raise ValueError(f'{self.__class__} object needs to be fitted first!')
+            raise ValueError(f"{self.__class__} object needs to be fitted first!")
 
         kwargs.setdefault("verbose", self.verbose)
         return self._predict(x, **kwargs)
 
-    def _predict(self, x: DataType, return_conditions: bool = False, **kwargs) -> DataType:
+    def _predict(
+        self, x: DataType, return_conditions: bool = False, **kwargs
+    ) -> DataType:
         """Predict with fitted model.
 
         Args:
@@ -329,12 +370,16 @@ class Autoencoder(ABC, SaveLoadMixin):
         """
         if not self.is_conditional:
             if isinstance(x, pd.DataFrame):
-                return pd.DataFrame(self.model.predict(x, **kwargs), index=x.index, columns=x.columns)
+                return pd.DataFrame(
+                    self.model.predict(x, **kwargs), index=x.index, columns=x.columns
+                )
             return self.model.predict(x, **kwargs)
 
         input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
         predictions = self.model.predict([input_data, conditions], **kwargs)
-        prediction_df = pd.DataFrame(predictions, index=input_data.index, columns=input_data.columns)
+        prediction_df = pd.DataFrame(
+            predictions, index=input_data.index, columns=input_data.columns
+        )
 
         if return_conditions:
             input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
@@ -360,7 +405,9 @@ class Autoencoder(ABC, SaveLoadMixin):
             input_data, conditions, _, _ = split_inputs(self.conditional_features, x)
             recon_error = x_predicted - input_data
             if isinstance(x, pd.DataFrame):
-                recon_error = pd.DataFrame(recon_error, index=input_data.index, columns=input_data.columns)
+                recon_error = pd.DataFrame(
+                    recon_error, index=input_data.index, columns=input_data.columns
+                )
             return recon_error
 
         if isinstance(x, pd.DataFrame):
@@ -380,13 +427,13 @@ class Autoencoder(ABC, SaveLoadMixin):
         file_path = os.path.join(directory, self.__class__.__name__)
 
         if self.model is not None:
-            self.model.save(file_path + '.model')
+            self.model.save(file_path + ".model.keras")
 
         if self.encoder is not None:
-            self.encoder.save(file_path + '.encoder')
+            self.encoder.save(file_path + ".encoder.keras")
 
         if self.decoder is not None:
-            self.decoder.save(file_path + '.decoder')
+            self.decoder.save(file_path + '.decoder.keras')
 
         ae_dict = self.__dict__.copy()
         ae_dict['model'] = None
@@ -396,22 +443,96 @@ class Autoencoder(ABC, SaveLoadMixin):
         with open(file_name, 'wb') as f:
             f.write(pickle.dumps(ae_dict))
 
-    def load(self, directory: str, **kwargs) -> 'Autoencoder':  # pylint: disable=W0221,W0613
-        """Load the model object from given directory."""
+    def load(self, directory: str, **kwargs) -> "Autoencoder":  # pylint: disable=W0221,W0613
+        """Load the model object from given directory.
+        Tries to load .keras files first, falls back to .model.
+        """
 
         file_name = os.path.join(directory, self.__class__.__name__)
-        with open(file_name + '.attrs', 'rb') as f:
-            class_data = f.read()
 
+        # Load metadata (.attrs file)
+        with open(file_name + ".attrs", "rb") as f:
+            class_data = f.read()
         self.__dict__ = pickle.loads(class_data)
-        if os.path.exists(file_name + '.model'):
-            self.model = load_keras_model(file_name + '.model')
-            if os.path.exists(file_name + '.encoder'):
-                self.encoder = load_keras_model(file_name + '.encoder')
-            if os.path.exists(file_name + '.decoder'):
-                self.decoder = load_keras_model(file_name + '.decoder')
-        else:
-            warnings.warn('No fitted model was found.')
+
+        # Priority order for file extensions: .model.keras (new) > .model (old)
+        model_extensions = [".model.keras", ".model"]
+        encoder_extensions = [".encoder.keras", ".encoder"]
+        decoder_extensions = [".decoder.keras", ".decoder"]
+
+        # Try to load AE model
+        model_loaded = False
+        for ext in model_extensions:
+            model_path = file_name + ext
+            if os.path.exists(model_path):
+                self.model = load_keras_model(model_path)
+                model_loaded = True
+                break
+
+        # Try to load encoder
+        encoder_loaded = False
+        for ext in encoder_extensions:
+            encoder_path = file_name + ext
+            if os.path.exists(encoder_path):
+                self.encoder = load_keras_model(encoder_path)
+                encoder_loaded = True
+                break
+
+        # Try to load decoder
+        decoder_loaded = False
+        for ext in decoder_extensions:
+            decoder_path = file_name + ext
+            if os.path.exists(decoder_path):
+                self.encoder = load_keras_model(decoder_path)
+                decoder_loaded = True
+                break
+
+        if not model_loaded:
+            warnings.warn("No fitted autoencoder model was found.")
+        if not encoder_loaded:
+            warnings.warn("No fitted encoder model was found.")
+        if not decoder_loaded:
+            warnings.warn("No fitted decoder model was found.")
+
+        # Priority order for file extensions: .model.keras (new) > .model (old)
+        model_extensions = [".model.keras", ".model"]
+        encoder_extensions = [".encoder.keras", ".encoder"]
+        decoder_extensions = [".decoder.keras", ".decoder"]
+
+        # Try to load AE model
+        model_loaded = False
+        for ext in model_extensions:
+            model_path = file_name + ext
+            if os.path.exists(model_path):
+                self.model = load_keras_model(model_path)
+                model_loaded = True
+                break
+
+        # Try to load encoder
+        encoder_loaded = False
+        for ext in encoder_extensions:
+            encoder_path = file_name + ext
+            if os.path.exists(encoder_path):
+                self.encoder = load_keras_model(encoder_path)
+                encoder_loaded = True
+                break
+
+
+        # Try to load decoder
+        decoder_loaded = False
+        for ext in decoder_extensions:
+            decoder_path = file_name + ext
+            if os.path.exists(decoder_path):
+                self.encoder = load_keras_model(decoder_path)
+                decoder_loaded = True
+                break
+
+        if not model_loaded:
+            warnings.warn("No fitted autoencoder model was found.")
+        if not encoder_loaded:
+            warnings.warn("No fitted encoder model was found.")
+        if not decoder_loaded:
+            warnings.warn("No fitted decoder model was found.")
 
         return self
 
@@ -445,7 +566,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         if self.noise == 0:
             return x
 
-        return x + self.noise * np.random.normal(loc=0., scale=1.0, size=x.shape)
+        return x + self.noise * np.random.normal(loc=0.0, scale=1.0, size=x.shape)
 
     def _apply_noise_generator(self, x):
         """Apply random normal noise to generator inputs - for denoising AEs.
@@ -465,7 +586,9 @@ class Autoencoder(ABC, SaveLoadMixin):
             yield np.array(noisy_input), batch_output
 
 
-def split_inputs(conditional_features: List[str], x: pd.DataFrame, x_val: pd.DataFrame = None) -> Tuple:
+def split_inputs(
+    conditional_features: List[str], x: pd.DataFrame, x_val: pd.DataFrame = None
+) -> Tuple:
     """Prepare the input and conditional data.
 
     Args:
@@ -484,13 +607,17 @@ def split_inputs(conditional_features: List[str], x: pd.DataFrame, x_val: pd.Dat
             inputs = data.drop(conditional_features, axis=1)
         elif isinstance(data, (np.ndarray, tf.Tensor)):
             # Assume the first columns are the conditional features
-            inputs = data[:, len(conditional_features):]
-            conditions = data[:, :len(conditional_features)]
+            inputs = data[:, len(conditional_features) :]
+            conditions = data[:, : len(conditional_features)]
         else:
-            raise ValueError("Input must be a pandas DataFrame, NumPy array, or TensorFlow Tensor.")
+            raise ValueError(
+                "Input must be a pandas DataFrame, NumPy array, or TensorFlow Tensor."
+            )
         return inputs, conditions
 
     input_data, conditions = _split(x)
-    val_input_data, val_conditions = _split(x_val) if x_val is not None else (None, None)
+    val_input_data, val_conditions = (
+        _split(x_val) if x_val is not None else (None, None)
+    )
 
     return input_data, conditions, val_input_data, val_conditions
