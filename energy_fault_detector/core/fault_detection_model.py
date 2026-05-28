@@ -34,7 +34,13 @@ DataType = Union[pd.DataFrame, np.ndarray, List]
 PathLike = Union[str, Path]
 ModelPart = Union[DataPreprocessor, "Autoencoder", AnomalyScore, ThresholdSelector]
 
-_MODEL_EXTENSIONS = ('.pkl', '.attrs', '.model', '.encoder')
+_MODEL_EXTENSIONS = (
+    '.pkl',
+    '.attrs',
+    '.model', '.encoder', '.decoder',
+    '.model.keras', 'encoder.keras', 'decoder.keras',
+)
+
 
 class NoTrainingData(Exception):
     """Raised when no training data is available."""
