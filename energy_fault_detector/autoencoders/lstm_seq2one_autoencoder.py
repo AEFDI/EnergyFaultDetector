@@ -10,8 +10,6 @@ from tensorflow.keras.layers import (
     Dropout,
     Dense,
     Concatenate,
-    RepeatVector,
-    Lambda,
 )
 from tensorflow.keras.models import Model as KerasModel
 
@@ -189,7 +187,7 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         if conditional_input is not None:
             enc = self.encoder(inputs=[main_input, conditional_input])
-            cond_last = Lambda(lambda c: c[:, -1, :], name="cond_last")(conditional_input)
+            cond_last = conditional_input[:, -1, :]
             decoded = self.decoder([enc, cond_last])
             self.model = tf.keras.Model(
                 inputs=[main_input, conditional_input],

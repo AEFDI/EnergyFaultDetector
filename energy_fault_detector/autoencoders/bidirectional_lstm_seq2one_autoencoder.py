@@ -11,7 +11,6 @@ from tensorflow.keras.layers import (
     Dropout,
     Input,
     LSTM,
-    Lambda,
     RepeatVector,
 )
 from tensorflow.keras.models import Model as KerasModel
@@ -176,7 +175,7 @@ class BidirectionalLSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             )(decoder_output)
             decoder_output = Dropout(rate=self.dropout_rate)(decoder_output)
 
-        last_timestep = Lambda(lambda t: t[:, -1, :], name="last_timestep")(decoder_output)
+        last_timestep = decoder_output[:, -1, :]
         reconstruction = Dense(
             units=n_main_features,
             name="reconstruction",
