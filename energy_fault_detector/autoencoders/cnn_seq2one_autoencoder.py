@@ -13,7 +13,6 @@ from tensorflow.keras.layers import (
     Dense,
     Concatenate,
     Flatten,
-    Lambda,
     MaxPooling1D,
 )
 from tensorflow.keras.models import Model as KerasModel
@@ -209,7 +208,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         # Full AE
         if cond_last_input is not None:
             encoded = self.encoder(inputs=[main_input, conditional_input])
-            cond_last = Lambda(lambda c: c[:, -1, :], name="cond_last")(conditional_input)
+            cond_last = conditional_input[:, -1, :]
             decoded = self.decoder([encoded, cond_last])
             self.model = tf.keras.Model(
                 inputs=[main_input, conditional_input],
