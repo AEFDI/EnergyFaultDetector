@@ -136,5 +136,5 @@ Step 4: Visualise ARCANA importances
     # Bar plot of mean importances for one event
     fig, ax = plot_arcana_mean_importances(
         importances=mean_importances,
-        top_n_features=10,
+        top_n_features=10
     )
