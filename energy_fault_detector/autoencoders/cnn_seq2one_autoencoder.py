@@ -39,7 +39,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
     The model will first use a stack of 1D-Convolutional layers to encode sequence data with dimensional reduction.
     After that, a series of MaxPooling-Layers followed by 1D convolutions is used to summarize the encoded sequences
     while subsequently reducing the number of timestamps per sequence. Once the encoded data is compact enough, the
-    sample will be flattened and the prediction of the last last timestamp of the original input series is done by
+    sample will be flattened and the prediction of the last timestamp of the original input series is done by
     applying a stack of Dense layers.
 
     Input:
