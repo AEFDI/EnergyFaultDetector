@@ -114,7 +114,7 @@ class SequenceAutoencoder(Autoencoder):
         return self._fit_internal(
             x=x,
             x_val=x_val,
-            total_epochs=self.epochs + tune_epochs,
+            total_epochs=self.epochs_completed + tune_epochs,
             initial_epoch=self.epochs_completed,
             learning_rate=learning_rate,
             **kwargs,
