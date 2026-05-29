@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
-from tensorflow.keras.layers import (
+from keras.layers import (
     Input,
     Conv1D,
     Conv1DTranspose,
@@ -10,7 +10,7 @@ from tensorflow.keras.layers import (
     Dropout,
     Concatenate
 )
-from tensorflow.keras.models import Model as KerasModel
+from keras.models import Model as KerasModel
 
 from .seq2seq_autoencoder import Seq2SeqAutoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder

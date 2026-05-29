@@ -215,12 +215,13 @@ class TestFaultDetector(unittest.TestCase):
                                                         self.sensor_data]
         mock_autoencoder.get_reconstruction_error.side_effect = [self.recon_error, self.recon_error, self.recon_error]
         mock_score.transform.return_value = pd.Series([0.1, 0.2, 0.15])
+        mock_score.reset_mock()
 
         _ = fault_detector.fit(sensor_data=self.sensor_data,
                                normal_index=self.normal_index,
                                save_models=False)
 
-        mock_score.save.asset_not_called()
+        mock_score.save.assert_not_called()
         self.assertEqual(self.conf.write_config.call_count, 1)
 
     def test_tune(self):
@@ -235,7 +236,7 @@ class TestFaultDetector(unittest.TestCase):
         tune_results = fault_detector.tune(sensor_data=self.sensor_data, normal_index=self.normal_index,
                                            new_learning_rate=0.001, tune_epochs=1, tune_method='full',
                                            save_models=False)
-        mock_autoencoder.tune.called_once()
+        mock_autoencoder.tune.assert_called_once()
 
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
                                                         self.sensor_data]
@@ -243,7 +244,7 @@ class TestFaultDetector(unittest.TestCase):
         tune_results = fault_detector.tune(sensor_data=self.sensor_data, normal_index=self.normal_index,
                                            new_learning_rate=0.001, tune_epochs=1, tune_method='decoder',
                                            save_models=False)
-        mock_autoencoder.tune_decoder.called_once()
+        mock_autoencoder.tune_decoder.assert_called_once()
 
     @patch('energy_fault_detector.root_cause_analysis.arcana.Arcana.find_arcana_bias')
     def test_predict(self, mock_find_arcana_bias):

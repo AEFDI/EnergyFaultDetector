@@ -10,7 +10,7 @@ import tensorflow as tf
 
 tf.get_logger().setLevel('ERROR')
 
-from tensorflow.keras.optimizers import Adam
+from keras.optimizers import Adam
 
 from energy_fault_detector.core.autoencoder import Autoencoder
 from energy_fault_detector.autoencoders.sequence_autoencoder import SequenceAutoencoder

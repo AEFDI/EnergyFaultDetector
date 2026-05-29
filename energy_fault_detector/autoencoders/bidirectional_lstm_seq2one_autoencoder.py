@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
-import tensorflow as tf
-from tensorflow.keras import regularizers
-from tensorflow.keras.layers import (
+from keras import regularizers
+from keras.layers import (
     Bidirectional,
     Concatenate,
     Dense,
@@ -13,7 +12,7 @@ from tensorflow.keras.layers import (
     LSTM,
     RepeatVector,
 )
-from tensorflow.keras.models import Model as KerasModel
+from keras.models import Model as KerasModel
 
 from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
@@ -153,13 +152,13 @@ class BidirectionalLSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
         encoded = Dropout(rate=self.dropout_rate)(encoded)
 
         if conditional_input is not None:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=encoded,
                 name="encoder",
             )
         else:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=main_input,
                 outputs=encoded,
                 name="encoder",
@@ -182,13 +181,13 @@ class BidirectionalLSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
         )(last_timestep)
 
         if conditional_input is not None:
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=reconstruction,
                 name="bidirectional_lstm_seq2one_autoencoder",
             )
         else:
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=main_input,
                 outputs=reconstruction,
                 name="bidirectional_lstm_seq2one_autoencoder",

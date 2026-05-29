@@ -4,8 +4,7 @@ from typing import List, Optional, Tuple
 import logging
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.layers import (
+from keras.layers import (
     Input,
     Conv1D,
     BatchNormalization,
@@ -15,7 +14,7 @@ from tensorflow.keras.layers import (
     Flatten,
     MaxPooling1D,
 )
-from tensorflow.keras.models import Model as KerasModel
+from keras.models import Model as KerasModel
 
 from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
@@ -161,13 +160,13 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         # Encoder model for latent representation
         if conditional_input is not None:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=encoded,
                 name="encoder",
             )
         else:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=main_input,
                 outputs=encoded,
                 name="encoder",
@@ -193,13 +192,13 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         # Stand-alone decoder model
         if conditional_input is not None:
-            self.decoder = tf.keras.Model(
+            self.decoder = KerasModel(
                 inputs=[latent_input, cond_last_input],
                 outputs=reconstruction,
                 name="decoder",
             )
         else:
-            self.decoder = tf.keras.Model(
+            self.decoder = KerasModel(
                 inputs=latent_input,
                 outputs=reconstruction,
                 name="decoder",
@@ -210,7 +209,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
             encoded = self.encoder(inputs=[main_input, conditional_input])
             cond_last = conditional_input[:, -1, :]
             decoded = self.decoder([encoded, cond_last])
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=decoded,
                 name="cnn_seq2one_autoencoder",
@@ -218,7 +217,7 @@ class CNNSeq2OneAutoencoder(Seq2OneAutoencoder):
         else:
             encoded = self.encoder(main_input)
             decoded = self.decoder(encoded)
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=main_input,
                 outputs=decoded,
                 name="cnn_seq2one_autoencoder",

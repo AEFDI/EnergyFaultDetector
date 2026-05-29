@@ -1,7 +1,7 @@
 from typing import List, Union, Tuple
 
-from tensorflow.keras import Model as KerasModel
-from tensorflow.keras import layers
+from keras import Model as KerasModel
+from keras import layers
 
 from energy_fault_detector.autoencoders import MultilayerAutoencoder
 

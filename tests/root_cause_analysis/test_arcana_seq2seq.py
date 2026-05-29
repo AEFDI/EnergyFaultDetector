@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from tensorflow.keras import layers
-from tensorflow.keras.models import Model as KerasModel
+from keras import layers
+from keras.models import Model as KerasModel
 
 from energy_fault_detector.root_cause_analysis.arcana import Arcana
 from energy_fault_detector.autoencoders.seq2seq_autoencoder import Seq2SeqAutoencoder
