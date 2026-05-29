@@ -4,15 +4,11 @@ import os
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from energy_fault_detector.quick_fault_detection.quick_fault_detector import (
-    quick_fault_detector,
-    analyze_event,
-)
+import energy_fault_detector.quick_fault_detection.pipeline as qfd_module
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult
 
 
@@ -48,8 +44,8 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
         self.tmp_dir = tempfile.mkdtemp()
         self.train_path, self.test_path = _make_csv_files(self.tmp_dir)
 
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.generate_output_plots")
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.FaultDetector")
+    @patch.object(qfd_module, "generate_output_plots")
+    @patch.object(qfd_module, "FaultDetector")
     def test_full_pipeline_no_anomalies(self, MockFaultDetector, mock_plots):
         """Pipeline runs end-to-end when no anomalies are detected."""
         # Setup mock
@@ -66,7 +62,7 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
         )
         mock_model.predict.return_value = mock_result
 
-        result, events = quick_fault_detector(
+        result, events = qfd_module.quick_fault_detector(
             csv_data_path=self.train_path,
             csv_test_data_path=self.test_path,
             time_column_name="timestamp",
@@ -80,8 +76,8 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
         self.assertEqual(len(events), 0)
         mock_plots.assert_called_once()
 
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.generate_output_plots")
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.FaultDetector")
+    @patch.object(qfd_module, "generate_output_plots")
+    @patch.object(qfd_module, "FaultDetector")
     def test_full_pipeline_with_anomalies(self, MockFaultDetector, mock_plots):
         """Pipeline runs ARCANA when anomalies are detected."""
         n_rows = 200
@@ -112,7 +108,7 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
             [],  # tracked_bias
         )
 
-        result, events = quick_fault_detector(
+        result, events = qfd_module.quick_fault_detector(
             csv_data_path=self.train_path,
             csv_test_data_path=self.test_path,
             time_column_name="timestamp",
@@ -124,8 +120,8 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
         self.assertGreater(len(events), 0)
         mock_model.run_root_cause_analysis.assert_called()
 
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.generate_output_plots")
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.FaultDetector")
+    @patch.object(qfd_module, "generate_output_plots")
+    @patch.object(qfd_module, "FaultDetector")
     def test_features_to_exclude_passed_to_config(self, MockFaultDetector, mock_plots):
         """Verify features_to_exclude reaches the config."""
         n_rows = 200
@@ -139,7 +135,7 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
         )
         mock_model.predict.return_value = mock_result
 
-        quick_fault_detector(
+        qfd_module.quick_fault_detector(
             csv_data_path=self.train_path,
             csv_test_data_path=self.test_path,
             time_column_name="timestamp",
@@ -164,9 +160,9 @@ class TestCLI(unittest.TestCase):
         self.tmp_dir = tempfile.mkdtemp()
         self.train_path, self.test_path = _make_csv_files(self.tmp_dir)
 
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.generate_output_plots")
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.FaultDetector")
-    @patch("energy_fault_detector.quick_fault_detection.quick_fault_detector.load_train_test_data")
+    @patch.object(qfd_module, "generate_output_plots")
+    @patch.object(qfd_module, "FaultDetector")
+    @patch.object(qfd_module, "load_train_test_data")
     def test_cli_invocation(self, mock_load, MockFaultDetector, mock_plots):
         """CLI parses args and calls quick_fault_detector."""
         from energy_fault_detector.main import main
@@ -218,7 +214,7 @@ class TestAnalyzeEvent(unittest.TestCase):
         )
         mock_detector.run_root_cause_analysis.return_value = (bias, pd.DataFrame(), [])
 
-        importances, losses = analyze_event(mock_detector, event_data, track_losses=False)
+        importances, losses = qfd_module.analyze_event(mock_detector, event_data, track_losses=False)
 
         self.assertEqual(len(importances), 3)
         # calculate_mean_arcana_importances normalizes: 0.5 / (0.1 + 0.5 + 0.0)
