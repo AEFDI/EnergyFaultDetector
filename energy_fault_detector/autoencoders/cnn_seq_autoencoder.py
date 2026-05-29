@@ -43,13 +43,10 @@ class CNNAutoencoder(Seq2SeqAutoencoder):
         train:
           autoencoder:
             name: CNNAutoencoder
-            time_series_sampler:
-              name: TimeSeriesRandomSampler
-              params:
-                sequence_length: 36
-                ts_freq: np.timedelta64(10, 'm')
-                pad_incomplete: false
-                pad_value: 0
+            sequence_builder:
+              sequence_length: 36
+              ts_freq: "5m"
+              stride: 6
             params:
               sequence_length: 12
               dropout_rate: 0.0
