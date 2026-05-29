@@ -1,2 +1,2 @@
 
-from .quick_fault_detector import quick_fault_detector
+from .pipeline import quick_fault_detector
