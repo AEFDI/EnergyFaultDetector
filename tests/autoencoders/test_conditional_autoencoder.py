@@ -1,6 +1,5 @@
 """Conditional AE tests"""
 
-import os.path
 import shutil
 from typing import Dict
 from unittest import TestCase

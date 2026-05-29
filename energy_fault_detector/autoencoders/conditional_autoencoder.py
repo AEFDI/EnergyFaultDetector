@@ -2,8 +2,8 @@
 
 from typing import List, Optional
 
-from tensorflow.keras.models import Model as KerasModel
-from tensorflow.keras.layers import Dense, PReLU, Input, Concatenate
+from keras.models import Model as KerasModel
+from keras.layers import Dense, PReLU, Input, Concatenate
 
 from energy_fault_detector.core.autoencoder import Autoencoder
 

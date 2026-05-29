@@ -12,10 +12,10 @@ import tensorflow as tf
 tf.get_logger().setLevel("ERROR")
 
 # # pylint: disable=E0401,E0611,C0413
-from tensorflow.keras.models import load_model as load_keras_model, Model as KerasModel
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.optimizers.schedules import ExponentialDecay
-from tensorflow.keras.callbacks import EarlyStopping, Callback
+from keras.models import load_model as load_keras_model, Model as KerasModel
+from keras.optimizers import Adam
+from keras.optimizers.schedules import ExponentialDecay
+from keras.callbacks import EarlyStopping, Callback
 
 from energy_fault_detector.core.save_load_mixin import SaveLoadMixin
 
@@ -144,12 +144,16 @@ class Autoencoder(ABC, SaveLoadMixin):
 
     def __call__(self, x: Union[np.ndarray, tf.Tensor], conditions: Union[np.ndarray, tf.Tensor] = None) -> tf.Tensor:
         """Calls the model on new inputs."""
+
+        x = tf.convert_to_tensor(x, dtype=tf.float32)
+
         if self.is_conditional:
             if conditions is None:
                 raise ValueError(
                     "To call an conditional autoencoder on new input, the conditions need to be provided"
                     " as well: `Autoencoder(inputs, conditions)`."
                 )
+            conditions = tf.convert_to_tensor(conditions, dtype=tf.float32)
             return self.model([x, conditions])
 
         return self.model(x)

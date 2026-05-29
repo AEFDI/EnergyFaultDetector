@@ -126,7 +126,7 @@ class FaultDetector(FaultDetectionModel):
         """
 
         try:
-            from tensorflow.keras.backend import clear_session
+            from keras.backend import clear_session
         except ImportError:
             logger.warning('Could not import tensorflow.keras.backend.clear_session(). Please install tensorflow.')
             raise
@@ -225,7 +225,7 @@ class FaultDetector(FaultDetectionModel):
                 raise ValueError('No models loaded and no pretrained_model_path provided!')
 
         try:
-            from tensorflow.keras.backend import clear_session
+            from keras.backend import clear_session
         except ImportError:
             logger.warning('Could not import tensorflow.keras.backend.clear_session(). Please install tensorflow.')
             raise
