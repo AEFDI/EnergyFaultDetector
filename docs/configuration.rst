@@ -88,27 +88,6 @@ You can look up the names for the available model classes in the class registry:
 
     registry.print_available_classes()
 
-Configuration updates
-^^^^^^^^^^^^^^^^^^^^^
-
-To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
-configuration dictionary via the :py:obj:`Config.update_config <energy_fault_detector.config.config.Config.update_config>` method:
-
-.. code-block:: python
-
-  from energy_fault_detector.config import Config
-  from copy import deepcopy
-
-  config = Config('configs/base_config.yaml')
-
-  # update some parameters:
-  new_config_dict = deepcopy(config.config_dict)
-  new_config_dict['train']['anomaly_score']['name'] = 'mahalanobis'
-  config = Config(new_config_dict)
-
-  # or create a new configuration object and model
-  new_model = FaultDetector(Config(config_dict=new_config_dict))
-
 Detailed configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 Below is a more thorough configuration. It shows how to specify preprocessing steps and more model parameters.
