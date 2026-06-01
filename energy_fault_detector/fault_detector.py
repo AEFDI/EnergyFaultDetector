@@ -230,7 +230,6 @@ class FaultDetector(FaultDetectionModel):
             logger.warning('Could not import tensorflow.keras.backend.clear_session(). Please install tensorflow.')
             raise
 
-        clear_session()
         x = sensor_data.sort_index()
         if normal_index is not None:
             y = normal_index.sort_index()

@@ -220,7 +220,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         # ensure verbose default
         kwargs.setdefault("verbose", self.verbose)
 
-        self._fit_internal(x, x_val, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
+        self._fit_internal(x, x_val, epochs=self.epochs, callbacks=callbacks, **kwargs)
         return self
 
     def _fit_internal(self, x: DataType, x_val: DataType, epochs: int, callbacks: List[Callback], **kwargs) -> None:
@@ -282,11 +282,12 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         self.compile_model(learning_rate)  # sets new learning rate
         kwargs.setdefault("verbose", self.verbose)
+        callbacks = kwargs.pop('callbacks', [])
         self._fit_internal(
             x, x_val,
             epochs=tune_epochs + self.epochs_completed,
-            callbacks=self.callbacks,
             initial_epoch=self.epochs_completed,
+            callbacks=callbacks,
             **kwargs
         )
         return self
