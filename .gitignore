@@ -6,6 +6,10 @@ __pycache__/
 .ipynb_checkpoints/
 .vscode
 
+# env
+.venv/
+.venv*/
+
 # Coverage etc.
 .coverage
 htmlcov/
@@ -32,6 +36,12 @@ test_report.xml
 *.pkl
 *.attrs
 *.model
+*.encoder
+*.decoder
+*.keras
+notebooks/PreDist/models/
+notebooks/PreDist/predist_data/
+*.csv
 
 # logging
 *.log
