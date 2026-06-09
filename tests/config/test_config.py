@@ -38,7 +38,8 @@ class TestConfig(unittest.TestCase):
                                    'params': {'target_false_discovery_rate': 0.8},
                                    'fit_on_val': False},
             'data_splitter': {'train_block_size': 7, 'val_block_size': 3, 'type': 'BlockDataSplitter'},
-            'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99}
+            'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99},
+            'protect_conditional_features': False,
         })
         self.assertDictEqual(conf.config_dict['root_cause_analysis'],
                              {'alpha': 0.8,

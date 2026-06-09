@@ -489,19 +489,18 @@ class TestAutoencoderGetReconstructionError(unittest.TestCase):
             mock_predict.assert_called_once()
 
 
-class TestFaultDetectorConditionalFeatureProtection(unittest.TestCase):
-    """Test that FaultDetector protects conditional features from being dropped during preprocessing."""
+class TestFaultDetectorConditionalFeatureResolution(unittest.TestCase):
+    """Test conditional feature resolution, fallback, and predict-time validation."""
 
     def setUp(self) -> None:
         self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
         self.conf = Config(self.config_path)
         self.test_dir = tempfile.mkdtemp()
 
-        # Create sensor data where conditional feature is constant (would normally be dropped)
         np.random.seed(42)
         length = 100
         self.sensor_data = pd.DataFrame({
-            'feature_a': [180] * length,  # Constant conditional feature
+            'feature_a': np.random.random(size=length),
             'feature_b': np.random.random(size=length),
             'feature_c': np.random.random(size=length),
             'feature_d': np.random.random(size=length),
@@ -511,21 +510,233 @@ class TestFaultDetectorConditionalFeatureProtection(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.test_dir)
 
-    def test_conditional_features_protected_from_dropping(self):
-        """Test that conditional features specified in the autoencoder are protected during fit."""
-        # The config specifies ConditionalAE with 'feature_a' as conditional feature
-        # It also has LowUniqueValueFilter which would normally drop constant features
-        fault_detector = FaultDetector(config=self.conf, model_directory=self.test_dir)
+    def test_resolve_partial_missing_conditionals(self):
+        """When some conditional features are missing, only available ones are kept."""
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        # Config has conditional_features: ['feature_a', 'feature_b']
+        self.assertEqual(fd.autoencoder.conditional_features, ['feature_a', 'feature_b'])
 
-        # Fit the model - this should NOT drop the conditional feature despite it being constant
-        fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
+        # Drop feature_b from sensor data
+        sensor_data_partial = self.sensor_data.drop(columns=['feature_b'])
 
-        # Check that the conditional feature is still present after preprocessing
-        feature_names = fault_detector.data_preprocessor.get_feature_names_out()
-        self.assertIn('feature_a', feature_names,
-                      "Conditional feature 'feature_a' should be protected from dropping")
+        available = fd._resolve_conditional_features(sensor_data_partial)
 
-        # Verify we can predict with data containing the conditional feature
-        result = fault_detector.predict(sensor_data=self.sensor_data)
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.predicted_anomalies), len(self.sensor_data))
+        self.assertEqual(available, ['feature_a'])
+        self.assertEqual(fd.autoencoder.conditional_features, ['feature_a'])
+        self.assertTrue(fd.autoencoder.is_conditional)
+
+    def test_resolve_all_missing_conditionals_fallback_to_multilayer(self):
+        """When ALL conditional features are missing, ConditionalAE falls back to MultilayerAutoencoder."""
+        from energy_fault_detector.autoencoders import MultilayerAutoencoder
+
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        self.assertIsInstance(fd.autoencoder, ConditionalAE)
+
+        # Drop both conditional features
+        sensor_data_no_cond = self.sensor_data.drop(columns=['feature_a', 'feature_b'])
+
+        available = fd._resolve_conditional_features(sensor_data_no_cond)
+
+        self.assertEqual(available, [])
+        self.assertIsInstance(fd.autoencoder, MultilayerAutoencoder)
+        self.assertFalse(fd.autoencoder.is_conditional)
+        self.assertIsNone(fd.autoencoder.conditional_features)
+
+    def test_fallback_preserves_architecture_params(self):
+        """Fallback MultilayerAutoencoder should have the same architecture params from config."""
+        from energy_fault_detector.autoencoders import MultilayerAutoencoder
+
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        ae_params = self.conf['train']['autoencoder'].get('params', {})
+
+        sensor_data_no_cond = self.sensor_data.drop(columns=['feature_a', 'feature_b'])
+        fd._resolve_conditional_features(sensor_data_no_cond)
+
+        self.assertIsInstance(fd.autoencoder, MultilayerAutoencoder)
+        self.assertEqual(fd.autoencoder.code_size, ae_params.get('code_size', 10))
+        self.assertEqual(fd.autoencoder.layers, ae_params.get('layers', [200]))
+
+    def test_resolve_no_conditionals_configured_is_noop(self):
+        """When no conditional features are configured, resolution is a no-op."""
+        config = Config(os.path.join(PROJECT_ROOT, 'tests/test_data/test_config.yaml'))
+        fd = FaultDetector(config=config, model_directory=self.test_dir)
+
+        self.assertFalse(fd.autoencoder.is_conditional)
+
+        available = fd._resolve_conditional_features(self.sensor_data)
+
+        self.assertEqual(available, [])
+        self.assertFalse(fd.autoencoder.is_conditional)
+
+    def test_resolve_all_present_no_change(self):
+        """When all conditional features are present, no change occurs."""
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+
+        available = fd._resolve_conditional_features(self.sensor_data)
+
+        self.assertEqual(available, ['feature_a', 'feature_b'])
+        self.assertIsInstance(fd.autoencoder, ConditionalAE)
+        self.assertTrue(fd.autoencoder.is_conditional)
+
+    def test_predict_raises_on_missing_trained_conditionals(self):
+        """Predict raises ValueError when trained conditional features are missing."""
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+
+        # Train with all features present
+        fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
+
+        # Predict without feature_a
+        sensor_data_missing = self.sensor_data.drop(columns=['feature_a'])
+
+        with self.assertRaises(ValueError) as ctx:
+            fd.predict(sensor_data=sensor_data_missing)
+
+        self.assertIn('feature_a', str(ctx.exception))
+        self.assertIn('missing', str(ctx.exception).lower())
+
+    def test_fit_with_all_conditionals_missing_trains_successfully(self):
+        """Fit with all conditionals missing falls back and trains successfully."""
+        from energy_fault_detector.autoencoders import MultilayerAutoencoder
+
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        sensor_data_no_cond = self.sensor_data.drop(columns=['feature_a', 'feature_b'])
+
+        result = fd.fit(sensor_data=sensor_data_no_cond, normal_index=self.normal_index, save_models=False)
+
+        self.assertIsInstance(fd.autoencoder, MultilayerAutoencoder)
+        self.assertIsNotNone(result.train_recon_error)
+
+    def test_fit_with_partial_conditionals_trains_successfully(self):
+        """Fit with some conditionals missing still trains with remaining ones."""
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        sensor_data_partial = self.sensor_data.drop(columns=['feature_b'])
+
+        result = fd.fit(sensor_data=sensor_data_partial, normal_index=self.normal_index, save_models=False)
+
+        self.assertIsInstance(fd.autoencoder, ConditionalAE)
+        self.assertEqual(fd.autoencoder.conditional_features, ['feature_a'])
+        self.assertIsNotNone(result.train_recon_error)
+
+
+class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
+    """Test behavior when protect_conditional_features is False."""
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
+        self.conf = Config(self.config_path)
+        # Set protect_conditional_features to False
+        self.conf.config_dict['train']['protect_conditional_features'] = False
+        self.test_dir = tempfile.mkdtemp()
+
+        np.random.seed(42)
+        length = 100
+        # feature_a is constant → will be dropped by LowUniqueValueFilter when unprotected
+        self.sensor_data = pd.DataFrame({
+            'feature_a': [1.0] * length,
+            'feature_b': np.random.random(size=length),
+            'feature_c': np.random.random(size=length),
+            'feature_d': np.random.random(size=length),
+        })
+        self.normal_index = pd.Series([True] * 80 + [False] * 20)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.test_dir)
+
+    def test_conditional_features_can_be_dropped_when_unprotected(self):
+        """When protect=False, pipeline can drop constant conditional features."""
+        from energy_fault_detector.autoencoders import MultilayerAutoencoder
+
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        self.assertFalse(fd.config.protect_conditional_features)
+
+        result = fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
+
+        # feature_a was constant, should have been dropped, triggering fallback
+        # Since feature_b survived, autoencoder should still be conditional with just feature_b
+        # OR if feature_a was the only one dropped, we still have feature_b
+        if fd.autoencoder.is_conditional:
+            self.assertNotIn('feature_a', fd.autoencoder.conditional_features)
+            self.assertIn('feature_b', fd.autoencoder.conditional_features)
+        else:
+            # Both were dropped → fallback
+            self.assertIsInstance(fd.autoencoder, MultilayerAutoencoder)
+
+    def test_protect_true_keeps_constant_conditional(self):
+        """When protect=True (default), constant conditional features are kept."""
+        self.conf.config_dict['train']['protect_conditional_features'] = True
+
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
+
+        feature_names = fd.data_preprocessor.get_feature_names_out()
+        self.assertIn('feature_a', feature_names)
+        self.assertIsInstance(fd.autoencoder, ConditionalAE)
+
+
+class TestFaultDetectorSequenceConditionalFallback(unittest.TestCase):
+    """Test conditional feature fallback for sequence models."""
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_config_ts_freq.yaml')
+        self.conf = Config(self.config_path)
+        self.test_dir = tempfile.mkdtemp()
+
+        n = 200
+        index = pd.date_range("2025-01-01", periods=n, freq="30s")
+        np.random.seed(42)
+        self.sensor_data = pd.DataFrame(
+            np.random.randn(n, 3), index=index, columns=["f1", "f2", "f3"]
+        )
+        self.normal_index = pd.Series(True, index=index)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.test_dir)
+
+    def test_sequence_model_clears_missing_conditionals(self):
+        """Sequence model with missing conditionals just clears them (no class swap)."""
+        # Manually set conditional features on the sequence model
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        fd.autoencoder.conditional_features = ['nonexistent_feature']
+        fd.autoencoder.is_conditional = True
+
+        available = fd._resolve_conditional_features(self.sensor_data)
+
+        self.assertEqual(available, [])
+        self.assertIsInstance(fd.autoencoder, LSTMSeq2OneAutoencoder)
+        self.assertIsNone(fd.autoencoder.conditional_features)
+        self.assertFalse(fd.autoencoder.is_conditional)
+
+
+class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
+    """Test the config property for protect_conditional_features."""
+
+    def test_default_is_false(self):
+        """Default value should be False when not specified."""
+        config = Config(os.path.join(PROJECT_ROOT, 'tests/test_data/test_config.yaml'))
+        self.assertFalse(config.protect_conditional_features)
+
+    def test_explicit_false(self):
+        """Explicit False in config should be respected."""
+        config = Config(config_dict={
+            'train': {
+                'protect_conditional_features': False,
+                'data_preprocessor': {'steps': []},
+                'autoencoder': {'name': 'default', 'params': {'epochs': 1}},
+                'anomaly_score': {'name': 'rmse'},
+                'threshold_selector': {'name': 'quantile', 'params': {'quantile': 0.95}},
+            }
+        })
+        self.assertFalse(config.protect_conditional_features)
+
+    def test_explicit_true(self):
+        """Explicit True in config should be respected."""
+        config = Config(config_dict={
+            'train': {
+                'protect_conditional_features': True,
+                'data_preprocessor': {'steps': []},
+                'autoencoder': {'name': 'default', 'params': {'epochs': 1}},
+                'anomaly_score': {'name': 'rmse'},
+                'threshold_selector': {'name': 'quantile', 'params': {'quantile': 0.95}},
+            }
+        })
+        self.assertTrue(config.protect_conditional_features)

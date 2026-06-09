@@ -76,6 +76,7 @@ TRAIN_SCHEMA = {
             'shuffle': {'type': 'boolean', 'required': False, 'dependencies': {'type': ['sklearn', 'train_test_split']}},
         }
     },
+    'protect_conditional_features': {'type': 'boolean', 'required': False, 'default': False},
 }
 
 ROOT_CAUSE_ANALYSIS_SCHEMA = {
@@ -266,6 +267,11 @@ class Config(BaseConfig):
     def dtype(self):
         """Data type, float32 by default."""
         return self.config_dict.get('dtype', 'float32')
+
+    @property
+    def protect_conditional_features(self) -> bool:
+        """Whether to protect conditional features from being dropped by preprocessing."""
+        return self.config_dict.get('train', {}).get('protect_conditional_features', False)
 
 
 def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str, Any]]:

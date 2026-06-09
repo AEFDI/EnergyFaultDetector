@@ -39,42 +39,28 @@ class FaultDetector(FaultDetectionModel):
 
     def preprocess_train_data(self, sensor_data: pd.DataFrame, normal_index: pd.Series, fit_preprocessor: bool = True
                               ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
-        """ Preprocesses the training data using the configured data_preprocessor
-
-        Args:
-            sensor_data (pd.DataFrame): unprocessed training data
-            normal_index (pd.Series): unprocessed normal index
-            fit_preprocessor (bool, optional): if True the preprocessor is fitted. If False the preprocessor is not
-                fitted and the user has to provide a ready-to-use preprocessor by loading models before calling this
-                function.
-
-        Returns: tuple of (pd.Dataframe, pd.Dataframe, pd.Series)
-            x_prepped (pd.DataFrame): preprocessed normal training data
-            x: ordered training data (unprocessed)  # needed for _fit_threshold
-            y: ordered normal_index (unprocessed)  # needed for _fit_threshold
-
-        """
+        """Preprocesses the training data using the configured data_preprocessor."""
 
         x = sensor_data.sort_index()
         if normal_index is not None:
             y = normal_index.sort_index()
         else:
-            # assume only 'normal behaviour' in x
             y = pd.Series(np.full(len(x), True), index=x.index)
 
         if not x.loc[x.index.duplicated()].empty or not y.loc[y.index.duplicated()].empty:
             raise ValueError('There are duplicated indices in the input dataframe `sensor_data` and/or in the '
                              '`normal_index`, please check your input data.')
 
-        # Get conditional features early to protect them from transformations
-        protected_features = self.autoencoder.conditional_features if self.autoencoder.is_conditional else []
+        # Determine which features to protect based on config flag
+        protect = self.config.protect_conditional_features if self.config else True
+        protected_features = (
+            self.autoencoder.conditional_features or []
+        ) if protect else []
 
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
-            # Don't clip conditional features
             clipper_params = self.config.data_clipping_params.copy()
             if protected_features:
-                # Add conditional features to exclusion list
                 existing_exclusions = clipper_params.get('features_to_exclude', [])
                 clipper_params['features_to_exclude'] = list(set(existing_exclusions + protected_features))
                 logger.debug(f'Excluding conditional features from clipping: {protected_features}')
@@ -82,22 +68,18 @@ class FaultDetector(FaultDetectionModel):
             data_clipper.fit(x=x)
             x = data_clipper.transform(x)
 
-        x_normal = x[y.values]  # filter normal before data prep
+        x_normal = x[y.values]
         if fit_preprocessor:
             logger.info('Fit preprocessor pipeline.')
-            # Build fit params for pipeline steps that support protected_features
             fit_params = {}
             for step_name in self.data_preprocessor.named_steps.keys():
                 if 'column_selector' in step_name or 'low_unique_value_filter' in step_name:
                     fit_params[f'{step_name}__protected_features'] = protected_features
-            # Add global validation that protected features are in the output
             if protected_features:
                 fit_params['protected_features'] = protected_features
             self.data_preprocessor.fit(x_normal, **fit_params)
 
         x_prepped = self.data_preprocessor.transform(x_normal)
-
-        # Use float32 by default for performance, unless specified otherwise in config
         x_prepped = x_prepped.astype(self.config.dtype)
 
         return x_prepped, x, y
@@ -105,25 +87,7 @@ class FaultDetector(FaultDetectionModel):
     def fit(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, save_models: bool = True,
             overwrite_models: bool = False, fit_autoencoder_only: bool = False, fit_preprocessor: bool = True,
             **kwargs) -> ModelMetadata:
-        """Fit models on the given sensor_data and save them locally and return the metadata.
-
-        Args:
-            sensor_data (pd.DataFrame): DataFrame with the sensor data of one asset for a specific time window.
-                The timestamp should be the index and the sensor values as columns.
-            normal_index (Optional[pd.Series]): Series indicating normal behavior as boolean with the timestamp as
-                index.
-                Optional; if not provided, assumes all sensor_data represents normal behavior.
-            save_models (bool, optional): Whether to save models. Defaults to True.
-            overwrite_models (bool, optional): If True, existing model directories can be overwritten. Defaults to
-                False.
-            fit_autoencoder_only (bool, optional): If True, only fit the data preprocessor and autoencoder objects.
-                Defaults to False.
-            fit_preprocessor (bool, optional): If True, the preprocessor is fitted. Defaults to True.
-
-        Returns:
-            ModelMetadata: metadata of the trained model: model_date, model_path, model reconstruction errors
-            of the training and validation data.
-        """
+        """Fit models on the given sensor_data and save them locally and return the metadata."""
 
         try:
             from keras.backend import clear_session
@@ -141,9 +105,31 @@ class FaultDetector(FaultDetectionModel):
             raise ValueError(f"`sensor_data` must be numeric. Non-numeric columns: {non_numeric}")
 
         clear_session()
-        model_path = None  # default value (will be overwritten by self._save if the models are saved).
-        x_prepped, x, y = self.preprocess_train_data(sensor_data=sensor_data, normal_index=normal_index,
-                                                     fit_preprocessor=fit_preprocessor)
+
+        # --- Resolve conditional features against available data ---
+        self._resolve_conditional_features(sensor_data)
+
+        model_path = None
+        x_prepped, x, y = self.preprocess_train_data(
+            sensor_data=sensor_data, normal_index=normal_index, fit_preprocessor=fit_preprocessor
+        )
+
+        # Post-preprocessing check: conditionals may have been dropped
+        if not self.config.protect_conditional_features and self.autoencoder.is_conditional:
+            # Check if conditionals survived preprocessing
+            surviving = [
+                f for f in (self.autoencoder.conditional_features or [])
+                if f in x_prepped.columns
+            ]
+            dropped_by_pipeline = set(self.autoencoder.conditional_features or []) - set(surviving)
+            if dropped_by_pipeline:
+                logger.warning(f"Conditional features dropped by preprocessing pipeline: "
+                               f"{sorted(dropped_by_pipeline)}. Remaining: {surviving or 'none'}")
+                if surviving:
+                    self.autoencoder.conditional_features = surviving
+                else:
+                    self._fallback_if_no_conditionals()
+
         train_recon_error, val_recon_error = None, None
         x_train, x_val = self.train_val_split(x_prepped)
         logger.info('Train autoencoder.')
@@ -157,7 +143,6 @@ class FaultDetector(FaultDetectionModel):
         if not fit_autoencoder_only:
             self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=self.config.fit_threshold_on_val)
 
-        # save the models
         if save_models:
             model_path, model_date = self.save(overwrite=overwrite_models)
         else:
@@ -316,6 +301,15 @@ class FaultDetector(FaultDetectionModel):
         if not x.loc[x.index.duplicated()].empty:
             raise ValueError('There are duplicated indices in the input dataframe `sensor_data`.')
 
+        # Validate conditional features at predict time
+        if self.autoencoder.is_conditional:
+            required = self.autoencoder.conditional_features or []
+            missing_at_predict = [f for f in required if f not in x.columns]
+            if missing_at_predict:
+                raise ValueError(f"Conditional features required by the trained model are missing from "
+                                 f"sensor_data: {sorted(missing_at_predict)}. The model was trained with "
+                                 f"these features and cannot predict without them.")
+
         x_prepped = self.data_preprocessor.transform(x).sort_index()
         x_prepped = x_prepped.astype(self.config.dtype)
         column_order = x_prepped.columns
@@ -441,3 +435,62 @@ class FaultDetector(FaultDetectionModel):
                                         normal_index=y.loc[scores.index])
         else:
             self.threshold_selector.fit(x=scores, y=y.loc[scores.index])
+
+    def _resolve_conditional_features(self, sensor_data: pd.DataFrame) -> List[str]:
+        """Resolve which conditional features are actually available in the data.
+
+        If all conditional features are missing and the autoencoder is a ConditionalAE,
+        falls back to MultilayerAutoencoder. For sequence models, simply clears the
+        conditional_features list (they handle None gracefully).
+
+        Args:
+            sensor_data: Input DataFrame to check column availability.
+
+        Returns:
+            List of available conditional feature names (may be empty).
+        """
+        configured = self.autoencoder.conditional_features or []
+        if not configured:
+            return []
+
+        available = [f for f in configured if f in sensor_data.columns]
+        missing = set(configured) - set(available)
+
+        if missing:
+            logger.warning(f"Conditional features not found in sensor_data and will be ignored: "
+                           f"{sorted(missing)}. Using: {available or 'none'}")
+
+        if not available:
+            self._fallback_if_no_conditionals()
+        else:
+            self.autoencoder.conditional_features = available
+            self.autoencoder.is_conditional = True
+
+        return available
+
+    def _fallback_if_no_conditionals(self) -> None:
+        """Handle the case where all conditional features are unavailable.
+
+        For ConditionalAE: replaces with MultilayerAutoencoder (same architecture params).
+        For sequence models: just clears conditional_features (they work without).
+        """
+        from energy_fault_detector.autoencoders.conditional_autoencoder import ConditionalAE
+        from energy_fault_detector.autoencoders.multilayer_autoencoder import MultilayerAutoencoder
+        from energy_fault_detector.autoencoders.sequence_autoencoder import SequenceAutoencoder
+
+        if isinstance(self.autoencoder, SequenceAutoencoder):
+            logger.warning("All conditional features are unavailable. "
+                           "Sequence model will proceed without conditional inputs.")
+            self.autoencoder.conditional_features = None
+            self.autoencoder.is_conditional = False
+
+        elif isinstance(self.autoencoder, ConditionalAE):
+            logger.warning("All conditional features are unavailable. "
+                           "Falling back from ConditionalAE to MultilayerAutoencoder.")
+            ae_params = dict(self.config['train']['autoencoder'].get('params', {}))
+            ae_params.pop('conditional_features', None)
+            self.autoencoder = MultilayerAutoencoder(**ae_params)
+
+        else:
+            self.autoencoder.conditional_features = None
+            self.autoencoder.is_conditional = False
