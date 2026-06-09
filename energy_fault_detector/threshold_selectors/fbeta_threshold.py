@@ -129,9 +129,6 @@ class FbetaSelector(ThresholdSelector):
             selection (np.array): Boolean array which is true for all samples that are either normal and below quantile
                 or not normal.
         """
-        if not hasattr(self, 'quantile'):
-            # backwards compatibility
-            self.quantile = 1.
 
         quantile = np.quantile(anomaly_score[normal_index], q=self.quantile)
         all_scores_compared = anomaly_score < quantile

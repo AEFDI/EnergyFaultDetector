@@ -13,7 +13,7 @@ from energy_fault_detector.core.fault_detection_result import FaultDetectionResu
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
 from energy_fault_detector.data_preprocessing.data_clipper import DataClipper
 from energy_fault_detector.config import Config
-from energy_fault_detector.threshold_selectors import FbetaSelector, FDRSelector
+from energy_fault_detector.threshold_selectors import FbetaSelector, FDRSelector, AdaptiveThresholdSelector
 
 logger = logging.getLogger('energy_fault_detector')
 
@@ -307,6 +307,7 @@ class FaultDetector(FaultDetectionModel):
 
         if model_path is not None:
             self._load_from_path(model_path=model_path)
+            self.model_directory = model_path
         else:
             if self.data_preprocessor is None:
                 raise ValueError('No models loaded and no model_path provided!')
@@ -323,7 +324,7 @@ class FaultDetector(FaultDetectionModel):
             x_predicted = self.autoencoder.predict(x_prepped, return_conditions=True)
             x_predicted = x_predicted[column_order]
             main_cols = [c for c in column_order if c not in self.autoencoder.conditional_features]
-            recon_error = self.autoencoder.get_reconstruction_error(x=x_prepped,reconstruction=x_predicted[main_cols])
+            recon_error = self.autoencoder.get_reconstruction_error(x=x_prepped, reconstruction=x_predicted[main_cols])
         else:
             x_predicted = self.autoencoder.predict(x_prepped)
             recon_error = self.autoencoder.get_reconstruction_error(x_prepped, reconstruction=x_predicted)
@@ -434,7 +435,7 @@ class FaultDetector(FaultDetectionModel):
 
         logger.info('Fit threshold.')
         # fit threshold - x_prepped and labels are filtered based on scores (all or validation data only) used
-        if self.threshold_selector.__class__.__name__ == 'AdaptiveThresholdSelector':
+        if isinstance(self.threshold_selector, AdaptiveThresholdSelector):
             self.threshold_selector.fit(scaled_ae_input=x_prepped_all.loc[scores.index],
                                         anomaly_score=scores,
                                         normal_index=y.loc[scores.index])

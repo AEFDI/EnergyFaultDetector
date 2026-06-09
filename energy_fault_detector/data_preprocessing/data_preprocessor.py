@@ -362,7 +362,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
 
         # Order the preprocessing steps
         ordered = []
-        # can add NaN avalues or add new features that may be constant
+        # can add NaN values or add new features that may be constant
         ordered.extend(duplicates)
         ordered.extend(counter)
         # drop columns based on the values (NaNs, no variance)
