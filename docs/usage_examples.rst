@@ -7,6 +7,44 @@ refer to the example notebooks in the repository's notebooks folder.
     :depth: 3
     :local:
 
+Key concepts
+^^^^^^^^^^^^
+
+Throughout this documentation we use the following objects:
+
+* ``sensor_data``: a :class:`pandas.DataFrame` in **wide format**. Each row is a timestamp (or an index entry),
+  each column a sensor or feature. The index is typically
+
+  - a unique, sorted :class:`pandas.DatetimeIndex`, or
+  - a :class:`pandas.MultiIndex` such as ``(asset_id, timestamp)`` for multi-device data.
+
+* ``normal_index``: an optional :class:`pandas.Series` with the same index as ``sensor_data`` and boolean values.
+  ``True`` marks normal operation, ``False`` marks non-normal operation (faults, maintenance, curtailment, etc.).
+
+  If you do not provide ``normal_index``, the models assume that all samples in ``sensor_data`` represent normal
+  behaviour. In that case you cannot use label-based threshold selectors such as
+  :class:`FbetaSelector <energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector>`
+  or :class:`FDRSelector <energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector>`, but
+  you can still use quantile-based or adaptive thresholds.
+
+* Configuration: model behaviour is controlled via a YAML configuration parsed by
+  :class:`Config <energy_fault_detector.config.config.Config>`. For most users, the easiest entry
+  point is :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`,
+  which returns a minimal, valid configuration:
+
+  .. code-block:: python
+
+      from energy_fault_detector.config import generate_quickstart_config
+
+      # Generate a Config instance (and optionally write it to a file)
+      config = generate_quickstart_config(output_path="base_config.yaml")
+
+  For more control, you can provide your own YAML file; see
+  :doc:`configuration` and the example :file:`energy_fault_detector/base_config.yaml`.
+
+A summary of available model classes (autoencoders, anomaly scores, and threshold selectors) is given in
+:doc:`models_overview`.
+
 Expected input data format
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -34,11 +72,6 @@ pandas objects with the following structure:
   * index: same as ``sensor_data.index``
   * values: boolean – ``True`` indicates normal operation, ``False`` indicates
     non‑normal operation (faults, maintenance, curtailment, etc.)
-
-If you do not provide ``normal_index``, the models assume that all samples in
-``sensor_data`` represent normal behaviour. In that case you cannot use
-label-based threshold selectors such as :class:`FbetaSelector` or :class:`FDRSelector`,
-but you can still use the quantile-based (default) or adaptive threshold.
 
 For sequence-based models, a :class:`pandas.DatetimeIndex` or a compatible
 ``MultiIndex`` is required as described above; windows are built per group
@@ -144,7 +177,6 @@ with the following information:
 
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
 trained models using the :py:obj:`FaultDetector.load <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load>` class method.
-In this case, you do not need to provide a ``model_path`` in the :py:obj:`predict <energy_fault_detector.fault_detector.FaultDetector.predict>` method.
 
 .. code-block:: python
 

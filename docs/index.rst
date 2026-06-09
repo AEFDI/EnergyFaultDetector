@@ -30,6 +30,7 @@ To install the `energy-fault-detector` package, run:
     usage_examples
     quick_fault_detection
     configuration
+    models_overview
     sequence_models
     arcana
     The EnergyFaultDetector package <modules>
