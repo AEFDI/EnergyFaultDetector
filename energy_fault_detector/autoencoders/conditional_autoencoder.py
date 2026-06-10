@@ -22,7 +22,6 @@ class ConditionalAE(Autoencoder):
             the decoder (reversed order in this case). Default [200]
         code_size: number of units of the encoded layer (bottleneck layer).
             (number of features to compress the input features to). Default 10.
-                kernel_initializer: initializer to use in each layer. Default he_normal.
         kernel_initializer: initializer to use in each layer. Default he_normal.
         act: activation function to use, prelu, relu, ... Defaults to prelu.
         last_act: activation function for last layer, prelu, relu, sigmoid, linear... Defaults to linear.

@@ -26,7 +26,7 @@ Please include:
 3. Install the package in editable mode with development dependencies: `pip install -e .[dev]`
 4. Run the tests to verify your setup: `pytest --cov`
 
-##Coding guidelines
+## Coding guidelines
 - Follow the existing style and structure in the codebase.
 - Keep functions and public APIs documented with clear docstrings (we use Google Style docstrings).
 - Prefer small, focused changes with clear motivation.
@@ -49,10 +49,10 @@ The documentation is built with Sphinx under `docs/`.
 To build the docs locally:
 ```bash
 pip install -e .[docs]
-sphinx-build -b html . _build/html
+sphinx-build -b html docs docs/_build/html
 ```
 
-Open `_build/html/index.html` in a browser to inspect the result.
+Open `docs/_build/html/index.html` in a browser to inspect the result.
 If you move or extend conceptual content (for example “Key Concepts” or “Available Models”) from the README, please:
 - Update or create the relevant `.rst` pages under `docs/`
 - Add them to the toctree in `docs/index.rst` if appropriate

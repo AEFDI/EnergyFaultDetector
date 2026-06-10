@@ -38,11 +38,16 @@ from energy_fault_detector import __about__ as about  # noqa: E402
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'<name>': ('https://docs.python.org/', None)}
+# intersphinx_mapping = {'<name>': ('https://docs.python.org/', None)}
 
 add_module_names = False
 
 autodoc_mock_imports = ["sklearn"]
+
+# Silence warnings about unresolved external labels in third-party docstrings (e.g. sklearn)
+suppress_warnings = [
+    "ref.ref",  # undefined :ref: targets
+]
 
 autoclass_content = 'both'
 
@@ -62,14 +67,12 @@ version = about.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',  # generate docs from docstrings
-    'sphinx.ext.napoleon',  # does some formatting tricks
+    'sphinx.ext.autodoc',        # generate docs from docstrings
+    'sphinx.ext.napoleon',       # does some formatting tricks
     'sphinx_autodoc_typehints',  # package needs to be installed
-    # 'sphinx.ext.doctest',  # if you want to use doctests somehow
-    'sphinx.ext.imgmath',  # render latex graphics
-    #'sphinx.ext.intersphinx',  # links to other (energy_fault_detector) packages
-    #'sphinx.ext.coverage',  # documentation coverage (not test coverage)
-    'sphinx_copybutton',  # add copy button to code blocks
+    'sphinx.ext.imgmath',        # render latex graphics
+    'sphinx_copybutton',         # add copy button to code blocks
+    'sphinx.ext.autosummary',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -152,22 +155,6 @@ html_css_files = [
     'custom.css',
 ]
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# This is required for the alabaster theme
-# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-        # 'donate.html',
-    ]
-}
-
-
 # -- Options for HTMLHelp output ------------------------------------------
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pydoc'
@@ -198,7 +185,6 @@ man_pages = [(
     about.__author__, 1)
 ]
 
-
 # -- Options for Texinfo output -------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
@@ -209,3 +195,35 @@ texinfo_documents = [
      about.__author__, about.__title__, about.__description__,
      'Miscellaneous'),
 ]
+
+
+def run_apidoc(app):
+    """Generate API .rst files with sphinx-apidoc, like in CI:
+
+       sphinx-apidoc -o docs energy_fault_detector/ --module-first --force --separate --templatedir docs/_templates
+    """
+
+    # Only run this step if we're building the HTML docs
+    if app.builder.name != "html":
+        return
+
+    from sphinx.ext.apidoc import main as apidoc_main
+    from pathlib import Path
+
+    here = Path(__file__).parent
+    pkg_dir = here.parent / IMPORT_NAME
+    out_dir = here
+    templates = here / "_templates"
+
+    apidoc_main([
+        "-o", str(out_dir),
+        str(pkg_dir),
+        "--module-first",
+        "--force",
+        "--separate",
+        "--templatedir", str(templates),
+    ])
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)

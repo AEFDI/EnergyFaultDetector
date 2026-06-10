@@ -80,7 +80,7 @@ Step 1: Predict a time series of anomaly scores
 
 .. code-block:: python
 
-    results = detector.predict(sensor_data=test_data)
+    results = fd.predict(sensor_data=test_data)
     scores = results.anomaly_score           # Series[float]
     anomalies = results.predicted_anomalies  # Series[bool]
 
@@ -88,6 +88,7 @@ Step 2: Extract anomaly events
 Aggregate consecutive anomalies into events using create_events:
 
 .. code-block:: python
+
     from energy_fault_detector.utils.analysis import create_events
 
     event_meta, event_data_list = create_events(
@@ -106,6 +107,7 @@ Step 3: Analyse events with ARCANA and calculate importances
 Run ARCANA per event via FaultDetector.run_root_cause_analysis:
 
 .. code-block:: python
+
     from energy_fault_detector.root_cause_analysis.arcana_utils import (
         calculate_mean_arcana_importances,
     )
@@ -114,7 +116,7 @@ Run ARCANA per event via FaultDetector.run_root_cause_analysis:
     arcana_losses_per_event = []  # Loss tracking is optional and only useful for evaluations of ARCANA parameter settings.
 
     for event_data in event_data_list:
-        bias, arcana_losses, tracked_bias = detector.run_root_cause_analysis(
+        bias, arcana_losses, tracked_bias = fd.run_root_cause_analysis(
             sensor_data=event_data,
             track_losses=True,
             track_bias=False,
@@ -128,6 +130,7 @@ Run ARCANA per event via FaultDetector.run_root_cause_analysis:
 Step 4: Visualise ARCANA importances
 
 .. code-block:: python
+
     from energy_fault_detector.utils.visualisation import (
         plot_arcana_mean_importances
     )

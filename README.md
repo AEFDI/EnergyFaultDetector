@@ -87,6 +87,18 @@ See the [CLI documentation](https://aefdi.github.io/EnergyFaultDetector/quick_fa
 ## Documentation
 Full docs (concepts, available models, configuration reference, evaluation, and examples): [https://aefdi.github.io/EnergyFaultDetector/](https://aefdi.github.io/EnergyFaultDetector/)
 
+## Examples and notebooks
+
+The repository contains Jupyter notebooks with end-to-end examples and evaluation workflows in the
+[`notebooks/`](./notebooks) folder, for example:
+
+- Quick fault detection on a CSV file
+- Standard `FaultDetector` training and prediction
+- Sequence models (LSTM/CNN) on time-series data
+- CARE2Compare and PreDist benchmark evaluations
+
+These notebooks complement the documentation and are a good starting point for interactive exploration.
+
 ## Contributing
 Contributions are welcome! Please feel free to open issues or submit pull requests.
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.

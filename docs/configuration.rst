@@ -72,22 +72,6 @@ configuration dictionary via the :py:obj:`Config.update_config <energy_fault_det
   # or create a new configuration object and model
   new_model = FaultDetector(Config(config_dict=new_config_dict))
 
-You can also generate this kind of configuration programmatically using
-:func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
-
-.. code-block:: python
-
-   from energy_fault_detector.config.quickstart_config import generate_quickstart_config
-   generate_quickstart_config(output_path="base_config.yaml")
-
-You can look up the names for the available model classes in the class registry:
-
-.. code-block:: python
-
-    from energy_fault_detector import registry
-
-    registry.print_available_classes()
-
 Detailed configuration
 ^^^^^^^^^^^^^^^^^^^^^^
 Below is a more thorough configuration. It shows how to specify preprocessing steps and more model parameters.
@@ -212,4 +196,4 @@ Root cause analysis (ARCANA)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If ``root_cause_analysis`` is provided, ARCANA will attempt to attribute anomalies to specific features using the
 provided settings. If not provided, default settings are used. For detailed documentation refer to
-:py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`.
+:py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>` and :ref:`arcana_docs` for a full example.

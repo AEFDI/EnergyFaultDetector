@@ -62,3 +62,5 @@ register(module_path='energy_fault_detector.threshold_selectors.quantile_thresho
 register(module_path='energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector',
          class_type='threshold_selector',
          class_names=['AdaptiveThresholdSelector', 'adaptive_threshold', 'SVR', 'svr', 'adaptive'])
+
+__all__ = ["FaultDetector", "Config"]

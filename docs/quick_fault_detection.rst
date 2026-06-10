@@ -1,4 +1,5 @@
 .. _quick_fault_detector_cli:
+
 Quick fault detection (CLI)
 ===========================
 

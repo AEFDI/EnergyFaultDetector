@@ -1,5 +1,7 @@
-Energy Fault Detector - Autoencoder-based Fault Detection for the Future Energy System
-======================================================================================
+Energy Fault Detector
+======================
+
+Autoencoder-based Fault Detection for the Future Energy System.
 
 **Energy Fault Detector** is an open-source Python package designed for the automated detection of anomalies in
 operational data from renewable energy systems as well as power grids. It uses autoencoder-based normal behaviour
@@ -15,26 +17,39 @@ predictive maintenance of renewable energy assets.
 Installation
 ^^^^^^^^^^^^
 
-To install the `energy-fault-detector` package, run:
-
 .. code-block:: shell
 
     pip install energy-fault-detector
 
 
 .. toctree::
-    :caption: Contents
-    :glob:
+    :caption: Getting started
     :maxdepth: 1
 
     usage_examples
     quick_fault_detection
     configuration
+
+.. toctree::
+    :caption: Models and methods
+    :maxdepth: 1
+
     models_overview
     sequence_models
     arcana
-    The EnergyFaultDetector package <modules>
+
+.. toctree::
+    :caption: Advanced usage
+    :maxdepth: 1
+
+    advanced_usage
     logging
+
+.. toctree::
+    :caption: API reference
+    :maxdepth: 1
+
+    The EnergyFaultDetector package <modules>
 
 Module index
 ==================

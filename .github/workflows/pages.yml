@@ -3,6 +3,11 @@ name: Deploy Documentation
 on:
   release:
     types: [published]
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'energy_fault_detector/**'
 
 permissions:
   contents: write
@@ -21,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -29,7 +34,6 @@ jobs:
 
       - name: Generate API documentation
         run: |
-          sphinx-apidoc -o docs "${PKG_NAME}/" --module-first --force --separate --templatedir docs/_templates
           sphinx-build -b html --keep-going docs public
 
       - name: Deploy to GitHub Pages
