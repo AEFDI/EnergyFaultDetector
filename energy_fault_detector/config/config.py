@@ -62,6 +62,8 @@ TRAIN_SCHEMA = {
         'schema': {
             'lower_percentile': {'type': 'float', 'required': False},
             'upper_percentile': {'type': 'float', 'required': False},
+            'features_to_exclude': {'type': 'list', 'required': False, 'schema': {'type': 'string'}},
+            'features_to_clip': {'type': 'list', 'required': False, 'schema': {'type': 'string'}},
         }
     },
     'data_splitter': {

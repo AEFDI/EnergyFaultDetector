@@ -31,8 +31,8 @@ class DataClipper(DataTransformer):
               data_clipping:
                 lower_percentile: 0.001
                 upper_percentile: 0.999
-                  features_to_exclude:
-                    - do_not_clip_this_feature
+                features_to_exclude:   # or use features_to_clip
+                  - do_not_clip_this_feature
     """
 
     def __init__(self, lower_percentile: float = 0.01, upper_percentile: float = 0.99,
