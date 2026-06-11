@@ -11,7 +11,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.callbacks import Callback
+from keras.callbacks import Callback
 
 from energy_fault_detector.core.autoencoder import Autoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder

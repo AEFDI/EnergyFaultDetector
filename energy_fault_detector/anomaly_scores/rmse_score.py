@@ -70,16 +70,17 @@ class RMSEScore(AnomalyScore):
 
         check_is_fitted(self)
 
+        x_ = x
         if self.scale:
             # standardization of the reconstruction error in X
             if np.all(self.std_x_ > 0):
-                x = (x - self.mean_x_) / self.std_x_
+                x_ = (x - self.mean_x_) / self.std_x_
             else:
-                x = x - self.mean_x_
-                # replace possible inf values with 0
-            x[np.isinf(x)] = 0
+                x_ = x - self.mean_x_
+            # replace possible inf values with 0
+            x_[np.isinf(x_)] = 0
 
-        scores = np.sqrt(np.mean(x ** 2, axis=1))
+        scores = np.sqrt(np.mean(x_ ** 2, axis=1))
         if isinstance(x, (pd.DataFrame, pd.Series)):
             scores = pd.Series(scores, index=x.index)
 

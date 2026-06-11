@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from energy_fault_detector.utils import analysis
 from energy_fault_detector.utils.analysis import calculate_criticality, create_events
@@ -49,11 +48,13 @@ class TestCalculateCriticalitySingleIndex:
         assert list(crit) == [1, 2, 2, 2, 3]
 
 
-class TestCalculateCriticalityMultiIndex:
+class TestCalculateCriticalityMultiIndex(unittest.TestCase):
     """MultiIndex (asset_id, timestamp) behavior."""
 
-    @pytest.fixture
-    def multi_index_data(self):
+    def setUp(self) -> None:
+        self.multi_index_data = self.create_multi_index_data()
+
+    def create_multi_index_data(self):
         """Two assets, each with 5 timestamps."""
         times = pd.date_range("2024-01-01", periods=5, freq="10min")
         idx = pd.MultiIndex.from_product(
@@ -61,9 +62,9 @@ class TestCalculateCriticalityMultiIndex:
         )
         return idx, times
 
-    def test_groups_are_independent(self, multi_index_data):
+    def test_groups_are_independent(self):
         """Criticality in asset_A does not leak into asset_B."""
-        idx, times = multi_index_data
+        idx, times = self.multi_index_data
         # asset_A: all anomalies → criticality rises
         # asset_B: no anomalies → criticality stays 0
         anomalies = pd.Series(
@@ -74,9 +75,9 @@ class TestCalculateCriticalityMultiIndex:
         assert list(crit.loc["asset_A"]) == [1, 2, 3, 4, 5]
         assert list(crit.loc["asset_B"]) == [0, 0, 0, 0, 0]
 
-    def test_multiindex_with_normal_idx(self, multi_index_data):
+    def test_multiindex_with_normal_idx(self):
         """Normal index is respected per group."""
-        idx, times = multi_index_data
+        idx, times = self.multi_index_data
         anomalies = pd.Series([True] * 10, index=idx)
         # asset_A: normal everywhere, asset_B: not normal at indices 0,1
         normal_idx = pd.Series(
@@ -88,18 +89,18 @@ class TestCalculateCriticalityMultiIndex:
         # asset_B: 0, 0 (not normal), then +1, +1, +1
         assert list(crit.loc["asset_B"]) == [0, 0, 1, 2, 3]
 
-    def test_multiindex_init_criticality_per_group(self, multi_index_data):
+    def test_multiindex_init_criticality_per_group(self):
         """init_criticality applies to each group independently."""
-        idx, _ = multi_index_data
+        idx, _ = self.multi_index_data
         anomalies = pd.Series([False] * 10, index=idx)
         crit = calculate_criticality(anomalies, init_criticality=3)
         # Each group starts at 3 and decreases
         assert list(crit.loc["asset_A"]) == [2, 1, 0, 0, 0]
         assert list(crit.loc["asset_B"]) == [2, 1, 0, 0, 0]
 
-    def test_preserves_multiindex(self, multi_index_data):
+    def test_preserves_multiindex(self):
         """Output has the same MultiIndex as input."""
-        idx, _ = multi_index_data
+        idx, _ = self.multi_index_data
         anomalies = pd.Series([True] * 10, index=idx)
         crit = calculate_criticality(anomalies)
         assert isinstance(crit.index, pd.MultiIndex)
@@ -141,11 +142,13 @@ class TestCreateEventsSingleIndex:
         assert len(events) == 2
 
 
-class TestCreateEventsMultiIndex:
+class TestCreateEventsMultiIndex(unittest.TestCase):
     """MultiIndex (asset_id, timestamp) behavior."""
 
-    @pytest.fixture
-    def multi_index_sensor_data(self):
+    def setUp(self):
+        self.multi_index_sensor_data = self.create_multi_index_sensor_data()
+
+    def create_multi_index_sensor_data(self):
         times = pd.date_range("2024-01-01", periods=20, freq="10min")
         idx = pd.MultiIndex.from_product(
             [["asset_A", "asset_B"], times], names=["asset_id", "timestamp"]
@@ -153,9 +156,9 @@ class TestCreateEventsMultiIndex:
         df = pd.DataFrame({"power": np.random.randn(40)}, index=idx)
         return df, idx, times
 
-    def test_events_per_group(self, multi_index_sensor_data):
+    def test_events_per_group(self):
         """Events are detected independently per asset."""
-        df, idx, times = multi_index_sensor_data
+        df, idx, times = self.multi_index_sensor_data
         # asset_A: event from index 5-16 (12 timestamps)
         # asset_B: no event (only 3 consecutive True)
         bools_a = [False] * 5 + [True] * 12 + [False] * 3
@@ -168,9 +171,9 @@ class TestCreateEventsMultiIndex:
         assert meta.iloc[0]["group"] == "asset_A"
         assert len(events) == 1
 
-    def test_events_in_multiple_groups(self, multi_index_sensor_data):
+    def test_events_in_multiple_groups(self):
         """Events detected in both assets."""
-        df, idx, times = multi_index_sensor_data
+        df, idx, times = self.multi_index_sensor_data
         # Both assets have a 12-timestamp event
         bools_a = [False] * 5 + [True] * 12 + [False] * 3
         bools_b = [False] * 2 + [True] * 12 + [False] * 6
@@ -182,17 +185,17 @@ class TestCreateEventsMultiIndex:
         assert set(meta["group"]) == {"asset_A", "asset_B"}
         assert len(events) == 2
 
-    def test_no_events_returns_empty(self, multi_index_sensor_data):
+    def test_no_events_returns_empty(self):
         """No events in any group."""
-        df, idx, _ = multi_index_sensor_data
+        df, idx, _ = self.multi_index_sensor_data
         bools = pd.Series([False] * 40, index=idx)
         meta, events = create_events(df, bools, min_event_length=10)
         assert meta.empty
         assert len(events) == 0
 
-    def test_meta_has_group_column(self, multi_index_sensor_data):
+    def test_meta_has_group_column(self):
         """MultiIndex results include a 'group' column."""
-        df, idx, _ = multi_index_sensor_data
+        df, idx, _ = self.multi_index_sensor_data
         bools = pd.Series([True] * 20 + [False] * 20, index=idx)
         meta, events = create_events(df, bools, min_event_length=10)
         assert "group" in meta.columns

@@ -320,3 +320,119 @@ class TestDataPreprocessorPipelineWithTimestamp(TestCase):
         self.assertIn('minute_of_hour_sine', transformed.columns)
         self.assertIn('minute_of_hour_cosine', transformed.columns)
         self.assertIn('is_weekend', transformed.columns)
+
+
+class TestDataPreprocessorProtectedFeatures(TestCase):
+    """Test that protected features (e.g., conditional features for autoencoders) are never dropped."""
+
+    def setUp(self) -> None:
+        length = 10
+        time_index = pd.date_range(start='1/1/2021', end='10/1/2021', periods=length)
+        # Create test data where 'conditional_feature' would normally be dropped
+        data = {
+            'normal_feature': list(range(length)),
+            'conditional_feature': [1] * length,  # constant - would be dropped by LowUniqueValueFilter
+            'high_nan_feature': [None] * 8 + [1, 2],  # 80% NaN - would be dropped by ColumnSelector
+            'another_feature': list(range(length)),
+        }
+        self.test_data = pd.DataFrame(index=time_index, data=data)
+
+    def test_protected_feature_not_dropped_by_low_unique_value_filter(self):
+        """Test that a constant conditional feature is protected from LowUniqueValueFilter."""
+        preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'low_unique_value_filter',
+                 'params': {'min_unique_value_count': 2}},
+            ]
+        )
+
+        # Fit without protection - conditional_feature should be dropped
+        preprocessor.fit(self.test_data)
+        transformed = preprocessor.transform(self.test_data)
+        self.assertNotIn('conditional_feature', transformed.columns)
+
+        # Fit WITH protection - conditional_feature should be kept
+        preprocessor_protected = DataPreprocessor(
+            steps=[
+                {'name': 'low_unique_value_filter',
+                 'params': {'min_unique_value_count': 2}},
+            ]
+        )
+        fit_params = {'low_unique_value_filter__protected_features': ['conditional_feature']}
+        preprocessor_protected.fit(self.test_data, **fit_params)
+        transformed_protected = preprocessor_protected.transform(self.test_data)
+        self.assertIn('conditional_feature', transformed_protected.columns,
+                      "Protected feature should be kept despite being constant")
+
+    def test_protected_feature_not_dropped_by_column_selector(self):
+        """Test that a high-NaN conditional feature is protected from ColumnSelector."""
+        preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector',
+                 'params': {'max_nan_frac_per_col': 0.5}},  # 50% threshold
+            ]
+        )
+
+        # Fit without protection - high_nan_feature should be dropped (80% NaN > 50%)
+        preprocessor.fit(self.test_data)
+        transformed = preprocessor.transform(self.test_data)
+        self.assertNotIn('high_nan_feature', transformed.columns)
+
+        # Fit WITH protection - high_nan_feature should be kept
+        preprocessor_protected = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector',
+                 'params': {'max_nan_frac_per_col': 0.5}},
+            ]
+        )
+        fit_params = {'column_selector__protected_features': ['high_nan_feature']}
+        preprocessor_protected.fit(self.test_data, **fit_params)
+        transformed_protected = preprocessor_protected.transform(self.test_data)
+        self.assertIn('high_nan_feature', transformed_protected.columns,
+                      "Protected feature should be kept despite high NaN percentage")
+
+    def test_protected_features_with_both_filters(self):
+        """Test that protected features work with both ColumnSelector and LowUniqueValueFilter."""
+        preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector',
+                 'params': {'max_nan_frac_per_col': 0.5}},
+                {'name': 'low_unique_value_filter',
+                 'params': {'min_unique_value_count': 2}},
+            ]
+        )
+
+        # Protect both problematic features
+        fit_params = {
+            'column_selector__protected_features': ['high_nan_feature', 'conditional_feature'],
+            'low_unique_value_filter__protected_features': ['high_nan_feature', 'conditional_feature']
+        }
+        preprocessor.fit(self.test_data, **fit_params)
+        transformed = preprocessor.transform(self.test_data)
+
+        # Both protected features should be present
+        self.assertIn('conditional_feature', transformed.columns,
+                      "Constant protected feature should be kept")
+        self.assertIn('high_nan_feature', transformed.columns,
+                      "High-NaN protected feature should be kept")
+
+    def test_validation_fails_when_protected_feature_missing_from_output(self):
+        """Test that fit raises ValueError if a protected feature is missing from output."""
+        from energy_fault_detector.data_preprocessing.angle_transformer import AngleTransformer
+
+        # Create a pipeline that transforms a protected feature
+        preprocessor = DataPreprocessor(
+            steps=[
+                {'name': 'angle_transformer',
+                 'params': {'angles': ['conditional_feature']}},  # Transforms conditional_feature
+            ]
+        )
+
+        # This should raise an error because 'conditional_feature' will be transformed to
+        # 'conditional_feature_sin' and 'conditional_feature_cos'
+        with self.assertRaises(ValueError) as context:
+            preprocessor.fit(self.test_data, protected_features=['conditional_feature'])
+
+        self.assertIn('Protected features were dropped', str(context.exception))
+        self.assertIn('conditional_feature', str(context.exception))
+        self.assertIn('AngleTransformer or CounterDiffTransformer', str(context.exception))

@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
-import tensorflow as tf
-from tensorflow.keras import regularizers
-from tensorflow.keras.layers import (
+from keras import regularizers
+from keras.layers import (
     Input,
     LSTM,
     Dropout,
     Dense,
     Concatenate,
 )
-from tensorflow.keras.models import Model as KerasModel
+from keras.models import Model as KerasModel
 
 from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
@@ -144,13 +143,13 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         # Encoder model for latent representation
         if conditional_input is not None:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=encoded,
                 name="encoder",
             )
         else:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=main_input,
                 outputs=encoded,
                 name="encoder",
@@ -173,13 +172,13 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
 
         # Stand-alone decoder model
         if conditional_input is not None:
-            self.decoder = tf.keras.Model(
+            self.decoder = KerasModel(
                 inputs=[latent_input, cond_last_input],
                 outputs=reconstruction,
                 name="decoder",
             )
         else:
-            self.decoder = tf.keras.Model(
+            self.decoder = KerasModel(
                 inputs=latent_input,
                 outputs=reconstruction,
                 name="decoder",
@@ -189,14 +188,14 @@ class LSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
             enc = self.encoder(inputs=[main_input, conditional_input])
             cond_last = conditional_input[:, -1, :]
             decoded = self.decoder([enc, cond_last])
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=decoded,
             )
         else:
             enc = self.encoder(main_input)
             decoded = self.decoder(enc)
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=main_input,
                 outputs=decoded,
             )

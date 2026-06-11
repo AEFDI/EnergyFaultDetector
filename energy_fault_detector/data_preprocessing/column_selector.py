@@ -1,10 +1,13 @@
 from typing import Optional, List
+import logging
 
 import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.data_transformer import DataTransformer
+
+logger = logging.getLogger('energy_fault_detector')
 
 
 class ColumnSelector(DataTransformer):
@@ -40,16 +43,22 @@ class ColumnSelector(DataTransformer):
 
     # pylint: disable=attribute-defined-outside-init
     # noinspection PyAttributeOutsideInit
-    def fit(self, x: pd.DataFrame, y: Optional[np.array] = None) -> 'ColumnSelector':
+    def fit(self, x: pd.DataFrame, y: Optional[np.array] = None,
+            protected_features: Optional[List[str]] = None) -> 'ColumnSelector':
         """Find columns to keep for training
 
         Args:
             x: data to filter based on NaN fractions
             y: target variable, currently unused.
+            protected_features: list of feature names that should never be dropped (e.g., conditional features for
+                autoencoders). Warnings will be issued if these features would have been dropped otherwise.
         """
 
         self.feature_names_in_ = x.columns.to_list()
         self.n_features_in_ = len(x.columns)
+
+        protected_features = protected_features or []
+        protected_lower = [f.lower() for f in protected_features]
 
         # If features_to_select is provided - ignore upper/lower case
         if self.features_to_select is not None:
@@ -57,16 +66,34 @@ class ColumnSelector(DataTransformer):
             keep_cols = [col for col in x.columns if col.lower() in select_lower]
             x_transformed = x[keep_cols]
         else:
-            # drop features to exclude - ignore upper/lower case
+            # drop features to exclude - ignore upper/lower case, but protect protected_features
             to_drop = [col for col in x.columns if col.lower() in
                        [excluded_feature.lower() for excluded_feature in self.features_to_exclude]
                        ]
+
+            # Warn about protected features in exclusion list
+            protected_in_exclusion = [col for col in to_drop if col.lower() in protected_lower]
+            for col in protected_in_exclusion:
+                logger.warning(f"Feature '{col}' is in features_to_exclude but is used as a conditional feature. "
+                               f"Keeping it anyway.")
+                to_drop.remove(col)
+
             x_transformed = x.drop(to_drop, axis=1, errors='ignore')
 
         # drop columns which have more than max_nan_frac_per_col relative NaN frequency
         empty_percentage = x_transformed.isnull().mean(axis=0)
         empty_cols = empty_percentage[empty_percentage >= self.max_nan_frac_per_col].index
-        x_transformed = x_transformed.drop(empty_cols, axis=1)
+
+        # Protect features from NaN-based dropping
+        protected_empty_cols = [col for col in empty_cols if col.lower() in protected_lower]
+        for col in protected_empty_cols:
+            nan_frac = empty_percentage[col]
+            logger.warning(f"Feature '{col}' has {nan_frac*100:.1f}% NaN values (exceeds threshold of "
+                           f"{self.max_nan_frac_per_col*100:.1f}%), but is used as a conditional feature. "
+                           f"Keeping it anyway.")
+
+        empty_cols_to_drop = [col for col in empty_cols if col.lower() not in protected_lower]
+        x_transformed = x_transformed.drop(empty_cols_to_drop, axis=1)
 
         # select relevant numeric columns and set attribute for transform
         self.feature_names_out_ = x_transformed.columns.to_list()

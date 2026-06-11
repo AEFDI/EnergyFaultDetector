@@ -5,9 +5,9 @@ import pickle as pkl
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_almost_equal
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Input
+from keras.models import Model
+from keras.layers import Dense
+from keras.layers import Input
 import tensorflow as tf
 
 from energy_fault_detector.root_cause_analysis.arcana import Arcana

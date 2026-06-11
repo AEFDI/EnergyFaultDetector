@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import List, Optional, Tuple
 
-import tensorflow as tf
-from tensorflow.keras import regularizers
-from tensorflow.keras.layers import (
+from keras import regularizers
+from keras.layers import (
     Input,
     LSTM,
     Dropout,
@@ -13,7 +12,7 @@ from tensorflow.keras.layers import (
     TimeDistributed,
     Concatenate,
 )
-from tensorflow.keras.models import Model as KerasModel
+from keras.models import Model as KerasModel
 
 from .seq2seq_autoencoder import Seq2SeqAutoencoder
 from ..data_splitting.sequence_dataset import SequenceDatasetBuilder
@@ -133,13 +132,13 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
 
         # Encoder model (for latent representation)
         if conditional_input is not None:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=encoded,
                 name="encoder",
             )
         else:
-            self.encoder = tf.keras.Model(
+            self.encoder = KerasModel(
                 inputs=main_input,
                 outputs=encoded,
                 name="encoder",
@@ -160,12 +159,12 @@ class LSTMSeqAutoencoder(Seq2SeqAutoencoder):
         )(decoder_output)
 
         if conditional_input is not None:
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=[main_input, conditional_input],
                 outputs=reconstruction,
             )
         else:
-            self.model = tf.keras.Model(
+            self.model = KerasModel(
                 inputs=main_input,
                 outputs=reconstruction,
             )

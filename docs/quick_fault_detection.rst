@@ -123,7 +123,7 @@ The underlying helper functions are implemented in:
 
 - :mod:`energy_fault_detector.quick_fault_detection.data_loading`
 - :mod:`energy_fault_detector.quick_fault_detection.configuration`
-- :mod:`energy_fault_detector.quick_fault_detection.quick_fault_detector`
+- :mod:`energy_fault_detector.quick_fault_detection.pipeline`
 
 Output
 ------

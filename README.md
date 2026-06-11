@@ -8,6 +8,15 @@
 
 # Energy Fault Detector - Autoencoder-based Fault Detection for the Future Energy System
 
+[![Python](https://img.shields.io/pypi/pyversions/energy-fault-detector)](https://pypi.org/project/energy-fault-detector/)
+[![PyPI version](https://img.shields.io/pypi/v/energy-fault-detector)](https://pypi.org/project/energy-fault-detector/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/AEFDI/EnergyFaultDetector/actions/workflows/run-tests.yml/badge.svg)](https://github.com/AEFDI/EnergyFaultDetector/actions/workflows/run-tests.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://aefdi.github.io/EnergyFaultDetector/)
+[![Downloads](https://img.shields.io/pypi/dm/energy-fault-detector)](https://pypi.org/project/energy-fault-detector/)
+
+Unsupervised fault detection for renewable energy assets using autoencoder-based anomaly detection.
+
 **Energy Fault Detector** is an open-source Python package designed for the automated detection of anomalies in
 operational data from renewable energy systems as well as power grids. It uses autoencoder-based normal behaviour
 models to identify irregularities in operational data. In addition to the classic anomaly detection, the package 

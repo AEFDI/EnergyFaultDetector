@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 
 # pylint: disable=E0401,E0611
-from tensorflow.keras.models import Model as KerasModel
-from tensorflow.keras.layers import Dense, PReLU, Input
+from keras.models import Model as KerasModel
+from keras.layers import Dense, PReLU, Input
 
 from energy_fault_detector.core.autoencoder import Autoencoder
 

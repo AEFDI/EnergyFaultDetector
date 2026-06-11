@@ -12,10 +12,10 @@ import tensorflow as tf
 tf.get_logger().setLevel("ERROR")
 
 # # pylint: disable=E0401,E0611,C0413
-from tensorflow.keras.models import load_model as load_keras_model, Model as KerasModel
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.optimizers.schedules import ExponentialDecay
-from tensorflow.keras.callbacks import EarlyStopping, Callback
+from keras.models import load_model as load_keras_model, Model as KerasModel
+from keras.optimizers import Adam
+from keras.optimizers.schedules import ExponentialDecay
+from keras.callbacks import EarlyStopping, Callback
 
 from energy_fault_detector.core.save_load_mixin import SaveLoadMixin
 
@@ -144,12 +144,16 @@ class Autoencoder(ABC, SaveLoadMixin):
 
     def __call__(self, x: Union[np.ndarray, tf.Tensor], conditions: Union[np.ndarray, tf.Tensor] = None) -> tf.Tensor:
         """Calls the model on new inputs."""
+
+        x = tf.convert_to_tensor(x, dtype=tf.float32)
+
         if self.is_conditional:
             if conditions is None:
                 raise ValueError(
                     "To call an conditional autoencoder on new input, the conditions need to be provided"
                     " as well: `Autoencoder(inputs, conditions)`."
                 )
+            conditions = tf.convert_to_tensor(conditions, dtype=tf.float32)
             return self.model([x, conditions])
 
         return self.model(x)
@@ -220,7 +224,7 @@ class Autoencoder(ABC, SaveLoadMixin):
         # ensure verbose default
         kwargs.setdefault("verbose", self.verbose)
 
-        self._fit_internal(x, x_val, epochs=self.epochs, callbacks=self.callbacks, **kwargs)
+        self._fit_internal(x, x_val, epochs=self.epochs, callbacks=callbacks, **kwargs)
         return self
 
     def _fit_internal(self, x: DataType, x_val: DataType, epochs: int, callbacks: List[Callback], **kwargs) -> None:
@@ -282,11 +286,12 @@ class Autoencoder(ABC, SaveLoadMixin):
 
         self.compile_model(learning_rate)  # sets new learning rate
         kwargs.setdefault("verbose", self.verbose)
+        callbacks = kwargs.pop('callbacks', [])
         self._fit_internal(
             x, x_val,
             epochs=tune_epochs + self.epochs_completed,
-            callbacks=self.callbacks,
             initial_epoch=self.epochs_completed,
+            callbacks=callbacks,
             **kwargs
         )
         return self
