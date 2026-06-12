@@ -3,6 +3,7 @@ Thanks for your interest in contributing!
 
 ## Getting help and reporting issues
 
+- Check the documentation first: [EnergyFaultDetector docs](https://aefdi.github.io/EnergyFaultDetector)
 - Bug reports and feature requests: open an issue at https://github.com/AEFDI/EnergyFaultDetector/issues
 - For general questions or integration support, you can also contact [aefdi@iee.fraunhofer.de](mailto:aefdi@iee.fraunhofer.de)
 
@@ -10,7 +11,7 @@ Please include:
 - A clear description of the problem or request
 - Steps to reproduce (for bugs)
 - Your Python version and operating system
-- The Energy Fault Detector version (`pip show energy-fault-detector`)
+- The EnergyFaultDetector version (`pip show energy-fault-detector`)
 
 ---
 ## Development setup
@@ -18,10 +19,14 @@ Please include:
    ```bash
    git clone https://github.com/<your-username>/EnergyFaultDetector.git
    cd EnergyFaultDetector
+   ```
 2. Create and activate a virtual environment (example with venv):
    ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # on Windows: .venv\Scripts\activate
+   python -m venv .venv
+   # on Linux/maxOS
+    source .venv/bin/activate
+   # on Windows:
+   .venv\Scripts\activate.ps1
    ```
 3. Install the package in editable mode with development dependencies: `pip install -e .[dev]`
 4. Run the tests to verify your setup: `pytest --cov`
@@ -31,6 +36,7 @@ Please include:
 - Keep functions and public APIs documented with clear docstrings (we use Google Style docstrings).
 - Prefer small, focused changes with clear motivation.
 - If you introduce new functionality, add tests where feasible.
+- Avoid introducing new dependencies unless necessary; if you do, justify them in the PR description.
 
 ## Pull request process
 1. If you plan a substantial change, open an issue first to discuss the idea.
@@ -60,3 +66,10 @@ If you move or extend conceptual content (for example “Key Concepts” or “A
 ---
 
 By contributing to this project, you agree that your contributions will be licensed under the project’s MIT license.
+
+---
+
+## Support
+If you find this project useful but don’t have time to contribute code, you can still support it by 
+starring the repository on GitHub, mentioning it in your project’s README or documentation, or 
+recommending it to others.
