@@ -492,3 +492,9 @@ def download_backblaze_data(names: Union[List[str], str],
     logger.info(f"Download of Backblaze data successful. CSV files available in {dest_dir.resolve()}")
 
     return dest_dir.resolve()
+
+
+__all__ = [
+    "download_zenodo_data",
+    "download_backblaze_data"
+]

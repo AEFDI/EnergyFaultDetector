@@ -24,7 +24,12 @@ Typical steps:
    - :class:`~energy_fault_detector.core.threshold_selector.ThresholdSelector`
    - :class:`~energy_fault_detector.core.data_transformer.DataTransformer`
 
-2. Register your class in :mod:`energy_fault_detector.registration` so it can be referenced
+   For sequence models:
+
+   - :class:`~energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder`
+   - :class:`~energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder`
+
+2. Register your class in the :class:`~energy_fault_detector.registration.Registry` so it can be referenced
    by name from the YAML config:
 
    .. code-block:: python

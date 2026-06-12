@@ -3,7 +3,7 @@
 ARCANA: Root cause analysis
 ===========================
 
-ARCANA (:mod:`energy_fault_detector.root_cause_analysis.arcana`) is a gradient-based root cause
+:class:`~energy_fault_detector.root_cause_analysis.arcana.Arcana` is a gradient-based root cause
 analysis method for autoencoders, described in:
 
   *Autoencoder-based anomaly root cause analysis for wind turbines.*\
@@ -16,8 +16,8 @@ strongly to the detected anomaly.
 Using ARCANA via FaultDetector
 ------------------------------
 
-The :py:meth:`FaultDetector.run_root_cause_analysis <energy_fault_detector.fault_detector.FaultDetector.run_root_cause_analysis>`
-method runs ARCANA on a trained model:
+The :meth:`~energy_fault_detector.fault_detector.FaultDetector.run_root_cause_analysis` method of the
+:class:`~energy_fault_detector.fault_detector.FaultDetector` runs ARCANA on a trained model:
 
 .. code-block:: python
 

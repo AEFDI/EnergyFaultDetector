@@ -34,9 +34,9 @@ Installation
     :caption: Models and methods
     :maxdepth: 1
 
+    arcana
     models_overview
     sequence_models
-    arcana
 
 .. toctree::
     :caption: Advanced usage
