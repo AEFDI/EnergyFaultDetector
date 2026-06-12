@@ -159,6 +159,7 @@ html_css_files = [
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pydoc'
 
+html_title = f"{project} documentation"
 
 # -- Options for LaTeX output ---------------------------------------------
 latex_elements = {}
