@@ -17,6 +17,8 @@ use os.path.abspath to make it absolute, like shown here.
 """
 import os
 import sys
+import inspect
+import importlib
 
 IMPORT_NAME = 'energy_fault_detector'  # name used for imports
 
@@ -73,6 +75,7 @@ extensions = [
     'sphinx.ext.imgmath',        # render latex graphics
     'sphinx_copybutton',         # add copy button to code blocks
     'sphinx.ext.autosummary',
+    'sphinx.ext.linkcode',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -141,6 +144,14 @@ napoleon_type_aliases = {
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+
+html_context = {
+    "display_github": True,
+    "github_user": "AEFDI",
+    "github_repo": "EnergyFaultDetector",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -270,3 +281,31 @@ def run_apidoc(app):
 
 def setup(app):
     app.connect("builder-inited", run_apidoc)
+
+
+def linkcode_resolve(domain, info):
+    if domain != "py" or not info["module"]:
+        return None
+    try:
+        mod = importlib.import_module(info["module"])
+        obj = mod
+        for part in info["fullname"].split("."):
+            obj = getattr(obj, part)
+        obj = inspect.unwrap(obj)
+        source_file = inspect.getsourcefile(obj)
+        source_lines, start_line = inspect.getsourcelines(obj)
+    except (TypeError, OSError, AttributeError):
+        return None
+    if source_file is None:
+        return None
+
+    source_file = os.path.relpath(source_file, start=PROJECT_ROOT)
+    if not source_file.startswith(IMPORT_NAME + os.sep):
+        return None
+
+    source_file = source_file.replace(os.sep, "/")
+    end_line = start_line + len(source_lines) - 1
+    return (
+        f"https://github.com/AEFDI/EnergyFaultDetector/blob/main/"
+        f"{source_file}#L{start_line}-L{end_line}"
+    )
