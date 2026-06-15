@@ -39,7 +39,14 @@ class FaultDetector(FaultDetectionModel):
 
     def preprocess_train_data(self, sensor_data: pd.DataFrame, normal_index: pd.Series, fit_preprocessor: bool = True
                               ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
-        """Preprocesses the training data using the configured data_preprocessor."""
+        """Preprocesses the training data using the configured data_preprocessor.
+        If categorical features are declared in config file, data is split into categorical and numerical features.
+        Boolean features are treated the same as numerical features. Scaling is not applied to encoded categorical features.
+        """
+
+        # TODO: Check if categorical features are declared. If true, split data into categorical and numerical data.
+        # TODO: Fit categorical data -> categorical pipeline
+        # TODO: Fit numerical and boolean data. -> numerical pipeline
 
         x = sensor_data.sort_index()
         if normal_index is not None:
@@ -51,6 +58,7 @@ class FaultDetector(FaultDetectionModel):
             raise ValueError('There are duplicated indices in the input dataframe `sensor_data` and/or in the '
                              '`normal_index`, please check your input data.')
 
+        # TODO: add list of relevant features to config and protect relevant features (if present) as well.
         # Determine which features to protect based on config flag
         protect = self.config.protect_conditional_features if self.config else True
         protected_features = (
@@ -70,6 +78,7 @@ class FaultDetector(FaultDetectionModel):
 
         x_normal = x[y.values]
         if fit_preprocessor:
+            # TODO: Here we have to run two separate pipelines, one for categorical and one for numerical + boolean.
             logger.info('Fit preprocessor pipeline.')
             fit_params = {}
             for step_name in self.data_preprocessor.named_steps.keys():
