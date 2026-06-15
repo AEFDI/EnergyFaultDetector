@@ -29,6 +29,10 @@ def quick_fault_detector(csv_data_path: str | Path, csv_test_data_path: Optional
                          ) -> Tuple[FaultDetectionResult, pd.DataFrame]:
     """Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
     behavior. Anomalies are then aggregated to events and further analyzed.
+
+    This function can also be called via the CLI command ``quick_fault_detector``.
+    See :doc:`/quick_fault_detection` for details.
+
     Runs the entire fault detection module chain in one function call. Sections of this function call are:
     1. Data Loading and verification
     2. Config selection and optimization

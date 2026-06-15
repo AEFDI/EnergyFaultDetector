@@ -1,8 +1,5 @@
 """This module contains class templates for most of the anomaly detection classes, such as
-anomaly scores, threshold selectors and data classes.
-
-Core templates (no heavy backends (i.e. tensorflow) imported at module import).
-"""
+anomaly scores, threshold selectors and data classes."""
 
 from .anomaly_score import AnomalyScore
 from .data_transformer import DataTransformer

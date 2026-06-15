@@ -17,6 +17,8 @@ use os.path.abspath to make it absolute, like shown here.
 """
 import os
 import sys
+import inspect
+import importlib
 
 IMPORT_NAME = 'energy_fault_detector'  # name used for imports
 
@@ -38,11 +40,16 @@ from energy_fault_detector import __about__ as about  # noqa: E402
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'<name>': ('https://docs.python.org/', None)}
+# intersphinx_mapping = {'<name>': ('https://docs.python.org/', None)}
 
 add_module_names = False
 
 autodoc_mock_imports = ["sklearn"]
+
+# Silence warnings about unresolved external labels in third-party docstrings (e.g. sklearn)
+suppress_warnings = [
+    "ref.ref",  # undefined :ref: targets
+]
 
 autoclass_content = 'both'
 
@@ -62,14 +69,13 @@ version = about.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',  # generate docs from docstrings
-    'sphinx.ext.napoleon',  # does some formatting tricks
+    'sphinx.ext.autodoc',        # generate docs from docstrings
+    'sphinx.ext.napoleon',       # does some formatting tricks
     'sphinx_autodoc_typehints',  # package needs to be installed
-    # 'sphinx.ext.doctest',  # if you want to use doctests somehow
-    'sphinx.ext.imgmath',  # render latex graphics
-    #'sphinx.ext.intersphinx',  # links to other (energy_fault_detector) packages
-    #'sphinx.ext.coverage',  # documentation coverage (not test coverage)
-    'sphinx_copybutton',  # add copy button to code blocks
+    'sphinx.ext.imgmath',        # render latex graphics
+    'sphinx_copybutton',         # add copy button to code blocks
+    'sphinx.ext.autosummary',
+    'sphinx.ext.linkcode',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -139,6 +145,14 @@ napoleon_type_aliases = {
 #
 html_theme = 'sphinx_rtd_theme'
 
+html_context = {
+    "display_github": True,
+    "github_user": "AEFDI",
+    "github_repo": "EnergyFaultDetector",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -152,26 +166,11 @@ html_css_files = [
     'custom.css',
 ]
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# This is required for the alabaster theme
-# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-        # 'donate.html',
-    ]
-}
-
-
 # -- Options for HTMLHelp output ------------------------------------------
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pydoc'
 
+html_title = f"{project} documentation"
 
 # -- Options for LaTeX output ---------------------------------------------
 latex_elements = {}
@@ -198,7 +197,6 @@ man_pages = [(
     about.__author__, 1)
 ]
 
-
 # -- Options for Texinfo output -------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
@@ -209,3 +207,105 @@ texinfo_documents = [
      about.__author__, about.__title__, about.__description__,
      'Miscellaneous'),
 ]
+
+
+def run_apidoc(app):
+    """Generate API .rst files with sphinx-apidoc, like in CI:
+
+       sphinx-apidoc -o docs energy_fault_detector/ --module-first --force --separate --templatedir docs/_templates
+    """
+
+    # Only run this step if we're building the HTML docs
+    if app.builder.name != "html":
+        return
+
+    from sphinx.ext.apidoc import main as apidoc_main
+    from pathlib import Path
+
+    here = Path(__file__).parent
+    pkg_dir = here.parent / IMPORT_NAME
+    out_dir = here
+    templates = here / "_templates"
+
+    apidoc_main([
+        "-o", str(out_dir),
+        str(pkg_dir),
+        "--module-first",
+        "--force",
+        "--separate",
+        "--templatedir", str(templates),
+        # Following files are skipped
+        # Quick fault detection internals
+        str(pkg_dir / "main.py"),
+        str(pkg_dir / "quick_fault_detection" / "configuration.py"),
+        str(pkg_dir / "quick_fault_detection" / "data_loading.py"),
+        str(pkg_dir / "quick_fault_detection" / "optimization.py"),
+        str(pkg_dir / "quick_fault_detection" / "output.py"),
+        str(pkg_dir / "quick_fault_detection" / "pipeline.py"),
+        str(pkg_dir / "quick_fault_detection" / "quick_fault_detector.py"),
+        # core internals
+        str(pkg_dir / "core" / "anomaly_score.py"),
+        str(pkg_dir / "core" / "data_transformer.py"),
+        str(pkg_dir / "core" / "threshold_selector.py"),
+        str(pkg_dir / "core" / "fault_detection_result.py"),
+        str(pkg_dir / "core" / "fault_detection_model.py"),
+        str(pkg_dir / "core" / "model_factory.py"),
+        str(pkg_dir / "core" / "save_load_mixin.py"),
+        # internal utilities
+        str(pkg_dir / "utils" / "index_utils.py"),
+        # config internals
+        str(pkg_dir / "config" / "base_config.py"),
+        str(pkg_dir / "config" / "config.py"),
+        str(pkg_dir / "config" / "quickstart_config.py"),
+        # Class specific files (documented directly under the top module)
+        # autoencoder
+        str(pkg_dir / "autoencoders" / "multilayer_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "conditional_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "lstm_seq2one_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "cnn_seq2one_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "bidirectional_lstm_seq2one_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "cnn_seq_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "lstm_seq2seq_autoencoder.py"),
+        # anomaly score
+        str(pkg_dir / "anomaly_scores" / "rmse_score.py"),
+        str(pkg_dir / "anomaly_scores" / "mahalanobis_score.py"),
+        # threshold selector
+        str(pkg_dir / "threshold_selectors" / "adaptive_threshold.py"),
+        str(pkg_dir / "threshold_selectors" / "fdr_threshold.py"),
+        str(pkg_dir / "threshold_selectors" / "fbeta_threshold.py"),
+        str(pkg_dir / "threshold_selectors" / "quantile_threshold.py"),
+        # main class (documented directly under the top module)
+        str(pkg_dir / "fault_detector.py"),
+    ])
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)
+
+
+def linkcode_resolve(domain, info):
+    if domain != "py" or not info["module"]:
+        return None
+    try:
+        mod = importlib.import_module(info["module"])
+        obj = mod
+        for part in info["fullname"].split("."):
+            obj = getattr(obj, part)
+        obj = inspect.unwrap(obj)
+        source_file = inspect.getsourcefile(obj)
+        source_lines, start_line = inspect.getsourcelines(obj)
+    except (TypeError, OSError, AttributeError):
+        return None
+    if source_file is None:
+        return None
+
+    source_file = os.path.relpath(source_file, start=PROJECT_ROOT)
+    if not source_file.startswith(IMPORT_NAME + os.sep):
+        return None
+
+    source_file = source_file.replace(os.sep, "/")
+    end_line = start_line + len(source_lines) - 1
+    return (
+        f"https://github.com/AEFDI/EnergyFaultDetector/blob/main/"
+        f"{source_file}#L{start_line}-L{end_line}"
+    )
