@@ -15,6 +15,8 @@ from .angle_transformer import AngleTransformer
 from .duplicate_value_to_nan import DuplicateValuesToNan
 from .counter_diff_transformer import CounterDiffTransformer
 from .timestamp_transformer import TimestampTransformer
+from .categorical_encoder import CategoricalEncoder
+from .imputer import Imputer
 
 
 class DataPreprocessor(Pipeline, SaveLoadMixin):
@@ -28,6 +30,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         'standard_scaler': StandardScaler,
         'minmax_scaler': MinMaxScaler,
         'timestamp_transformer': TimestampTransformer,
+        'categorical_encoder': CategoricalEncoder,
+        'imputer': Imputer,
     }
 
     NAME_ALIASES: Dict[str, str] = {
@@ -43,6 +47,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "duplicate_values_to_nan": "duplicate_to_nan",
         "timestamp_features": "timestamp_transformer",
         "timestamp_transform": "timestamp_transformer",
+        "categorical_encoder": "categorical_encoder",
     }
 
     def __init__(self, steps: Optional[List[Dict[str, Any]]] = None) -> None:
@@ -301,6 +306,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             cls = self.STEP_REGISTRY.get(name)
             if cls is None:
                 raise ValueError(f"Unknown step name '{name}'. Register it in STEP_REGISTRY.")
+            # TODO: review initialization of estimator classes
             estimator = cls(**params)
             step_name = spec.get("step_name", name)
             steps.append((step_name, estimator))
@@ -337,6 +343,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         imputer = [s for s in steps_spec if s.get("name") == "simple_imputer"]
         scaler_names = {"standard_scaler", "minmax_scaler"}
         scalers = [s for s in steps_spec if s.get("name") in scaler_names]
+        encoders = [s for s in steps_spec if s.get("name") == "categorical_encoder"]
         if len(scalers) > 1:
             raise ValueError(f"Only one scaler can be used, two found in the steps specification: {scalers}")
         timestamp_step = [s for s in steps_spec if s.get("name") == "timestamp_transformer"]
@@ -345,7 +352,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             s for s in steps_spec
             if s.get("name") not in {
                 "column_selector", "duplicate_to_nan", "counter_diff_transformer", "simple_imputer",
-                "low_unique_value_filter", "timestamp_transformer",
+                "categorical_encoder", "low_unique_value_filter", "timestamp_transformer",
             } | scaler_names
         ]
 
