@@ -16,20 +16,20 @@ class Scaler(DataTransformer):
         'minmax': MinMaxScaler
     }
 
-    def __init__(self, scaler_type: str = 'standard', scale_encoded_features: bool = True,
-                 encoded_feature_names: list = None, **params):
+    def __init__(self, scaler_type: str = 'standard', scale_categorical_features: bool = True,
+                 categorical_features: list = None, **params):
         """
         Initialize the Scaler object.
 
         Args:
             scaler_type: Type of scaler ('standard', 'minmax'). Defaults to 'standard'.
-            scale_encoded_features: Flag to scale encoded features. Defaults to True.
-            encoded_feature_names: List of names of encoded features. Defaults to None.
+            scale_categorical_features: Flag to scale categorical features after encoding. Defaults to True.
+            categorical_features: List of names of categorical features. Defaults to None.
         """
         super().__init__()
         self.scaler_type = scaler_type
-        self.scale_encoded_features = scale_encoded_features
-        self.encoded_feature_names = encoded_feature_names if encoded_feature_names else []
+        self.scale_categorical_features = scale_categorical_features
+        self.categorical_features = categorical_features if categorical_features else []
         self.scaler = self.SCALER_REGISTRY.get(scaler_type)
 
         # Attributes to be defined during fitting
@@ -59,10 +59,10 @@ class Scaler(DataTransformer):
         self.n_features_in_ = len(self.feature_names_in_)
 
         # Determine features to scale
-        if self.scale_encoded_features:
+        if self.scale_categorical_features:
             subset_to_fit = x
         else:
-            non_encoded_features = [col for col in x.columns if col not in self.encoded_feature_names]
+            non_encoded_features = [col for col in x.columns if not any(feature in col for feature in self.categorical_features)]
             subset_to_fit = x[non_encoded_features]
 
         # Fit the scaler
@@ -85,12 +85,12 @@ class Scaler(DataTransformer):
         logger.debug("Transforming data with Scaler transformer...")
         check_is_fitted(self)
         x_transformed = x.copy()
-
+        # TODO: not sure if this work when x has different columns as the ones during fit...
         # Transform the appropriate features
-        if self.scale_encoded_features:
+        if self.scale_categorical_features:
             x_transformed.iloc[:, :] = self.scaler.transform(x_transformed)
         else:
-            non_encoded_features = [col for col in x.columns if col not in self.encoded_feature_names]
+            non_encoded_features = [col for col in x.columns if not any(feature in col for feature in self.categorical_features)]
             x_transformed[non_encoded_features] = self.scaler.transform(x[non_encoded_features])
 
         return x_transformed
@@ -109,10 +109,10 @@ class Scaler(DataTransformer):
         x_inverse_transformed = x.copy()
 
         # Apply inverse transform to the appropriate features
-        if self.scale_encoded_features:
+        if self.scale_categorical_features:
             x_inverse_transformed.iloc[:, :] = self.scaler.inverse_transform(x_inverse_transformed)
         else:
-            non_encoded_features = [col for col in x.columns if col not in self.encoded_feature_names]
+            non_encoded_features = [col for col in x.columns if not any(feature in col for feature in self.categorical_features)]
             x_inverse_transformed[non_encoded_features] = self.scaler.inverse_transform(x[non_encoded_features])
 
         return x_inverse_transformed
