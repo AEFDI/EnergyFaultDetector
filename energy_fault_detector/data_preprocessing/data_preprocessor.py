@@ -132,7 +132,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             x_ = self.named_steps[timestamp_key].inverse_transform(x_.copy())
 
         # Find scaler by type and reverse scaling
-        scaler_key, _ = self._find_step_by_type((StandardScaler, MinMaxScaler))
+        scaler_key, _ = self._find_step_by_type((Scaler,))
         x_ = self.named_steps[scaler_key].inverse_transform(x_)
         x_ = pd.DataFrame(data=x_, columns=self.named_steps[scaler_key].get_feature_names_out())
 
@@ -387,9 +387,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # Encoding categorical features before scaling
         ordered.extend(encoders)
         # Scaling
-        # ordered.extend(scalers)
+        ordered.extend(scalers)
         # No scaling needed for the time features
-        # ordered.extend(timestamp_step)
+        ordered.extend(timestamp_step)
         return ordered
 
     @staticmethod
