@@ -5,8 +5,7 @@ from typing import List, Optional, Dict, Any, Tuple
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.impute import SimpleImputer
+from sklearn.utils.validation import check_is_fitted
 
 from ..core.save_load_mixin import SaveLoadMixin
 from .column_selector import ColumnSelector
@@ -16,6 +15,7 @@ from .duplicate_value_to_nan import DuplicateValuesToNan
 from .counter_diff_transformer import CounterDiffTransformer
 from .timestamp_transformer import TimestampTransformer
 from .categorical_encoder import CategoricalEncoder
+from .scaler import Scaler
 from .imputer import Imputer
 
 
@@ -26,9 +26,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         'low_unique_value_filter': LowUniqueValueFilter,
         'angle_transformer': AngleTransformer,
         'counter_diff_transformer': CounterDiffTransformer,
-        'simple_imputer': SimpleImputer,
-        'standard_scaler': StandardScaler,
-        'minmax_scaler': MinMaxScaler,
+        'simple_imputer': Imputer,
+        'scaler': Scaler,
         'timestamp_transformer': TimestampTransformer,
         'categorical_encoder': CategoricalEncoder,
         'imputer': Imputer,
@@ -71,7 +70,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
               1) NaN introducing steps first (DuplicateValuesToNan, CounterDiffTransformer),
               2) ColumnSelector (if present),
               3) Other steps
-              4) SimpleImputer placed before scaler (always present; mean strategy by default),
+              4) Imputer placed before scaler (always present; mean strategy by default),
               5) Scaler always last (StandardScaler by default).
               6) TimestampTransformer (if present).
 
@@ -124,6 +123,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Returns:
             DataFrame with inverse scaling and angle back-transformation.
         """
+        check_is_fitted(self)
         x_ = x.copy()  # avoid modifying the original DataFrame
 
         # Drop time features
@@ -157,6 +157,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Returns:
             DataFrame with the same index as input.
         """
+        check_is_fitted(self)
         x_ = super().transform(X=x.copy())
         return pd.DataFrame(data=x_, columns=self.get_feature_names_out(), index=x.index)
 
@@ -254,7 +255,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Steps:
             - Column selection: A ColumnSelector object filters out columns/features with too many NaN values.
             - Low unique value filter: Remove columns/features with <= 2 unique values.
-            - Imputation with sklearn's SimpleImputer
+            - Simple imputation
             - Scaling: Apply either sklearn's StandardScaler or MinMaxScaler.
 
         Returns:
@@ -264,8 +265,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         steps = [
             ("column_selector", ColumnSelector(max_nan_frac_per_col=0.05)),
             ("low_unique_value_filter", LowUniqueValueFilter(min_unique_value_count=2, max_col_zero_frac=1.0)),
-            ("simple_imputer", SimpleImputer(strategy="mean").set_output(transform="pandas")),
-            ("standard_scaler", StandardScaler(with_mean=True, with_std=True)),
+            ("simple_imputer", Imputer(strategy="mean").set_output(transform="pandas")),
+            ("standard_scaler", Scaler(with_mean=True, with_std=True)),
         ]
 
         return steps
@@ -320,7 +321,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
           - NaN introducing steps first (DuplicateValuesToNan and CounterDiffTransformer)
           - ColumnSelector (if present).
           - Other steps
-          - Any imputer placed at the end, before scaler. If no imputer was defined, the SimpleImputer with imputation
+          - Any imputer placed at the end, before scaler. If no imputer was defined, the a simple imputer with imputation
             strategy 'mean' is added.
           - Scaler last (if present). If no scaler is added, the StandardScaler with default values is added.
           - TimestampTransformer (if present).
@@ -341,8 +342,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         duplicates = [s for s in steps_spec if s.get("name") == "duplicate_to_nan"]
         counter = [s for s in steps_spec if s.get("name") == "counter_diff_transformer"]
         imputer = [s for s in steps_spec if s.get("name") == "simple_imputer"]
-        scaler_names = {"standard_scaler", "minmax_scaler"}
-        scalers = [s for s in steps_spec if s.get("name") in scaler_names]
+        scalers = [s for s in steps_spec if s.get("name") == "scaler"]
         encoders = [s for s in steps_spec if s.get("name") == "categorical_encoder"]
         if len(scalers) > 1:
             raise ValueError(f"Only one scaler can be used, two found in the steps specification: {scalers}")
@@ -352,15 +352,20 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             s for s in steps_spec
             if s.get("name") not in {
                 "column_selector", "duplicate_to_nan", "counter_diff_transformer", "simple_imputer",
-                "categorical_encoder", "low_unique_value_filter", "timestamp_transformer",
-            } | scaler_names
+                "categorical_encoder", "low_unique_value_filter", "timestamp_transformer", "scaler"
+            }
         ]
 
         # Add default scaler if empty
+        # TODO: Review default scaler and imputer. What happens if the data contains categorical features?
         if not scalers:
-            scalers = [{'name': 'standard_scaler',
+            scalers = [{'name': 'scaler',
                         'step_name': 'scaler',
-                        'params': {'with_mean': True, 'with_std': True}}]
+                        'params': {
+                            'scaler_typ': 'standard',
+                            'scale_categorical_features': True,
+                            'with_mean': True,
+                            'with_std': True}}]
         # Add default imputer if empty
         if not imputer:
             imputer = [{'name': 'simple_imputer',
@@ -377,11 +382,14 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         ordered.extend(low_unique_value_filter)
         # other transformations
         ordered.extend(others)
-        # Imputation and scaling
+        # Imputation
         ordered.extend(imputer)
-        ordered.extend(scalers)
+        # Encoding categorical features before scaling
+        ordered.extend(encoders)
+        # Scaling
+        # ordered.extend(scalers)
         # No scaling needed for the time features
-        ordered.extend(timestamp_step)
+        # ordered.extend(timestamp_step)
         return ordered
 
     @staticmethod
