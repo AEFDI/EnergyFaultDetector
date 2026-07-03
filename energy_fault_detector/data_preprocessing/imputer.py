@@ -1,9 +1,7 @@
 from typing import Optional, List, Union, Callable
 import pandas as pd
-from dask.dataframe.dispatch import categorical_dtype
 from sklearn.utils.validation import check_is_fitted
 from sklearn.impute import SimpleImputer
-from statsmodels.tools import categorical
 
 from energy_fault_detector.core.data_transformer import DataTransformer
 import logging
