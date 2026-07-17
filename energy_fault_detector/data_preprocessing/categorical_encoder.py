@@ -109,7 +109,7 @@ class CategoricalEncoder(DataTransformer):
         self.one_hot_encoder = OneHotEncoder(sparse_output=False)
         self.categorical_columns = None
 
-    def fit(self, x: pd.DataFrame, y=None):
+    def fit(self, x: pd.DataFrame, y=None) -> "CategoricalEncoder":
         # TODO: non-numerical features that are not specified in categorical_features should bbe dropped and warning should be raised
         self.feature_names_in_ = x.columns.tolist()
         self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
@@ -121,7 +121,7 @@ class CategoricalEncoder(DataTransformer):
         self.one_hot_encoder.fit(categorical_data)
         return self
     
-    def transform(self, x: pd.DataFrame):
+    def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         check_is_fitted(self)
 
         # Separate data into numerical and categorical features. Only categorical features are transformed
@@ -142,7 +142,7 @@ class CategoricalEncoder(DataTransformer):
         else:
             return numerical_data  # Returns input df if no categorical features are specified in config file
 
-    def inverse_transform(self, x: pd.DataFrame):
+    def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
         check_is_fitted(self)
 
         # Get the one-hot encoded column names from the encoder
@@ -162,7 +162,7 @@ class CategoricalEncoder(DataTransformer):
         else:
             return numerical_data # Returns input df if no categorical features are specified in config file
     
-    def get_feature_names_out(self, input_features=None):
+    def get_feature_names_out(self, input_features=None) -> List[str]:
         check_is_fitted(self)
         self.feature_names_out_ = self.numerical_columns + list(self.one_hot_encoder.get_feature_names_out(self.categorical_columns))
         return self.feature_names_out_
