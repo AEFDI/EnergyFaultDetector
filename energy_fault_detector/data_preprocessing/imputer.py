@@ -8,7 +8,6 @@ import logging
 
 logger = logging.getLogger('energy_fault_detector')
 
-
 class Imputer(DataTransformer):
     """
     Class containing the imputation step. It is a wrap around methods for
@@ -19,22 +18,28 @@ class Imputer(DataTransformer):
         super().__init__()
         self.strategy = strategy
         self.categorical_features = categorical_features if categorical_features else []
-        # Initialize nested estimators
         self.params = params
+        # Initialize nested estimators
         # Separate imputers for numerical and categorical data
-        self.numerical_imputer = SimpleImputer(strategy=self.strategy, **self.params)
-        self.categorical_imputer = SimpleImputer(strategy='most_frequent')  # Categorical default to 'most_frequent'
+        if self.strategy == 'mean':
+            self.numerical_imputer = SimpleImputer(strategy=self.strategy, **self.params)
+            self.categorical_imputer = SimpleImputer(strategy='most_frequent')  # Categorical default to 'most_frequent'
+        elif self.strategy == 'median':
+            self.numerical_imputer = SimpleImputer(strategy=self.strategy, **self.params)
+            self.categorical_imputer = SimpleImputer(strategy='most_frequent')  # Categorical default to 'most_frequent'
+        else:
+            raise ValueError(f"Unsupported strategy: {self.strategy}. Supported strategies are 'mean' and 'median'.")
 
         # Attributes to be defined during fitting
         self.n_features_in_ = None
         self.feature_names_in_ = None
         self.feature_names_out_ = None
         self.input_index_ = None
-        self.numerical_columns = None
-        self.categorical_columns = None
-        self.non_declared_categorical_features = None
+        self.numerical_columns: List[str] = []
+        self.categorical_columns: List[str] = []
+        self.non_declared_categorical_features: List[str] = []
 
-    def fit(self, x: pd.DataFrame, y=None):
+    def fit(self, x: pd.DataFrame, y=None) -> "Imputer":
         """
         Fits the imputer on the provided DataFrame by separately handling numerical
         and categorical columns.
@@ -47,13 +52,16 @@ class Imputer(DataTransformer):
         # Split data into numerical (and boolean) and categorical features
         self.numerical_columns = [col for col in self.feature_names_in_ if not any(feature in col for feature in self.categorical_features)]
         self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
-        numerical_data = x[self.numerical_columns]
-        categorical_data = x[self.categorical_columns]
+        numerical_data = x.loc[:, self.numerical_columns]
+        categorical_data = x.loc[:, self.categorical_columns]
 
         # Clean numerical columns from non_declared categorical features
         self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
         self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
-        numerical_data = numerical_data[self.numerical_columns]
+        numerical_data = numerical_data.loc[:, self.numerical_columns]
+        if self.non_declared_categorical_features:
+            logger.info(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
+                        f"They will be dropped. Consider adding them to the categorical_features list if they should be treated as categorical.")
 
         logger.debug(f"Numerical columns: {self.numerical_columns}")
         logger.debug(f"Categorical columns: {self.categorical_columns}")
@@ -65,7 +73,7 @@ class Imputer(DataTransformer):
 
         return self
     
-    def transform(self, x: pd.DataFrame):
+    def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """
         Transforms the DataFrame by imputing missing values for numerical and
         categorical columns separately. Rejoins the transformed dataframes afterward.
@@ -74,8 +82,8 @@ class Imputer(DataTransformer):
 
         # Separate data into numerical and categorical features
         # TODO: what happens if x doesnt have all columns as during fit?
-        numerical_data = x[self.numerical_columns]
-        categorical_data = x[self.categorical_columns]
+        numerical_data = x.loc[:, self.numerical_columns]
+        categorical_data = x.loc[:, self.categorical_columns]
 
         # Transform the data
         numerical_transformed = pd.DataFrame(
@@ -99,14 +107,15 @@ class Imputer(DataTransformer):
 
         return transformed_data
     
-    def inverse_transform(self, x: pd.DataFrame):
+    def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """
         For compatibility, this method returns the DataFrame with the original column
         order but assumes no special inversions are necessary after imputation.
         """
         check_is_fitted(self)
+        
         return pd.DataFrame(x, columns=self.feature_names_in_, index=self.input_index_)
     
-    def get_feature_names_out(self, input_features=None):
+    def get_feature_names_out(self, input_features=None) -> List[str]:
         check_is_fitted(self)
         return self.numerical_columns + self.categorical_columns
