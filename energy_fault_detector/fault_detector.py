@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
+from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
@@ -41,7 +42,8 @@ class FaultDetector(FaultDetectionModel):
                               ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
         """Preprocesses the training data using the configured data_preprocessor.
         If categorical features are declared in config file, data is split into categorical and numerical features.
-        Boolean features are treated the same as numerical features. Scaling is not applied to encoded categorical features.
+        Boolean features are treated the same as numerical features. Encoded categorical features are scaled or not
+        depending on the config flag.
         """
 
         # TODO: Check if categorical features are declared. If true, split data into categorical and numerical data.
@@ -65,6 +67,7 @@ class FaultDetector(FaultDetectionModel):
             self.autoencoder.conditional_features or []
         ) if protect else []
 
+        # Data clipping (outlier clipping)
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
             clipper_params = self.config.data_clipping_params.copy()
@@ -77,8 +80,8 @@ class FaultDetector(FaultDetectionModel):
             x = data_clipper.transform(x)
 
         x_normal = x[y.values]
+        # Data preprocessing pipeline
         if fit_preprocessor:
-            # TODO: Here we have to run two separate pipelines, one for categorical and one for numerical + boolean.
             logger.info('Fit preprocessor pipeline.')
             fit_params = {}
             for step_name in self.data_preprocessor.named_steps.keys():
@@ -97,6 +100,8 @@ class FaultDetector(FaultDetectionModel):
             overwrite_models: bool = False, fit_autoencoder_only: bool = False, fit_preprocessor: bool = True,
             **kwargs) -> ModelMetadata:
         """Fit models on the given sensor_data and save them locally and return the metadata."""
+        if not check_is_fitted(self.data_preprocessor) and not fit_preprocessor:
+            raise ValueError("Data preprocessor is not fitted. Consider setting `fit_preprocessor=True`.")
 
         try:
             from keras.backend import clear_session
@@ -110,9 +115,9 @@ class FaultDetector(FaultDetectionModel):
                              "QuantileThresholdSelector or AdaptiveThresholdSelector.")
 
         non_numeric = sensor_data.select_dtypes(exclude='number').columns.tolist()
-        if non_numeric:
-            raise ValueError(f"`sensor_data` must be numeric. Non-numeric columns: {non_numeric}")
-
+        if non_numeric and fit_preprocessor:
+                logger.warning("Fitting preprocessor on non-numeric columns. Boolean columns will be treated as "
+                               "floats during imputation. Non-declared categorical features will be dropped.")
         clear_session()
 
         # --- Resolve conditional features against available data ---

@@ -20,6 +20,10 @@ from .imputer import Imputer
 
 
 class DataPreprocessor(Pipeline, SaveLoadMixin):
+    """
+    A configurable data preprocessing pipeline for tabular data.
+    """
+
     STEP_REGISTRY = {
         'duplicate_to_nan': DuplicateValuesToNan,
         'column_selector': ColumnSelector,
@@ -362,7 +366,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             scalers = [{'name': 'scaler',
                         'step_name': 'scaler',
                         'params': {
-                            'scaler_typ': 'standard',
+                            'scaler_type': 'standard',
                             'scale_categorical_features': True,
                             'with_mean': True,
                             'with_std': True}}]
