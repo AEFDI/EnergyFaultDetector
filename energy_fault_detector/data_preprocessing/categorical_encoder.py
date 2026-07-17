@@ -110,7 +110,7 @@ class CategoricalEncoder(DataTransformer):
         self.categorical_columns = None
 
     def fit(self, x: pd.DataFrame, y=None):
-        # Only categorical features are fitted and therefore features_names_in_ contain only categorical features
+        # TODO: non-numerical features that are not specified in categorical_features should bbe dropped and warning should be raised
         self.feature_names_in_ = x.columns.tolist()
         self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
         self.numerical_columns = [col for col in self.feature_names_in_ if col not in self.categorical_columns]

@@ -32,12 +32,14 @@ class Imputer(DataTransformer):
         self.input_index_ = None
         self.numerical_columns = None
         self.categorical_columns = None
+        self.non_declared_categorical_features = None
 
     def fit(self, x: pd.DataFrame, y=None):
         """
         Fits the imputer on the provided DataFrame by separately handling numerical
         and categorical columns.
         """
+
         self.feature_names_in_ = x.columns.tolist()
         self.n_features_in_ = len(self.feature_names_in_)
         self.input_index_ = x.index
@@ -47,6 +49,14 @@ class Imputer(DataTransformer):
         self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
         numerical_data = x[self.numerical_columns]
         categorical_data = x[self.categorical_columns]
+
+        # Clean numerical columns from non_declared categorical features
+        self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
+        self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
+        numerical_data = numerical_data[self.numerical_columns]
+
+        logger.debug(f"Numerical columns: {self.numerical_columns}")
+        logger.debug(f"Categorical columns: {self.categorical_columns}")
 
         # Fit the imputers
         self.numerical_imputer.fit(numerical_data)
@@ -99,4 +109,4 @@ class Imputer(DataTransformer):
     
     def get_feature_names_out(self, input_features=None):
         check_is_fitted(self)
-        return self.feature_names_in_
+        return self.numerical_columns + self.categorical_columns
