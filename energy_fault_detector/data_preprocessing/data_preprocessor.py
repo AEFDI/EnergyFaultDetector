@@ -17,6 +17,7 @@ from .timestamp_transformer import TimestampTransformer
 from .categorical_encoder import CategoricalEncoder
 from .scaler import Scaler
 from .imputer import Imputer
+from .ffill_imputer import ForwardFillImputer
 
 
 class DataPreprocessor(Pipeline, SaveLoadMixin):
@@ -34,7 +35,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         'scaler': Scaler,
         'timestamp_transformer': TimestampTransformer,
         'categorical_encoder': CategoricalEncoder,
-        'imputer': Imputer,
+        'ffill_imputer': ForwardFillImputer,
     }
 
     NAME_ALIASES: Dict[str, str] = {
@@ -51,6 +52,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "timestamp_features": "timestamp_transformer",
         "timestamp_transform": "timestamp_transformer",
         "categorical_encoder": "categorical_encoder",
+        "ffill_imputer": "ffill_imputer",
     }
 
     def __init__(self, steps: Optional[List[Dict[str, Any]]] = None) -> None:
@@ -163,7 +165,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         """
         check_is_fitted(self)
         x_ = super().transform(X=x.copy())
-        return pd.DataFrame(data=x_, columns=self.get_feature_names_out(), index=x.index)
+        return x_ # x_ is already a dataframe. Converting to a dataframe here and adding the input index is not working in case rows are dropped during preprocessing (e.g. in ForwardFillImputer). The index of the returned dataframe should be the index of the transformed dataframe, not the input dataframe.
 
     # pylint: disable=arguments-renamed
     def fit(self, X: pd.DataFrame, y=None, **fit_params):
@@ -239,6 +241,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             "column_selector",
             "low_unique_value_filter",
             "simple_imputer",
+            "ffill_imputer",
             "timestamp_transformer",
             # scaler handled separately (standard_scaler/minmax_scaler) in your code
         }
@@ -311,7 +314,6 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             cls = self.STEP_REGISTRY.get(name)
             if cls is None:
                 raise ValueError(f"Unknown step name '{name}'. Register it in STEP_REGISTRY.")
-            # TODO: review initialization of estimator classes
             estimator = cls(**params)
             step_name = spec.get("step_name", name)
             steps.append((step_name, estimator))
@@ -345,23 +347,25 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         low_unique_value_filter = [s for s in steps_spec if s.get("name") == "low_unique_value_filter"]
         duplicates = [s for s in steps_spec if s.get("name") == "duplicate_to_nan"]
         counter = [s for s in steps_spec if s.get("name") == "counter_diff_transformer"]
-        imputer = [s for s in steps_spec if s.get("name") == "simple_imputer"]
+        imputer = [s for s in steps_spec if s.get("name") in {"simple_imputer", "ffill_imputer"}]
         scalers = [s for s in steps_spec if s.get("name") == "scaler"]
         encoders = [s for s in steps_spec if s.get("name") == "categorical_encoder"]
         if len(scalers) > 1:
             raise ValueError(f"Only one scaler can be used, two found in the steps specification: {scalers}")
+        if len(imputer) > 1:
+            raise ValueError(f"Only one imputer can be used, two found in the steps specification: {imputer}")
         timestamp_step = [s for s in steps_spec if s.get("name") == "timestamp_transformer"]
 
         others = [
             s for s in steps_spec
             if s.get("name") not in {
                 "column_selector", "duplicate_to_nan", "counter_diff_transformer", "simple_imputer",
-                "categorical_encoder", "low_unique_value_filter", "timestamp_transformer", "scaler"
+                "categorical_encoder", "low_unique_value_filter", "timestamp_transformer", "scaler",
+                "ffill_imputer"
             }
         ]
 
         # Add default scaler if empty
-        # TODO: Review default scaler and imputer. What happens if the data contains categorical features?
         if not scalers:
             scalers = [{'name': 'scaler',
                         'step_name': 'scaler',
