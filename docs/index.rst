@@ -37,6 +37,8 @@ Installation
     arcana
     models_overview
     sequence_models
+    care2compare_guide
+    care2compare_faq
 
 .. toctree::
     :caption: Advanced usage
