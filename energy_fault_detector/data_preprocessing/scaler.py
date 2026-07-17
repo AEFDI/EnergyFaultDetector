@@ -27,6 +27,11 @@ class Scaler(DataTransformer):
             categorical_features: List of names of categorical features. Defaults to None.
         """
         super().__init__()
+
+        # Validate scaler_type
+        if scaler_type not in self.SCALER_REGISTRY:
+            raise ValueError(f"Unsupported scaler_type '{scaler_type}'. Valid types are: {list(self.SCALER_REGISTRY.keys())}")
+
         self.scaler_type = scaler_type
         self.scale_categorical_features = scale_categorical_features
         self.categorical_features = categorical_features if categorical_features else []
