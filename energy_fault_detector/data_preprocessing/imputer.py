@@ -62,7 +62,7 @@ class Imputer(DataTransformer):
             raise ValueError(f"Unsupported strategy: {self.strategy}. Supported strategies are 'mean' and 'median'.")
 
         # Attributes to be defined during fitting
-        
+
         self.feature_names_in_: List[str] = []
         self.feature_names_out_ = None
         self.input_index_ = None
@@ -120,6 +120,14 @@ class Imputer(DataTransformer):
             self.categorical_columns = [col for col in self.categorical_columns if col not in all_nan_cols]
             numerical_data = numerical_data.loc[:, self.numerical_columns]
             categorical_data = categorical_data.loc[:, self.categorical_columns]
+
+        logger.debug(f"Numerical columns: {self.numerical_columns}")
+        logger.debug(f"Categorical columns: {self.categorical_columns}")
+
+        # Clean numerical columns from non_declared categorical features
+        self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
+        self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
+        numerical_data = numerical_data[self.numerical_columns]
 
         logger.debug(f"Numerical columns: {self.numerical_columns}")
         logger.debug(f"Categorical columns: {self.categorical_columns}")
@@ -211,7 +219,7 @@ class Imputer(DataTransformer):
             ValueError: If imputer has not been fitted (via `check_is_fitted`).
         """
         check_is_fitted(self, "n_features_in_")
-        
+
         return pd.DataFrame(x, columns=self.feature_names_in_)
     
     def get_feature_names_out(self, input_features=None) -> List[str]:

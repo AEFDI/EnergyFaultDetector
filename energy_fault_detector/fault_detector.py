@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
+from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
@@ -106,6 +107,8 @@ class FaultDetector(FaultDetectionModel):
             overwrite_models: bool = False, fit_autoencoder_only: bool = False, fit_preprocessor: bool = True,
             **kwargs) -> ModelMetadata:
         """Fit models on the given sensor_data and save them locally and return the metadata."""
+        if not check_is_fitted(self.data_preprocessor) and not fit_preprocessor:
+            raise ValueError("Data preprocessor is not fitted. Consider setting `fit_preprocessor=True`.")
 
         try:
             from keras.backend import clear_session
@@ -154,7 +157,7 @@ class FaultDetector(FaultDetectionModel):
                 surviving = [declared_condition for declared_condition in available
                              if any(declared_condition in col for col in x_prepped.columns)]
                 dropped_by_pipeline = set(available or []) - set(surviving)
-                
+
                 if dropped_by_pipeline:
                     logger.warning(f"Declared conditions dropped by preprocessing pipeline: "
                                 f"{sorted(dropped_by_pipeline)}. Remaining: {surviving or 'none'}")
