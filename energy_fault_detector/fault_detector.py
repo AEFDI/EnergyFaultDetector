@@ -107,8 +107,6 @@ class FaultDetector(FaultDetectionModel):
             overwrite_models: bool = False, fit_autoencoder_only: bool = False, fit_preprocessor: bool = True,
             **kwargs) -> ModelMetadata:
         """Fit models on the given sensor_data and save them locally and return the metadata."""
-        if not check_is_fitted(self.data_preprocessor) and not fit_preprocessor:
-            raise ValueError("Data preprocessor is not fitted. Consider setting `fit_preprocessor=True`.")
 
         try:
             from keras.backend import clear_session
