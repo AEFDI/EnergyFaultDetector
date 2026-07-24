@@ -65,7 +65,13 @@ class ForwardFillImputer(DataTransformer):
             raise TypeError(
                 "x index must be a DatetimeIndex, TimedeltaIndex, or PeriodIndex to use asfreq()."
             )
-
+        # Harmonize data types in numerical columns to avoid issues during concatenation after one-hot encoding
+        for col in self.numerical_columns:
+            if col in x.columns:
+                try:
+                    x[col] = x[col].astype(float, errors='raise')
+                except ValueError as e:
+                    raise ValueError(f"Column '{col}' cannot be converted to float.") from e
         x_selected = x[self.numerical_columns + self.categorical_columns]
         df_resampled = x_selected.asfreq(self.freq)
         df_filled = df_resampled.ffill(limit=self.ffill_limit)
