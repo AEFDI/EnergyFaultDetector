@@ -32,7 +32,7 @@ class Imputer(DataTransformer):
 
         # Attributes to be defined during fitting
         self.n_features_in_ = None
-        self.feature_names_in_ = None
+        self.feature_names_in_: List[str] = []
         self.feature_names_out_ = None
         self.input_index_ = None
         self.numerical_columns: List[str] = []
@@ -79,9 +79,19 @@ class Imputer(DataTransformer):
         categorical columns separately. Rejoins the transformed dataframes afterward.
         """
         check_is_fitted(self)
+        missing_columns = [col for col in self.feature_names_in_ if col not in x.columns]
+        if missing_columns:
+            raise ValueError(f"Input is missing columns seen during fit: {missing_columns}")
+
+        # Harmonize data types in numerical columns to avoid issues during concatenation after one-hot encoding
+        for col in self.numerical_columns:
+            if col in x.columns:
+                try:
+                    x[col] = x[col].astype(float, errors='raise')
+                except ValueError as e:
+                    raise ValueError(f"Column '{col}' cannot be converted to float.") from e
 
         # Separate data into numerical and categorical features
-        # TODO: what happens if x doesnt have all columns as during fit?
         numerical_data = x.loc[:, self.numerical_columns]
         categorical_data = x.loc[:, self.categorical_columns]
 
