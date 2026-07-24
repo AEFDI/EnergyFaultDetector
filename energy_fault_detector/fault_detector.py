@@ -44,11 +44,10 @@ class FaultDetector(FaultDetectionModel):
         If categorical features are declared in config file, data is split into categorical and numerical features.
         Boolean features are treated the same as numerical features. Encoded categorical features are scaled or not
         depending on the config flag.
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame, pd.Series]: Preprocessed training data after filtering only normal index, 
+            original sensor data (clipped if data clipping is enabled), and normal index.
         """
-
-        # TODO: Check if categorical features are declared. If true, split data into categorical and numerical data.
-        # TODO: Fit categorical data -> categorical pipeline
-        # TODO: Fit numerical and boolean data. -> numerical pipeline
 
         x = sensor_data.sort_index()
         if normal_index is not None:
@@ -100,8 +99,6 @@ class FaultDetector(FaultDetectionModel):
             overwrite_models: bool = False, fit_autoencoder_only: bool = False, fit_preprocessor: bool = True,
             **kwargs) -> ModelMetadata:
         """Fit models on the given sensor_data and save them locally and return the metadata."""
-        if not check_is_fitted(self.data_preprocessor) and not fit_preprocessor:
-            raise ValueError("Data preprocessor is not fitted. Consider setting `fit_preprocessor=True`.")
 
         try:
             from keras.backend import clear_session
@@ -123,6 +120,7 @@ class FaultDetector(FaultDetectionModel):
         # --- Resolve conditional features against available data ---
         self._resolve_conditional_features(sensor_data)
 
+        # Preprocess data and fit autoencoder
         model_path = None
         x_prepped, x, y = self.preprocess_train_data(
             sensor_data=sensor_data, normal_index=normal_index, fit_preprocessor=fit_preprocessor
@@ -420,12 +418,19 @@ class FaultDetector(FaultDetectionModel):
 
     def _fit_threshold(self, x: pd.DataFrame, y: pd.Series, x_val: pd.DataFrame, fit_on_validation: bool = False
                        ) -> None:
-        """Fit AnomalyScore and ThresholdSelector objects."""
+        """Fit AnomalyScore and ThresholdSelector objects.
+        
+        Args:
+            x: pandas DataFrame with the sensor data.
+            y: pandas Series with the labels indicating whether each sample is normal (True) or anomalous (False).
+            x_val: pandas DataFrame with the validation sensor data.
+            fit_on_validation: bool indicating whether to fit the threshold on the validation data.
+        """
 
-        # Fit score object only on normal data (all training + validation data)
         x_prepped_all = self.data_preprocessor.transform(x)
         deviations = self.autoencoder.get_reconstruction_error(x_prepped_all)
         y_ = y.loc[deviations.index]
+        # Fit score object only on normal data (all training + validation data)
         self.anomaly_score.fit(deviations[y_.values])  # use series values for compatibility with a multi-index
 
         scores = self.anomaly_score.transform(deviations)

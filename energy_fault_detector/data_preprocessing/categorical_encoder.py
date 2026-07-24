@@ -1,11 +1,12 @@
 from typing import Optional, List, Union, Callable
-
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from energy_fault_detector.core.data_transformer import DataTransformer
 
+logger = logging.getLogger('energy_fault_detector')
 
 class CategoricalEncoder(DataTransformer):
     """
@@ -108,12 +109,23 @@ class CategoricalEncoder(DataTransformer):
         self.categorical_features = categorical_features if categorical_features else []
         self.one_hot_encoder = OneHotEncoder(sparse_output=False)
         self.categorical_columns = None
+        self.non_declared_categorical_features = None
 
     def fit(self, x: pd.DataFrame, y=None) -> "CategoricalEncoder":
-        # TODO: non-numerical features that are not specified in categorical_features should bbe dropped and warning should be raised
         self.feature_names_in_ = x.columns.tolist()
         self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
         self.numerical_columns = [col for col in self.feature_names_in_ if col not in self.categorical_columns]
+
+        # Clean numerical columns from non_declared categorical features
+        numerical_data = x.loc[:, self.numerical_columns]
+        self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
+        self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
+
+        if self.non_declared_categorical_features:
+            logger.info(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
+                        f"They will be dropped. Consider adding them to the categorical_features list if they should be treated as categorical.")
+        
+
         self.n_features_in_ = len(self.feature_names_in_)
         categorical_data = x[self.categorical_columns]
 
@@ -125,7 +137,6 @@ class CategoricalEncoder(DataTransformer):
         check_is_fitted(self)
 
         # Separate data into numerical and categorical features. Only categorical features are transformed
-        # TODO: what happens if x doesnt have all columns as during fit?
         try:
             numerical_data = x[self.numerical_columns]
             categorical_data = x[self.categorical_columns]
