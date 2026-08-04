@@ -68,6 +68,7 @@ class FaultDetector(FaultDetectionModel):
         ) if protect else []
 
         # Data clipping (outlier clipping)
+        # TODO: what happens in DataClipper if data contains non-numerical features?
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
             clipper_params = self.config.data_clipping_params.copy()
