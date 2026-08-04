@@ -21,6 +21,8 @@ coverage.xml
 /docs/modules.rst
 /docs/anomaly_detection.rst
 /docs/anomaly_detection.*.rst
+/docs/energy_fault_detector.*.rst
+/docs/energy_fault_detector.rst
 public/
 
 # builds
@@ -45,3 +47,6 @@ notebooks/PreDist/predist_data/
 
 # logging
 *.log
+
+# coding agents
+.continue/

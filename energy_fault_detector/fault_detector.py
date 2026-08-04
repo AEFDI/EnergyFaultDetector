@@ -68,6 +68,7 @@ class FaultDetector(FaultDetectionModel):
         ) if protect else []
 
         # Data clipping (outlier clipping)
+        # TODO: what happens in DataClipper if data contains non-numerical features?
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
             clipper_params = self.config.data_clipping_params.copy()
@@ -131,6 +132,7 @@ class FaultDetector(FaultDetectionModel):
         self._resolve_conditional_features(x_prepped)
 
         # Post-preprocessing check: conditionals may have been dropped
+        # TODO: consider adding the encoded categorical features to conditional_features at this point. Declared categorical features can be used as conditions after encoding.
         if not self.config.protect_conditional_features and self.autoencoder.is_conditional:
             # Check if conditionals survived preprocessing
             surviving = [
