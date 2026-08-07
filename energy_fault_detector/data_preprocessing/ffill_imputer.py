@@ -10,7 +10,9 @@ logger = logging.getLogger('energy_fault_detector')
 
 class ForwardFillImputer(DataTransformer):
 
-    """Impute missing values using forward fill after resampling frequency."""
+    """Impute missing values using forward fill with limit after resampling frequency.
+    Duplicate rows are dropped and any remaining rows with NaN values are removed.
+    """
 
     def __init__(self, freq: str = "1Min", ffill_limit: int = 15, categorical_features: Optional[List[str]] = None):
         super().__init__()
@@ -18,7 +20,6 @@ class ForwardFillImputer(DataTransformer):
         self.ffill_limit = ffill_limit
 
         # Attributes set during fit.
-        self.n_features_in_ = None
         self.feature_names_in_: List[str] = []
         self.feature_names_out_: List[str] = []
         self.categorical_features = categorical_features if categorical_features else []
@@ -28,17 +29,20 @@ class ForwardFillImputer(DataTransformer):
 
     def fit(self, x: pd.DataFrame, y: Optional[pd.Series] = None) -> "ForwardFillImputer":
         """Store input feature metadata required by the DataTransformer API."""
+        # TODO: at this point there is no handling of all-NaN columns, should be included in fit to drop them and log a warning.
+
         if not isinstance(x, pd.DataFrame):
             raise TypeError("x must be a pandas DataFrame.")
 
         self.feature_names_in_ = x.columns.tolist()
         self.n_features_in_ = len(self.feature_names_in_)
 
-        self.numerical_columns = [col for col in self.feature_names_in_ if not any(feature in col for feature in self.categorical_features)]
-        self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
+        self.numerical_columns = [col for col in self.feature_names_in_ if not any(feature in col for feature in self.categorical_features)] # Uses nested for loop in case categorical cols have been encoded already and contain the original categorical feature name as a substring.
+        self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)] # Uses nested for loop in case categorical cols have been encoded already and contain the original categorical feature name as a substring.
         # Clean numerical columns from non_declared categorical features
         numerical_data = x.loc[:, self.numerical_columns]
-        self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
+        self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist() 
+        # Keep numerical and booleans
         self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
 
         if self.non_declared_categorical_features:
@@ -49,7 +53,7 @@ class ForwardFillImputer(DataTransformer):
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """Apply impute_by_row logic: asfreq -> ffill(limit) -> drop_duplicates -> dropna."""
-        check_is_fitted(self, attributes=["feature_names_in_", "n_features_in_"])
+        check_is_fitted(self, "n_features_in_")
         feature_names_in = self.feature_names_in_
         if feature_names_in is None:
             raise ValueError("ForwardFillImputer is not fitted.")
@@ -86,10 +90,10 @@ class ForwardFillImputer(DataTransformer):
         For compatibility, this method returns the DataFrame with the original column
         order but assumes no special inversions are necessary after imputation.
         """
-        check_is_fitted(self)
+        check_is_fitted(self, "n_features_in_")
         return pd.DataFrame(x, columns=self.feature_names_in_)
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """Return output feature names for downstream transformers."""
-        check_is_fitted(self)
+        check_is_fitted(self, "n_features_in_")
         return self.numerical_columns + self.categorical_columns
