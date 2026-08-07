@@ -84,6 +84,7 @@ class Imputer(DataTransformer):
             raise ValueError(f"Input is missing columns seen during fit: {missing_columns}")
 
         # Harmonize data types in numerical columns to avoid issues during concatenation after one-hot encoding
+        x = x.copy()  # Avoid modifying the original DataFrame
         for col in self.numerical_columns:
             if col in x.columns:
                 try:

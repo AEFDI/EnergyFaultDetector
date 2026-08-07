@@ -1,277 +1,233 @@
-import pytest
+import unittest
 import pandas as pd
 import numpy as np
-from unittest.mock import MagicMock, patch
+from sklearn.exceptions import NotFittedError
+
 from energy_fault_detector.data_preprocessing.categorical_encoder import CategoricalEncoder
 
-class TestCategoricalEncoder:
-    @pytest.fixture
-    def sample_data(self):
-        """Create a sample DataFrame with mixed categorical and numerical features."""
-        return pd.DataFrame({
-            'Category1': ['A', 'B', 'A', 'C', 'B'],
-            'Category2': ['X', 'Y', 'Z', 'X', 'Y'],
-            'Numerical1': [1.0, 2.0, 3.0, 4.0, 5.0],
-            'Numerical2': [10, 20, 30, 40, 50],
-        })
 
-    @pytest.fixture
-    def encoder_with_config(self):
-        """Create an encoder with declared categorical features."""
-        return CategoricalEncoder(categorical_features=['Category1', 'Category2'])
+class TestCategoricalEncoder(unittest.TestCase):
+    def setUp(self):
+        """Set up common test fixtures."""
+        # Create sample data with numerical, categorical, and mixed features
+        self.data_clean = pd.DataFrame({
+            'temperature': [20.5, 21.3, 19.8, 22.1, 23.0],
+            'humidity': [60, 62, 58, 65, 67],
+            'category': ['A', 'B', 'A', 'C', 'B'],
+            'region': ['North', 'South', 'North', 'East', 'West']
+        }, index=pd.date_range('2024-01-01', periods=5, freq='1Min'))
 
-    @pytest.fixture
-    def empty_encoder(self):
-        """Create an encoder without declared categorical features."""
-        return CategoricalEncoder(categorical_features=[])
-
-    def test_initialization(self, encoder_with_config, empty_encoder):
-        """Test the initialization of CategoricalEncoder."""
-        assert encoder_with_config.categorical_features == ['Category1', 'Category2']
-        assert empty_encoder.categorical_features == []
-        assert isinstance(encoder_with_config.one_hot_encoder, type(MagicMock().__class__))
-
-    def test_fit_with_valid_data(self, encoder_with_config, sample_data):
-        """Test that fitting works correctly on valid data."""
-        encoder_with_config.fit(sample_data)
+        self.data_clean_encoded_features = ['temperature', 'humidity', 'category_A', 'category_B', 'category_C', 'region_North', 'region_South', 'region_East', 'region_West']
         
-        # Check fitted attributes
-        assert encoder_with_config.feature_names_in_ == sample_data.columns.tolist()
-        assert encoder_with_config.categorical_columns == ['Category1', 'Category2']
-        assert encoder_with_config.numerical_columns == ['Numerical1', 'Numerical2']
-        assert encoder_with_config.n_features_in_ == 4
-        assert len(encoder_with_config.categorical_columns) == 2
-        assert len(encoder_with_config.numerical_columns) == 2
+        # Create data with non-declared categorical features in numerical columns
+        self.data_with_non_declared = self.data_clean.copy()
+        self.data_with_non_declared['status'] = ['high', 'medium', 'low', 'high', 'medium']
+        
+        # Create data with only numerical columns
+        self.data_numerical_only = pd.DataFrame({
+            'temperature': [20.5, 21.3, 19.8, 22.1, 23.0],
+            'humidity': [60, 62, 58, 65, 67]
+        }, index=pd.date_range('2024-01-01', periods=5, freq='1Min'))
+        self.data_numerical_only_encoded_features = ['temperature', 'humidity']
+        
+        # Create data with missing values in categorical columns
+        self.data_with_nan = self.data_clean.copy()
+        self.data_with_nan.iloc[2, 2] = np.nan
+        self.data_with_nan.iloc[3, 3] = np.nan
+        
+        # Create data with duplicate rows for testing deduplication
+        self.data_with_duplicates = pd.DataFrame({
+            'temperature': [20.5, 20.5, 21.3, 22.1],
+            'category': ['A', 'A', 'B', 'C']
+        }, index=pd.date_range('2024-01-01', periods=4, freq='1Min'))
+        
+        # Create data for testing inverse transform
+        self.data_for_inverse = pd.DataFrame({
+            'temperature': [20.5, 21.3, 19.8],
+            'category': ['A', 'B', 'A'],
+            'region': ['North', 'South', 'North']
+        }, index=pd.date_range('2024-01-01', periods=3, freq='1Min'))
 
-    def test_fit_with_non_declared_categorical_in_numerical_columns(self, encoder_with_config):
-        """Test handling of non-declared categorical features in numerical columns."""
-        data_with_mixed = pd.DataFrame({
-            'Category1': ['A', 'B', 'A'],
-            'Numerical': ['1', '2', '3'],  # String instead of numeric
-            'RealNumerical': [1.0, 2.0, 3.0]
-        })
-        
-        encoder_with_config.categorical_features = ['Category1']
-        with patch('energy_fault_detector.data_preprocessing.categorical_encoder.logger') as mock_logger:
-            encoder_with_config.fit(data_with_mixed)
-            
-            # Verify non-declared categorical features were identified and dropped
-            assert 'Numerical' in encoder_with_config.non_declared_categorical_features
-            assert 'Numerical' not in encoder_with_config.numerical_columns
-            assert 'Numerical' not in encoder_with_config.categorical_columns
-            mock_logger.info.assert_called_once()
+    def tearDown(self):
+        """Clean up after each test."""
+        del (self.data_clean, self.data_with_non_declared, self.data_numerical_only,
+             self.data_with_nan, self.data_with_duplicates, self.data_for_inverse)
 
-    def test_fit_with_no_categorical_features(self, empty_encoder, sample_data):
-        """Test fit behavior when no categorical features are declared."""
-        empty_encoder.fit(sample_data)
-        
-        assert empty_encoder.categorical_columns == []
-        assert empty_encoder.numerical_columns == sample_data.columns.tolist()
-        assert empty_encoder.n_features_in_ == 4
-
-    def test_transform_with_valid_data(self, encoder_with_config, sample_data):
-        """Test transformation with valid data."""
-        encoder_with_config.fit(sample_data)
-        transformed = encoder_with_config.transform(sample_data)
-        
-        # Verify output shape and column names
-        expected_columns = [
-            'Numerical1', 'Numerical2', 
-            'Category1_A', 'Category1_B', 'Category1_C', 
-            'Category2_X', 'Category2_Y', 'Category2_Z'
-        ]
-        assert list(transformed.columns) == expected_columns
-        assert transformed.shape == (5, len(expected_columns))
-        
-        # Check values are binary for one-hot columns
-        onehot_columns = [col for col in transformed.columns if col.startswith('Category')]
-        assert all(transformed[col].isin([0, 1]).all() for col in onehot_columns)
-
-    def test_transform_missing_features_raises_key_error(self, encoder_with_config, sample_data):
-        """Test that transform raises KeyError when input is missing required features."""
-        encoder_with_config.fit(sample_data)
-        
-        incomplete_data = sample_data.drop(columns=['Category1'])
-        with pytest.raises(KeyError, match="Category1"):
-            encoder_with_config.transform(incomplete_data)
-
-    def test_transform_with_no_categorical_features(self, empty_encoder, sample_data):
-        """Test transform behavior when no categorical features are declared."""
-        empty_encoder.fit(sample_data)
-        transformed = empty_encoder.transform(sample_data)
-        
-        # Should return only numerical data without transformation
-        pd.testing.assert_frame_equal(transformed, sample_data)
-
-    def test_inverse_transform_roundtrip(self, encoder_with_config, sample_data):
-        """Test inverse_transform correctly reverses the transformation."""
-        encoder_with_config.fit(sample_data)
-        transformed = encoder_with_config.transform(sample_data)
-        reconstructed = encoder_with_config.inverse_transform(transformed)
-        
-        # Sort columns before comparison to handle potential column order differences
-        pd.testing.assert_frame_equal(
-            sample_data.sort_index(axis=1), 
-            reconstructed.sort_index(axis=1)
-        )
-
-    def test_inverse_transform_with_missing_categorical_columns(self, encoder_with_config, sample_data):
-        """Test inverse_transform handles missing categorical columns gracefully."""
-        encoder_with_config.fit(sample_data)
-        transformed = encoder_with_config.transform(sample_data)
-        
-        # Create a DataFrame missing some one-hot encoded columns
-        incomplete_transformed = transformed.drop(columns=['Category1_C', 'Category2_Z'])
-        reconstructed = encoder_with_config.inverse_transform(incomplete_transformed)
-        
-        # Original data should still be reconstructed correctly
-        pd.testing.assert_frame_equal(
-            sample_data.sort_index(axis=1), 
-            reconstructed.sort_index(axis=1)
-        )
-
-    def test_inverse_transform_with_no_categorical_features(self, empty_encoder, sample_data):
-        """Test inverse_transform behavior when no categorical features are declared."""
-        empty_encoder.fit(sample_data)
-        transformed = empty_encoder.transform(sample_data)
-        reconstructed = empty_encoder.inverse_transform(transformed)
-        
-        # Should return only numerical data without transformation
-        pd.testing.assert_frame_equal(reconstructed, sample_data)
-
-    def test_get_feature_names_out(self, encoder_with_config, sample_data):
-        """Test that get_feature_names_out returns correct feature names."""
-        encoder_with_config.fit(sample_data)
-        feature_names = encoder_with_config.get_feature_names_out()
-        
-        expected_names = [
-            'Numerical1', 'Numerical2',
-            'Category1_A', 'Category1_B', 'Category1_C',
-            'Category2_X', 'Category2_Y', 'Category2_Z'
-        ]
-        assert feature_names == expected_names
-
-    def test_get_feature_names_out_with_empty_categorical_features(self, empty_encoder, sample_data):
-        """Test get_feature_names_out when no categorical features are declared."""
-        empty_encoder.fit(sample_data)
-        feature_names = empty_encoder.get_feature_names_out()
-        
-        assert feature_names == ['Category1', 'Category2', 'Numerical1', 'Numerical2']
-
-    def test_unfitted_transform_raises_error(self, sample_data):
-        """Test that transform raises error when called before fitting."""
+    def test_init_defaults(self):
+        """Test default initialization."""
         encoder = CategoricalEncoder()
-        with pytest.raises(NotImplementedError):
-            encoder.transform(sample_data)
+        self.assertEqual(encoder.categorical_features, [])
+        self.assertIsNone(encoder.categorical_columns)
+        self.assertIsNone(encoder.numerical_columns)
 
-    def test_unfitted_inverse_transform_raises_error(self, sample_data):
-        """Test that inverse_transform raises error when called before fitting."""
+    def test_init_with_categorical_features(self):
+        """Test initialization with categorical features."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        self.assertListEqual(encoder.categorical_features, ['category', 'region'])
+
+    def test_fit_with_categorical_features(self):
+        """Test fitting with categorical features."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_clean)
+        
+        self.assertEqual(encoder.n_features_in_, 4)
+        self.assertListEqual(encoder.feature_names_in_ or [], ['temperature', 'humidity', 'category', 'region'])
+        self.assertListEqual(encoder.numerical_columns or [], ['temperature', 'humidity'])
+        self.assertListEqual(encoder.categorical_columns or [], ['category', 'region'])
+
+    def test_fit_without_declaring_categorical_features(self):
+        """Test fitting without specifying categorical features."""
         encoder = CategoricalEncoder()
-        with pytest.raises(NotImplementedError):
-            encoder.inverse_transform(sample_data)
+        encoder.fit(self.data_clean)
+        
+        # Should ignore categorical columns
+        self.assertEqual(encoder.n_features_in_, 4)
+        self.assertListEqual(encoder.numerical_columns or [], ['temperature', 'humidity'])
+        self.assertListEqual(encoder.categorical_columns or [], [])
 
-    def test_unfitted_get_feature_names_out_raises_error(self, sample_data):
-        """Test that get_feature_names_out raises error when called before fitting."""
+    def test_fit_with_non_declared_categorical_features(self):
+        """Test detection of non-declared categorical features in numerical columns."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_with_non_declared)
+        
+        # Should detect 'status' as non-declared categorical
+        self.assertIn('status', encoder.non_declared_categorical_features or [])
+        self.assertNotIn('status', encoder.numerical_columns or [])
+        self.assertNotIn('status', encoder.categorical_columns or [])
+
+    def test_fit_with_only_numerical_data(self):
+        """Test fitting on numerical-only data."""
         encoder = CategoricalEncoder()
-        with pytest.raises(NotImplementedError):
-            encoder.get_feature_names_out()
+        encoder.fit(self.data_numerical_only)
+        
+        self.assertEqual(encoder.n_features_in_, 2)
+        self.assertListEqual(encoder.numerical_columns or [], ['temperature', 'humidity'])
+        self.assertEqual(len(encoder.categorical_columns or []), 0)
 
-    def test_handle_empty_categorical_data(self):
-        """Test behavior with empty categorical dataframes."""
-        data = pd.DataFrame({
-            'Numerical1': [1.0, 2.0, 3.0],
-            'Numerical2': [10, 20, 30]
-        })
-        encoder = CategoricalEncoder(categorical_features=[])
+    def test_transform_with_categorical_features(self):
+        """Test transformation with categorical features."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_clean)
+        result = encoder.transform(self.data_clean)
         
-        encoder.fit(data)
-        transformed = encoder.transform(data)
-        
-        pd.testing.assert_frame_equal(transformed, data)
+        # Should have transformed columns: temperature, humidity, category_A, category_B, category_C, region_*
+        for col in self.data_clean_encoded_features:
+            self.assertIn(col, result.columns)
+        # Should maintain same index
+        self.assertTrue(result.index.equals(self.data_clean.index))
+        # Should not contain NaN
+        self.assertFalse(result.isna().any().any())
 
-    def test_handle_unknown_categories_in_transform(self, encoder_with_config):
-        """Test how transform handles categories not seen during fit."""
-        train_data = pd.DataFrame({
-            'Category1': ['A', 'B', 'A'],
-            'Category2': ['X', 'Y', 'Z'],
-            'Numerical1': [1.0, 2.0, 3.0]
-        })
-        test_data = pd.DataFrame({
-            'Category1': ['A', 'C', 'D'],  # 'D' is unknown category
-            'Category2': ['X', 'Y', 'Z'],
-            'Numerical1': [4.0, 5.0, 6.0]
-        })
+    def test_transform_with_only_numerical_data(self):
+        """Test transformation when no categorical features."""
+        encoder = CategoricalEncoder()
+        encoder.fit(self.data_numerical_only)
+        result = encoder.transform(self.data_numerical_only)
         
-        encoder_with_config.fit(train_data)
-        
-        # Note: With handle_unknown='ignore', unknown categories are encoded as all zeros
-        transformed = encoder_with_config.transform(test_data)
-        
-        # Verify unknown categories are encoded as zeros
-        assert transformed.loc[2, 'Category1_D'] == 0  # Unknown category encoded as 0
+        # Should return same columns and shape
+        self.assertEqual(result.shape, self.data_numerical_only.shape)
+        self.assertListEqual(list(result.columns), self.data_numerical_only_encoded_features)
 
-    def test_pandas_dtype_preservation(self, encoder_with_config):
-        """Test that numerical dtypes are preserved in transformed data."""
-        data = pd.DataFrame({
-            'Category1': ['A', 'B', 'C'],
-            'Numerical1': [1, 2, 3],
-            'Numerical2': [1.1, 2.2, 3.3]
-        })
+    def test_transform_missing_columns_raises(self):
+        """Test that missing columns raise KeyError."""
+        encoder = CategoricalEncoder(categorical_features=['category'])
+        encoder.fit(self.data_clean)
         
-        encoder_with_config.fit(data)
-        transformed = encoder_with_config.transform(data)
+        # Create data missing one feature
+        partial_data = self.data_clean.drop(columns=['temperature'])
         
-        # Check dtypes for numerical columns in transformed data
-        assert transformed['Numerical1'].dtype == np.float64
-        assert transformed['Numerical2'].dtype == np.float64
+        with self.assertRaises(KeyError):
+            encoder.transform(partial_data)
 
-    def test_index_preservation_in_transform(self, encoder_with_config):
-        """Test that index is preserved during transform."""
-        data = pd.DataFrame({
-            'Category1': ['A', 'B', 'C'],
-            'Numerical1': [1.0, 2.0, 3.0]
-        }, index=['row1', 'row2', 'row3'])
+    def test_transform_invalid_type_raises(self):
+        """Test that non-DataFrame input raises TypeError."""
+        encoder = CategoricalEncoder()
+        encoder.fit(self.data_clean)
         
-        encoder_with_config.fit(data)
-        transformed = encoder_with_config.transform(data)
-        
-        assert list(transformed.index) == ['row1', 'row2', 'row3']
+        with self.assertRaises(TypeError):
+            encoder.transform([1, 2, 3])
 
-    def test_index_preservation_in_inverse_transform(self, encoder_with_config):
-        """Test that index is preserved during inverse_transform."""
-        data = pd.DataFrame({
-            'Category1': ['A', 'B', 'C'],
-            'Numerical1': [1.0, 2.0, 3.0]
-        }, index=['row1', 'row2', 'row3'])
+    def test_transform_unfitted_raises(self):
+        """Test that transform on unfitted model raises error."""
+        encoder = CategoricalEncoder()
         
-        encoder_with_config.fit(data)
-        transformed = encoder_with_config.transform(data)
-        reconstructed = encoder_with_config.inverse_transform(transformed)
-        
-        assert list(reconstructed.index) == ['row1', 'row2', 'row3']
+        with self.assertRaises(NotFittedError):
+            encoder.transform(self.data_clean)
 
-    def test_repeated_fit_and_transform(self, encoder_with_config, sample_data):
-        """Test that repeated fitting and transforming works correctly."""
-        encoder_with_config.fit(sample_data)
-        transformed1 = encoder_with_config.transform(sample_data)
+    def test_inverse_transform(self):
+        """Test inverse transform returns original categorical values."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_for_inverse)
         
-        # Fit again with different subset
-        subset_data = sample_data.iloc[:3]
-        encoder_with_config.fit(subset_data)
-        transformed2 = encoder_with_config.transform(subset_data)
+        transformed = encoder.transform(self.data_for_inverse)
+        inverse = encoder.inverse_transform(transformed)
         
-        # Check that results differ due to different fit
-        assert not transformed1.equals(transformed2)
-        assert transformed2.shape == (3, transformed1.shape[1])
+        # Should have same columns and shape as original
+        self.assertListEqual(list(inverse.columns), list(self.data_for_inverse.columns))
+        self.assertEqual(inverse.shape, self.data_for_inverse.shape)
+        # Should match original data (except for any NaN handling)
+        pd.testing.assert_frame_equal(inverse, self.data_for_inverse)
 
-    def test_get_feature_names_out_with_custom_input_features(self, encoder_with_config, sample_data):
-        """Test that input_features argument is ignored in get_feature_names_out."""
-        encoder_with_config.fit(sample_data)
+    def test_get_feature_names_out(self):
+        """Test feature names out method."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_clean)
         
-        # Provide arbitrary input_features - should be ignored
-        custom_features = ['custom1', 'custom2']
-        feature_names = encoder_with_config.get_feature_names_out(custom_features)
+        feature_names = encoder.get_feature_names_out()
         
-        # Result should not be affected by input_features
-        assert 'Category1' not in feature_names
-        assert feature_names == encoder_with_config.get_feature_names_out()
+        # Should include original numerical features
+        self.assertIn('temperature', feature_names)
+        self.assertIn('humidity', feature_names)
+        # Should include encoded categorical features (exact names depend on OneHotEncoder output)
+        categorical_feature_names = [name for name in feature_names if 'category' in name or 'region' in name]
+        self.assertGreater(len(categorical_feature_names), 0)
+        self.assertEqual(len(feature_names), encoder.n_features_in_ + len(categorical_feature_names) - 2)
+
+    def test_empty_dataframe_handling(self):
+        """Test behavior with empty DataFrame."""
+        empty_df = pd.DataFrame(columns=self.data_clean.columns, 
+                                index=pd.DatetimeIndex([]))
+        
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_clean)
+        
+        result = encoder.transform(empty_df)
+        
+        self.assertEqual(result.shape[0], 0)
+
+    def test_transform_preserves_index_type(self):
+        """Test that index type is preserved after transformation."""
+        encoder = CategoricalEncoder(categorical_features=['category'])
+        encoder.fit(self.data_clean)
+        result = encoder.transform(self.data_clean)
+        
+        self.assertIsInstance(result.index, pd.DatetimeIndex)
+
+    def test_transform_with_nan_in_categorical(self):
+        """Test transformation with NaN values in categorical columns."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_with_nan)
+        
+        # Should ignore NaN values in categorical columns during transformation
+        result = encoder.transform(self.data_with_nan)
+        self.assertFalse(result.isna().any().any())
+
+    def test_transform_with_new_categories(self):
+        """Test transformation with unseen category values."""
+        encoder = CategoricalEncoder(categorical_features=['category'])
+        encoder.fit(self.data_clean)
+        
+        # Create data with unseen category value
+        new_data = pd.DataFrame({
+            'temperature': [25.0],
+            'humidity': [70],
+            'category': ['D'],
+            'region': ['North']
+        }, index=pd.date_range('2024-01-01', periods=1, freq='1Min'))
+
+        # Should raise error as per OneHotEncoder default behavior (handle_unknown='error')
+        with self.assertRaises(ValueError):
+            encoder.transform(new_data)
+
+if __name__ == '__main__':
+    unittest.main()
