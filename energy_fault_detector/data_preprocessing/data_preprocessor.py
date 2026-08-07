@@ -42,10 +42,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         "angle_transform": "angle_transformer",
         "counter_diff": "counter_diff_transformer",
         "counter_diff_transform": "counter_diff_transformer",
-        "standardize": "standard_scaler",
-        "standard": "standard_scaler",
-        "standardscaler": "standard_scaler",
-        "minmax": "minmax_scaler",
+        "scaler": "scaler",
         "imputer": "simple_imputer",
         "duplicate_value_to_nan": "duplicate_to_nan",
         "duplicate_values_to_nan": "duplicate_to_nan",
@@ -392,7 +389,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         ordered.extend(others)
         # Imputation
         ordered.extend(imputer)
-        # Encoding categorical features before scaling
+        # Encoding categorical features before scaling and after imputation (encoder would crash if NaN values are present)
         ordered.extend(encoders)
         # Scaling
         ordered.extend(scalers)

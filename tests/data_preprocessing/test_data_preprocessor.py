@@ -43,6 +43,16 @@ class TestDataPreprocessorPipeline(TestCase):
             ]
         )
 
+        # Includes categorical encoder and ffill imputer
+        self.preprocessor_with_encoder = DataPreprocessor(
+            steps=[
+                {'name': 'column_selector', 'params': {'max_nan_frac_per_col': 0.2}},
+                {'name': 'ffill_imputer',
+                 'params': {'freq': '1Min', 'ffill_limit': 1, 'categorical_features': ['category', 'region']}},
+                {'name': 'categorical_encoder',
+                 'params': {'categorical_features': ['category', 'region']}},
+            ]
+        )
         # generate data for standard and feature consistent preprocessor tests
         length = 10  # choose an even number for simplicity
         time_index = pd.date_range(start='1/1/2021', end='10/1/2021', periods=length)
@@ -85,6 +95,14 @@ class TestDataPreprocessorPipeline(TestCase):
                 'Sensor_7': [0] * (length - 5) + [1] * (length - 5),
                 }
         self.test_data3 = pd.DataFrame(index=time_index, data=data)
+
+        # generate data for tests with categorical encoder and ffill imputer
+        self.test_data4 = pd.DataFrame({
+            'temperature': [20.5, 21.3, 19.8, 22.1, 23.0],
+            'humidity': [60, 62, np.nan, 65, 67],
+            'category': ['A', 'B', 'A', np.nan, 'B'],
+            'region': ['North', 'South', 'North', 'East', 'West']
+        }, index=pd.date_range('2024-01-01', periods=5, freq='1Min'))
 
     def test_transform(self):
         # expected output
@@ -202,22 +220,22 @@ class TestDataPreprocessorPipeline(TestCase):
             steps=[
                 {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
                 {"name": "simple_imputer", "params": {"strategy": "median"}},
-                {"name": "standard_scaler"},
+                {"name": "scaler"},
             ]
         )
         # Count imputers by estimator type
         n_imputers = sum(
-            est.__class__.__name__ == "SimpleImputer" for _, est in dp.steps
+            est.__class__.__name__ == "Imputer" for _, est in dp.steps
         )
         self.assertEqual(n_imputers, 1, "There should be exactly one SimpleImputer.")
 
         # Ensure imputer precedes scaler
         imputer_idx = next(
-            i for i, (_, est) in enumerate(dp.steps) if est.__class__.__name__ == "SimpleImputer"
+            i for i, (_, est) in enumerate(dp.steps) if est.__class__.__name__ == "Imputer"
         )
         scaler_idx = next(
             i for i, (_, est) in enumerate(dp.steps)
-            if est.__class__.__name__ in {"StandardScaler", "MinMaxScaler"}
+            if est.__class__.__name__ in {"Scaler"}
         )
         self.assertLess(imputer_idx, scaler_idx, "Imputer must precede scaler.")
 
@@ -226,22 +244,22 @@ class TestDataPreprocessorPipeline(TestCase):
         dp = DataPreprocessor(
             steps=[
                 {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
-                {"name": "standard_scaler"},
+                {"name": "scaler"},
             ]
         )
         # Exactly one imputer should be present
         n_imputers = sum(
-            est.__class__.__name__ == "SimpleImputer" for _, est in dp.steps
+            est.__class__.__name__ == "Imputer" for _, est in dp.steps
         )
         self.assertEqual(n_imputers, 1, "A single default SimpleImputer should be added.")
 
         # Imputer must be before scaler
         imputer_idx = next(
-            i for i, (_, est) in enumerate(dp.steps) if est.__class__.__name__ == "SimpleImputer"
+            i for i, (_, est) in enumerate(dp.steps) if est.__class__.__name__ == "Imputer"
         )
         scaler_idx = next(
             i for i, (_, est) in enumerate(dp.steps)
-            if est.__class__.__name__ in {"StandardScaler", "MinMaxScaler"}
+            if est.__class__.__name__ in {"Scaler"}
         )
         self.assertLess(imputer_idx, scaler_idx, "Default imputer must be inserted before scaler.")
 
@@ -250,7 +268,7 @@ class TestDataPreprocessorPipeline(TestCase):
         dp = DataPreprocessor(
             steps=[
                 {"name": "imputer", "params": {"strategy": "mean"}},  # alias
-                {"name": "standard_scaler"},
+                {"name": "scaler"},
             ]
         )
         # Named steps should include the canonical 'simple_imputer'
@@ -278,6 +296,18 @@ class TestDataPreprocessorPipeline(TestCase):
                 ]
             )
 
+    def test_transform_with_encoder_ffill(self):
+        """Test that the preprocessor with categorical encoder and ffill imputer works as expected."""
+        self.preprocessor_with_encoder.fit(self.test_data4)
+        transformed = self.preprocessor_with_encoder.transform(self.test_data4)
+        self.assertIsNotNone(transformed)
+
+    def test_inverse_transform_with_encoder_ffill(self):
+        """Test that the inverse_transform works correctly with the preprocessor that includes categorical encoder and ffill imputer."""
+        self.preprocessor_with_encoder.fit(self.test_data4)
+        transformed = self.preprocessor_with_encoder.transform(self.test_data4)
+        inversed = self.preprocessor_with_encoder.inverse_transform(transformed)
+        self.assertIsNotNone(inversed)
 
 class TestDataPreprocessorPipelineWithTimestamp(TestCase):
     def setUp(self) -> None:
