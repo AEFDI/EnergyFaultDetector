@@ -38,7 +38,6 @@ class Scaler(DataTransformer):
         self.scaler = self.SCALER_REGISTRY.get(scaler_type)
 
         # Attributes to be defined during fitting
-        self.n_features_in_ = None
         self.feature_names_in_ = None
         self.feature_names_out_ = None
         self.columns_dropped_ = []
@@ -60,6 +59,15 @@ class Scaler(DataTransformer):
             Self.
         """
         logger.debug("Fitting Scaler transformer...")
+        x = x.copy()  # Avoid modifying the original DataFrame
+
+        # Check that all columns in input are numerical types.
+        for col in x.columns:
+            try:
+                x[col] = x[col].astype(float, errors='raise')
+            except ValueError as e:
+                raise ValueError(f"Column '{col}' cannot be converted to float.") from e
+
         self.feature_names_in_ = list(x.columns)
         self.n_features_in_ = len(self.feature_names_in_)
 
@@ -88,9 +96,20 @@ class Scaler(DataTransformer):
             Transformed DataFrame.
         """
         logger.debug("Transforming data with Scaler transformer...")
-        check_is_fitted(self)
-        x_transformed = x.copy()
-        # TODO: not sure if this work when x has different columns as the ones during fit...
+        check_is_fitted(self, "n_features_in_")
+
+        x_transformed = x.copy()  # Avoid modifying the original DataFrame
+
+        # Check that all columns in input are numerical types.
+        for col in x_transformed.columns:
+            try:
+                x_transformed[col] = x_transformed[col].astype(float, errors='raise')
+            except ValueError as e:
+                raise ValueError(f"Column '{col}' cannot be converted to float.") from e
+                
+        # Check if input features match the features seen during fit
+        if list(x.columns) != self.feature_names_in_:
+            raise ValueError(f"Input features {list(x.columns)} do not match the features seen during fit {self.feature_names_in_}.")
         # Transform the appropriate features
         if self.scale_categorical_features:
             x_transformed.iloc[:, :] = self.scaler.transform(x_transformed)
@@ -111,6 +130,8 @@ class Scaler(DataTransformer):
             Inversely transformed DataFrame.
         """
         logger.debug("Applying inverse transformation with Scaler transformer...")
+        check_is_fitted(self, "n_features_in_")
+
         x_inverse_transformed = x.copy()
 
         # Apply inverse transform to the appropriate features
@@ -132,4 +153,5 @@ class Scaler(DataTransformer):
         Returns:
             List of output feature names.
         """
+        check_is_fitted(self, "n_features_in_")
         return self.feature_names_out_
