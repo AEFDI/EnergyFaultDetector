@@ -9,7 +9,22 @@ logger = logging.getLogger('energy_fault_detector')
 
 
 class Scaler(DataTransformer):
-    """Scaler pre-processor step for scaling datasets."""
+    """Preprocessing step for scaling numerical (and optionally categorical) features.
+
+    Supports 'standard' (StandardScaler) and 'minmax' (MinMaxScaler) scalers.
+    Automatically enforces float conversion for all columns and optionally excludes
+    encoded categorical features from scaling depending on `scale_categorical_features`.
+
+    Attributes:
+        scaler_type (str): Type of scaler selected ('standard' or 'minmax').
+        scale_categorical_features (bool): Whether to scale features matched in `categorical_features`.
+        categorical_features (List[str]): List of column names or prefixes treated as categorical.
+        scaler (SklearnScaler): Instantiated sklearn scaler object (e.g., StandardScaler).
+        feature_names_in_ (List[str]): Names of features seen during `fit()`.
+        feature_names_out_ (List[str]): Names of features output after `transform()` (same as input).
+        columns_dropped_ (List[str]): Placeholder (unused in current implementation; preserved for API).
+        params (dict): Keyword arguments passed to the underlying sklearn scaler constructor.
+    """
 
     SCALER_REGISTRY = {
         'standard': StandardScaler,
@@ -18,13 +33,21 @@ class Scaler(DataTransformer):
 
     def __init__(self, scaler_type: str = 'standard', scale_categorical_features: bool = True,
                  categorical_features: list = None, **params):
-        """
-        Initialize the Scaler object.
+        """Initializes the Scaler with specified strategy and feature selection logic.
 
         Args:
-            scaler_type: Type of scaler ('standard', 'minmax'). Defaults to 'standard'.
-            scale_categorical_features: Flag to scale categorical features after encoding. Defaults to True.
-            categorical_features: List of names of categorical features. Defaults to None.
+            scaler_type (str, optional): Type of scaler to use. Supported: `'standard'` (default), `'minmax'`.
+            scale_categorical_features (bool, optional): Whether to include categorical (e.g., one-hot encoded)
+                features in scaling. If `False`, only non-encoded features are scaled.
+                Defaults to `True`.
+            categorical_features (List[str], optional): List of column names or prefixes to treat as categorical.
+                Used only when `scale_categorical_features=False` to determine which features to exclude.
+                Defaults to `None` (interpreted as empty list).
+            **params: Additional keyword arguments passed to the underlying sklearn scaler constructor.
+                Example: `{'with_mean': False, 'with_std': True}`.
+
+        Raises:
+            ValueError: If `scaler_type` is not supported (must be `'standard'` or `'minmax'`).
         """
         super().__init__()
 
@@ -48,15 +71,21 @@ class Scaler(DataTransformer):
         self.scaler = self.scaler(**self.params)
 
     def fit(self, x: pd.DataFrame, y: pd.Series = None) -> 'Scaler':
-        """
-        Fit the scaler to the dataset.
+        """Fits the scaler on the input data, optionally excluding categorical features.
+
+        Enforces float dtype for all columns. Scales either all columns or only
+        non-encoded numerical features, depending on `scale_categorical_features`.
 
         Args:
-            x: pandas DataFrame with input data.
-            y: (optional) labels. Defaults to None.
+            x (pd.DataFrame): Input feature DataFrame.
+            y (pd.Series, optional): Target variable. Ignored; included for scikit-learn API compatibility.
 
         Returns:
-            Self.
+            Scaler: The fitted transformer instance (self), for method chaining.
+
+        Raises:
+            ValueError: If any column cannot be converted to float.
+            ValueError: If column dtypes are inconsistent across features.
         """
         logger.debug("Fitting Scaler transformer...")
         x = x.copy()  # Avoid modifying the original DataFrame
@@ -86,14 +115,22 @@ class Scaler(DataTransformer):
         return self
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
-        """
-        Apply the scaling transformation to the data.
+        """Applies the learned scaling transformation to input data.
+
+        Enforces float dtypes and validates feature alignment with `fit()`.
+        Scales either all columns or only numerical (non-encoded) columns,
+        depending on `scale_categorical_features`.
 
         Args:
-            x: pandas DataFrame of input data.
+            x (pd.DataFrame): Input feature DataFrame, with column order and names matching those seen in `fit()`.
 
         Returns:
-            Transformed DataFrame.
+            pd.DataFrame: Scaled DataFrame, same shape and index as input.
+
+        Raises:
+            ValueError: If input feature names/order do not match those seen during `fit()`.
+            ValueError: If any column cannot be converted to float.
+            ValueError: If scaler has not been fitted (via `check_is_fitted`).
         """
         logger.debug("Transforming data with Scaler transformer...")
         check_is_fitted(self, "n_features_in_")
@@ -120,14 +157,19 @@ class Scaler(DataTransformer):
         return x_transformed
 
     def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
-        """
-        Apply the inverse scaling transformation to the data.
+        """Applies the inverse scaling transformation to revert scaled data.
+
+        Requires that the scaler was fitted and that input column structure matches `fit()`.
 
         Args:
-            x: pandas DataFrame of scaled input data.
+            x (pd.DataFrame): Scaled input DataFrame, with same columns and order as `fit()` output.
 
         Returns:
-            Inversely transformed DataFrame.
+            pd.DataFrame: Inversely transformed (descaled) DataFrame, with same shape/index as input.
+
+        Raises:
+            ValueError: If scaler has not been fitted (via `check_is_fitted`).
+            ValueError: If input feature names/order do not match those seen during `fit()`.
         """
         logger.debug("Applying inverse transformation with Scaler transformer...")
         check_is_fitted(self, "n_features_in_")
@@ -144,14 +186,18 @@ class Scaler(DataTransformer):
         return x_inverse_transformed
 
     def get_feature_names_out(self, input_features=None) -> list:
-        """
-        Get output feature names for the transformed data.
+        """Returns the list of output feature names (same as input feature names).
+
+        Preserves original column order and names seen during `fit()`.
 
         Args:
-            input_features: Optional list of input features.
+            input_features: Ignored; included for scikit-learn API compatibility.
 
         Returns:
-            List of output feature names.
+            List[str]: Ordered list of output feature names.
+
+        Raises:
+            ValueError: If scaler has not been fitted (via `check_is_fitted`).
         """
         check_is_fitted(self, "n_features_in_")
         return self.feature_names_out_

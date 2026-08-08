@@ -11,14 +11,37 @@ logger = logging.getLogger('energy_fault_detector')
 class ForwardFillImputer(DataTransformer):
 
     """Impute missing values using forward fill with limit after resampling frequency.
+
     Duplicate rows are dropped and any remaining rows with NaN values are removed.
+
+    The transformer assumes time-series data with a temporal index (DatetimeIndex, TimedeltaIndex, or PeriodIndex).
+    During `fit`, it categorizes features as numerical or categorical, identifies and logs non-declared categorical features,
+    and prepares internal metadata. During `transform`, it resamples the data to a uniform frequency, forward-fills missing
+    values up to a specified limit, drops duplicate rows, and removes any rows still containing NaN values. This transformer 
+    is useful for time-series datasets where missing values need to be imputed based on previous observations.
+
+    Attributes:
+        feature_names_in_ (List[str]): List of input feature names observed during fitting.
+        feature_names_out_ (List[str]): List of output feature names (same as input features unless some were dropped).
+        categorical_features (List[str]): List of user-specified categorical feature names or prefixes.
+        numerical_columns (List[str]): List of identified numerical column names after filtering out non-declared categoricals.
+        categorical_columns (List[str]): List of identified categorical column names (from `categorical_features`).
+        non_declared_categorical_features (List[str]): List of columns detected as object-type (categorical) but not declared as such.
     """
 
     def __init__(self, freq: str = "1Min", ffill_limit: int = 15, categorical_features: Optional[List[str]] = None):
-        """Initialize the ForwardFillImputer with the specified frequency, forward fill limit, and optional categorical features.
-        
+        """Initializes the ForwardFillImputer with specified frequency, forward-fill limit, and optional categorical features.
+
         Args:
-            freq (str): The frequency to resample the data before forward filling. Default is """
+            freq (str): Target resampling frequency for the time series (e.g., "1Min", "5Min", "H"). Passed to `pandas.DataFrame.asfreq()`.
+                Default is "1Min".
+            ffill_limit (int): Maximum number of consecutive NaN values to forward-fill after resampling.
+                NaNs beyond this limit remain unchanged and the corresponding rows will be dropped later. Default is 15.
+            categorical_features (Optional[List[str]]): List of column names or prefixes to treat as categorical features.
+                Columns matching any of these (as substring) are treated as categorical; others as numerical.
+                Non-declared object-type columns in numerical slots are automatically detected and excluded from processing.
+                Default is None (interpreted as empty list).
+        """
         super().__init__()
         self.freq = freq
         self.ffill_limit = ffill_limit
@@ -32,7 +55,22 @@ class ForwardFillImputer(DataTransformer):
         self.non_declared_categorical_features: List[str] = []
 
     def fit(self, x: pd.DataFrame, y: Optional[pd.Series] = None) -> "ForwardFillImputer":
-        """Store input feature metadata required by the DataTransformer API."""
+        """Fits the imputer to the input data by identifying feature types and storing metadata.
+
+        Populates `numerical_columns`, `categorical_columns`, and `non_declared_categorical_features`
+        based on the input DataFrame's structure and user-provided categorical feature hints.
+
+        Args:
+            x (pd.DataFrame): Input feature DataFrame. Must contain all features used during `transform`.
+            y (Optional[pd.Series]): Target variable. Ignored; included for compatibility with the scikit-learn API.
+
+        Returns:
+            ForwardFillImputer: The fitted transformer instance (self), for method chaining.
+
+        Raises:
+            TypeError: If `x` is not a pandas DataFrame.
+            ValueError: If internal consistency checks fail (e.g., invalid column references).
+        """
         # TODO: at this point there is no handling of all-NaN columns, should be included in fit to drop them and log a warning.
 
         if not isinstance(x, pd.DataFrame):
@@ -56,7 +94,25 @@ class ForwardFillImputer(DataTransformer):
         return self
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
-        """Apply impute_by_row logic: asfreq -> ffill(limit) -> drop_duplicates -> dropna."""
+        """Applies forward-fill imputation and cleaning pipeline to input data.
+
+        The steps executed are:
+        1. Resample the data to `self.freq` using `asfreq()`.
+        2. Forward-fill missing values up to `self.ffill_limit`.
+        3. Drop duplicate rows.
+        4. Drop any rows still containing NaN values (`dropna(how="any")`).
+
+        Args:
+            x (pd.DataFrame): Input feature DataFrame, with the same column names as used in `fit()`.
+
+        Returns:
+            pd.DataFrame: Cleaned and imputed DataFrame, containing only the columns from `get_feature_names_out()`.
+
+        Raises:
+            TypeError: If `x` is not a pandas DataFrame, or if its index is not temporal (DatetimeIndex/TimedeltaIndex/PeriodIndex).
+            ValueError: If `x` is missing columns seen during `fit()`, or if numerical columns cannot be converted to float.
+            ValueError: If the imputer has not been fitted (via `check_is_fitted`).
+        """
         check_is_fitted(self, "n_features_in_")
 
         x = x.copy()  # Avoid modifying the original DataFrame
@@ -93,9 +149,21 @@ class ForwardFillImputer(DataTransformer):
         return df_final[self.feature_names_out_]
 
     def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
-        """
-        For compatibility, this method returns the DataFrame with the original column
-        order but assumes no special inversions are necessary after imputation.
+        """Returns the input DataFrame with columns reordered to match the original input feature order.
+
+        This method is included for compatibility with the `DataTransformer`/scikit-learn API.
+        Since forward-fill imputation is not invertible (lost NaNs and duplicates cannot be recovered),
+        only column reordering is performed—no actual value inversion occurs.
+
+        Args:
+            x (pd.DataFrame): Transformed DataFrame with columns matching `feature_names_out_`.
+
+        Returns:
+            pd.DataFrame: DataFrame with columns reordered to match `feature_names_in_` (original order).
+
+        Raises:
+            TypeError: If `x` is not a pandas DataFrame.
+            ValueError: If the transformer has not been fitted (via `check_is_fitted`).
         """
         check_is_fitted(self, "n_features_in_")
         return pd.DataFrame(x, columns=self.feature_names_in_)
