@@ -46,7 +46,7 @@ class TestDataPreprocessorPipeline(TestCase):
         # Includes categorical encoder and ffill imputer
         self.preprocessor_with_encoder = DataPreprocessor(
             steps=[
-                {'name': 'column_selector', 'params': {'max_nan_frac_per_col': 0.2}},
+                {'name': 'column_selector', 'params': {'max_nan_frac_per_col': 0.8}},
                 {'name': 'ffill_imputer',
                  'params': {'freq': '1Min', 'ffill_limit': 1, 'categorical_features': ['category', 'region']}},
                 {'name': 'categorical_encoder',
@@ -99,10 +99,28 @@ class TestDataPreprocessorPipeline(TestCase):
         # generate data for tests with categorical encoder and ffill imputer
         self.test_data4 = pd.DataFrame({
             'temperature': [20.5, 21.3, 19.8, 22.1, 23.0],
-            'humidity': [60, 62, np.nan, 65, 67],
+            'humidity': [60, 62, np.nan, np.nan, 67],
             'category': ['A', 'B', 'A', np.nan, 'B'],
-            'region': ['North', 'South', 'North', 'East', 'West']
+            'region': ['North', 'South', 'North', 'East', 'West'],
+            'flowrate': [np.nan, np.nan, np.nan, np.nan, np.nan]
         }, index=pd.date_range('2024-01-01', periods=5, freq='1Min'))
+
+        self.exp_result4 = pd.DataFrame({
+            'temperature': [-0.5,  0.1, -1.1,  1.6],
+            'humidity': [-1.1, -0.3, -0.3,  1.6],
+            'category_A': [ 1. , -1. ,  1. , -1. ],
+            'category_B': [-1. ,  1. , -1. ,  1. ],
+            'region_North': [ 1. , -1. ,  1. , -1. ],
+            'region_South': [-0.6,  1.7, -0.6, -0.6],
+            'region_West': [-0.6, -0.6, -0.6,  1.7],
+        }, index=pd.to_datetime(['2024-01-01 00:00:00', '2024-01-01 00:01:00', '2024-01-01 00:02:00', '2024-01-01 00:04:00']))
+
+        self.exp_inv4 = pd.DataFrame({
+            'temperature': [20.5, 21.3, 19.8, 23.0],
+            'humidity': [60.0, 62.0, 62.0, 67.0],
+            'category': ['A', 'B', 'A', 'B'],
+            'region': ['North', 'South', 'North', 'West']
+        }, index=pd.to_datetime(['2024-01-01 00:00:00', '2024-01-01 00:01:00', '2024-01-01 00:02:00', '2024-01-01 00:04:00']))
 
     def test_transform(self):
         # expected output
@@ -163,6 +181,12 @@ class TestDataPreprocessorPipeline(TestCase):
         data = self.fc_preprocessor.transform(self.test_data1)
 
         assert_array_almost_equal(data, exp_result)
+
+    def test_transform_with_encoder_ffill(self):
+        """Test that the preprocessor with categorical encoder and ffill imputer works as expected."""
+        self.preprocessor_with_encoder.fit(self.test_data4)
+        transformed = self.preprocessor_with_encoder.transform(self.test_data4)
+        self.assertTrue(transformed.round(1).equals(self.exp_result4))
 
     def test_not_fitted(self):
         with self.assertRaises(NotFittedError):
@@ -296,18 +320,14 @@ class TestDataPreprocessorPipeline(TestCase):
                 ]
             )
 
-    def test_transform_with_encoder_ffill(self):
-        """Test that the preprocessor with categorical encoder and ffill imputer works as expected."""
-        self.preprocessor_with_encoder.fit(self.test_data4)
-        transformed = self.preprocessor_with_encoder.transform(self.test_data4)
-        self.assertIsNotNone(transformed)
-
     def test_inverse_transform_with_encoder_ffill(self):
         """Test that the inverse_transform works correctly with the preprocessor that includes categorical encoder and ffill imputer."""
         self.preprocessor_with_encoder.fit(self.test_data4)
         transformed = self.preprocessor_with_encoder.transform(self.test_data4)
         inversed = self.preprocessor_with_encoder.inverse_transform(transformed)
-        self.assertIsNotNone(inversed)
+        print("Inversed DataFrame:\n", inversed)
+        self.assertEqual(inversed.shape, self.exp_inv4.shape, "Inverse transform shape mismatch.")
+        self.assertTrue(inversed.round(1).equals(self.exp_inv4), "Inverse transform did not return the expected DataFrame.")
 
 class TestDataPreprocessorPipelineWithTimestamp(TestCase):
     def setUp(self) -> None:
