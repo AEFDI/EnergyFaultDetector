@@ -10,7 +10,7 @@ train:
           max_nan_frac_per_col: 0.2
       - name: low_unique_value_filter
       - name: simple_imputer
-      - name: standard_scaler
+      - name: scaler
 
   autoencoder:
     name: cnn_seq2seq

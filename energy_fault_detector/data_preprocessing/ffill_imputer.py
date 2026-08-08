@@ -15,6 +15,10 @@ class ForwardFillImputer(DataTransformer):
     """
 
     def __init__(self, freq: str = "1Min", ffill_limit: int = 15, categorical_features: Optional[List[str]] = None):
+        """Initialize the ForwardFillImputer with the specified frequency, forward fill limit, and optional categorical features.
+        
+        Args:
+            freq (str): The frequency to resample the data before forward filling. Default is """
         super().__init__()
         self.freq = freq
         self.ffill_limit = ffill_limit
@@ -54,6 +58,9 @@ class ForwardFillImputer(DataTransformer):
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """Apply impute_by_row logic: asfreq -> ffill(limit) -> drop_duplicates -> dropna."""
         check_is_fitted(self, "n_features_in_")
+
+        x = x.copy()  # Avoid modifying the original DataFrame
+
         feature_names_in = self.feature_names_in_
         if feature_names_in is None:
             raise ValueError("ForwardFillImputer is not fitted.")

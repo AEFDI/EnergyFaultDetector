@@ -74,8 +74,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
               2) ColumnSelector (if present),
               3) Other steps
               4) Imputer placed before scaler (always present; mean strategy by default),
-              5) Scaler always last (StandardScaler by default).
-              6) TimestampTransformer (if present).
+              5) CategoricalEncoder (if present),
+              6) Scaler always last (StandardScaler by default).
+              7) TimestampTransformer (if present).
 
         Configuration example:
 
@@ -117,17 +118,17 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # Ensure pandas output for supported transformers.
         self.set_output(transform="pandas")
 
-    def inverse_transform(self, x: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
-        """Inverse-transform scaler and angles (other transforms are not reversed).
+    def inverse_transform(self, X: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
+        """Inverse-transform scaler, timestamp transformer, categorical encoder and angle transformer (other transforms are not reversed).
 
         Args:
-            x: The transformed data.
+            X: The transformed data.
 
         Returns:
             DataFrame with inverse scaling and angle back-transformation.
         """
         check_is_fitted(self)
-        x_ = x.copy()  # avoid modifying the original DataFrame
+        x_ = X.copy()  # avoid modifying the original DataFrame
 
         # Drop time features
         timestamp_key, _ = self._find_step_by_type((TimestampTransformer,))
@@ -139,14 +140,19 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         x_ = self.named_steps[scaler_key].inverse_transform(x_)
         x_ = pd.DataFrame(data=x_, columns=self.named_steps[scaler_key].get_feature_names_out())
 
+        # Try to reverse categorical encoding
+        encoder_key, _ = self._find_step_by_type((CategoricalEncoder,))
+        if encoder_key is not None:
+            x_ = self.named_steps[encoder_key].inverse_transform(x_)
+
         # Try to reverse angle transformation
         angle_key, _ = self._find_step_by_type((AngleTransformer,))
         if angle_key is not None:
             x_ = self.named_steps[angle_key].inverse_transform(x_)
 
         # Keep original index
-        if isinstance(x, pd.DataFrame):
-            x_.index = x.index
+        if isinstance(X, pd.DataFrame):
+            x_.index = X.index
 
         return x_
 
@@ -270,7 +276,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             ("column_selector", ColumnSelector(max_nan_frac_per_col=0.05)),
             ("low_unique_value_filter", LowUniqueValueFilter(min_unique_value_count=2, max_col_zero_frac=1.0)),
             ("simple_imputer", Imputer(strategy="mean").set_output(transform="pandas")),
-            ("standard_scaler", Scaler(with_mean=True, with_std=True)),
+            ("scaler", Scaler(with_mean=True, with_std=True)),
         ]
 
         return steps
