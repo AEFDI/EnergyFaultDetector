@@ -10,15 +10,13 @@ logger = logging.getLogger('energy_fault_detector')
 
 class CategoricalEncoder(DataTransformer):
     """
-    CategoricalEncoder is a specialized transformer for encoding categorical features in a dataset.
+    CategoricalEncoder is a transformer for encoding categorical features in a dataset.
 
     This class is designed to handle preprocessing of datasets by encoding specified categorical
     features using one-hot encoding while maintaining numerical features unchanged. It provides
     methods to fit to the dataset, transform it into an encoded format, inversely transform
     encoded data back to the original format, and retrieve the transformed feature names.
     It assumes the input data will be in the form of a DataFrame.
-
-    It can be used in preprocessing pipelines for machine learning models.
 
     Attributes:
         categorical_features (list): A list of strings representing the categorical feature names to be one-hot encoded.
