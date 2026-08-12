@@ -106,13 +106,13 @@ class FaultDetector(FaultDetectionModel):
 
         clear_session()
 
-        # --- Resolve conditional features against available data ---
-        self._resolve_conditional_features(sensor_data)
-
         model_path = None
         x_prepped, x, y = self.preprocess_train_data(
             sensor_data=sensor_data, normal_index=normal_index, fit_preprocessor=fit_preprocessor
         )
+
+        # --- Resolve conditional features against available data ---
+        self._resolve_conditional_features(x_prepped)
 
         # Post-preprocessing check: conditionals may have been dropped
         if not self.config.protect_conditional_features and self.autoencoder.is_conditional:
@@ -231,6 +231,8 @@ class FaultDetector(FaultDetectionModel):
         val_recon_error = None
         x_prepped, x, y = self.preprocess_train_data(sensor_data=sensor_data, normal_index=normal_index,
                                                      fit_preprocessor=fit_preprocessor)
+        self._resolve_conditional_features(x_prepped)
+
         x_train, x_val = self.train_val_split(x_prepped)
         if tune_method != 'threshold':
             logger.info('Tune autoencoder.')
@@ -301,17 +303,17 @@ class FaultDetector(FaultDetectionModel):
         if not x.loc[x.index.duplicated()].empty:
             raise ValueError('There are duplicated indices in the input dataframe `sensor_data`.')
 
+        x_prepped = self.data_preprocessor.transform(x).sort_index()
+        x_prepped = x_prepped.astype(self.config.dtype)
         # Validate conditional features at predict time
         if self.autoencoder.is_conditional:
             required = self.autoencoder.conditional_features or []
-            missing_at_predict = [f for f in required if f not in x.columns]
+            missing_at_predict = [f for f in required if f not in x_prepped.columns]
             if missing_at_predict:
                 raise ValueError(f"Conditional features required by the trained model are missing from "
                                  f"sensor_data: {sorted(missing_at_predict)}. The model was trained with "
                                  f"these features and cannot predict without them.")
 
-        x_prepped = self.data_preprocessor.transform(x).sort_index()
-        x_prepped = x_prepped.astype(self.config.dtype)
         column_order = x_prepped.columns
 
         if self.autoencoder.is_conditional:
