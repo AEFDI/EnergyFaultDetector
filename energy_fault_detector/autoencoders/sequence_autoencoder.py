@@ -159,19 +159,27 @@ class SequenceAutoencoder(Autoencoder):
         kwargs.setdefault("verbose", self.verbose)
         return self.encoder.predict(dataset, **kwargs)
 
-    def predict(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def predict(self, x: pd.DataFrame, return_conditions: bool = False, **kwargs) -> pd.DataFrame:
         """Predict/reconstruct input data.
 
         Args:
             x: Input data (DataFrame with DatetimeIndex).
+            return_conditions: If True, append the original conditional columns
+                to the reconstructed main-feature columns.
+            **kwargs: Arguments forwarded to Keras ``Model.predict``.
 
         Returns:
             Reconstructed DataFrame.
         """
         if not self._is_fitted():
             raise ValueError(f"{self.__class__.__name__} must be fitted first!")
+
         kwargs.setdefault("verbose", self.verbose)
-        return self._predict(x, **kwargs)
+        return self._predict(
+            x,
+            return_conditions=return_conditions,
+            **kwargs,
+        )
 
     def get_reconstruction_error(self, x: pd.DataFrame, reconstruction: pd.DataFrame = None,
                                  **kwargs) -> pd.DataFrame:
@@ -248,7 +256,7 @@ class SequenceAutoencoder(Autoencoder):
         self._extend_fit_history(history.history)
         return self
 
-    def _predict(self, x: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def _predict(self, x: pd.DataFrame, return_conditions: bool = False, **kwargs) -> pd.DataFrame:
         """Run model prediction and reassemble into a DataFrame."""
         self._check_sequence_builder()
         dataset, window_timestamps = self._build_dataset(
@@ -264,12 +272,24 @@ class SequenceAutoencoder(Autoencoder):
         predictions = self.model.predict(dataset, **kwargs)
 
         main_columns = self._get_main_columns(x)
-        return self._assemble_predictions(
+        reconstruction = self._assemble_predictions(
             predictions=predictions,
             window_timestamps=window_timestamps,
             columns=main_columns,
             ref_index=x.index,
         )
+
+        # Conditions are inputs, not model outputs. Reattach their original values.
+        condition_columns = self.conditional_features or []
+        if return_conditions and condition_columns:
+            conditions = x.loc[reconstruction.index, condition_columns]
+
+            return pd.concat(
+                [reconstruction, conditions],
+                axis=1,
+            ).reindex(columns=x.columns)
+
+        return reconstruction
 
     def _ensure_model_created_from(self, x: pd.DataFrame) -> None:
         """Infer input shape and create model if not yet built."""

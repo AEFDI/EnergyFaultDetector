@@ -244,3 +244,72 @@ class TestLSTMSeqAutoencoder(unittest.TestCase):
             new_ae.model.weights,
         ):
             assert_array_almost_equal(original_weights, loaded_weights)
+
+    def test_predict_with_return_conditions_returns_reconstruction_and_conditions(self) -> None:
+        """Conditional sequence prediction must not forward return_conditions to Keras."""
+        timestamps = pd.date_range("2025-01-03", periods=40, freq="10min")
+        data_conditional = pd.DataFrame(
+            np.random.random(size=(40, 3)),
+            index=timestamps,
+            columns=["f1", "f2", "cond1"],
+        )
+
+        ae_cond = LSTMSeqAutoencoder(
+            sequence_builder=self.sequence_builder,
+            layers=[8, 4],
+            dropout_rate=0.0,
+            regularization=0.01,
+            stateful=False,
+            conditional_features=["cond1"],
+            learning_rate=0.001,
+            batch_size=8,
+            epochs=2,
+            loss_name="mean_squared_error",
+            metrics=["mean_absolute_error"],
+            decay_rate=None,
+            decay_steps=None,
+            early_stopping=False,
+            patience=3,
+            min_delta=1e-4,
+            noise=0.0,
+        )
+
+        ae_cond.fit(data_conditional, verbose=0)
+
+        # This used to fail because return_conditions was passed to Keras Model.predict().
+        reconstruction_with_conditions = ae_cond.predict(
+            data_conditional,
+            return_conditions=True,
+            verbose=0,
+        )
+
+        reconstruction_only = ae_cond.predict(
+            data_conditional,
+            return_conditions=False,
+            verbose=0,
+        )
+
+        # All original columns, in their original order, must be present.
+        self.assertListEqual(
+            list(reconstruction_with_conditions.columns),
+            list(data_conditional.columns),
+        )
+        self.assertTrue(
+            reconstruction_with_conditions.index.equals(data_conditional.index)
+        )
+        self.assertEqual(reconstruction_with_conditions.shape, data_conditional.shape)
+
+        # Main-feature reconstruction must equal the normal prediction result.
+        pd.testing.assert_frame_equal(
+            reconstruction_with_conditions[["f1", "f2"]],
+            reconstruction_only,
+            check_dtype=False,
+        )
+
+        # Conditions are not reconstructed; they must be copied from the input unchanged.
+        pd.testing.assert_series_equal(
+            reconstruction_with_conditions["cond1"],
+            data_conditional["cond1"],
+            check_dtype=False,
+            check_freq=False,
+        )
