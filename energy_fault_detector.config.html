@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>energy_fault_detector.config &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="energy_fault_detector.core" href="energy_fault_detector.core.html" />
+    <link rel="prev" title="energy_fault_detector.autoencoders.sequence_autoencoder" href="energy_fault_detector.autoencoders.sequence_autoencoder.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html">energy_fault_detector.autoencoders</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.config.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.config.generate_quickstart_config"><code class="docutils literal notranslate"><span class="pre">generate_quickstart_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+      <li class="breadcrumb-item active">energy_fault_detector.config</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.config">
+<span id="energy-fault-detector-config"></span><h1>energy_fault_detector.config<a class="headerlink" href="#module-energy_fault_detector.config" title="Link to this heading"></a></h1>
+<p>Configuration classes.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/config/config.py#L186-L276"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.config.Config" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseConfig</span></code></p>
+<p>Configuration class. Either config_filename or config_dict must be provided.
+Reads a yaml file with the anomaly detection configuration and sets corresponding settings.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.arcana_params">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">arcana_params</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#energy_fault_detector.config.Config.arcana_params" title="Link to this definition"></a></dt>
+<dd><p>Get the ARCANA parameters.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.data_clipping">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">data_clipping</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#energy_fault_detector.config.Config.data_clipping" title="Link to this definition"></a></dt>
+<dd><p>Whether to clip training data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.data_clipping_params">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">data_clipping_params</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#energy_fault_detector.config.Config.data_clipping_params" title="Link to this definition"></a></dt>
+<dd><p>Data clipping parameters.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.data_preprocessor_steps">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">data_preprocessor_steps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#energy_fault_detector.config.Config.data_preprocessor_steps" title="Link to this definition"></a></dt>
+<dd><p>Get the data preprocessor steps.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.data_split_params">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">data_split_params</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#energy_fault_detector.config.Config.data_split_params" title="Link to this definition"></a></dt>
+<dd><p>DataSplitter or train_test_split parameters.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.dtype">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#energy_fault_detector.config.Config.dtype" title="Link to this definition"></a></dt>
+<dd><p>Data type, float32 by default.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.fit_threshold_on_val">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fit_threshold_on_val</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#energy_fault_detector.config.Config.fit_threshold_on_val" title="Link to this definition"></a></dt>
+<dd><p>Whether to fit threshold on validation data only.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.max_criticality">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">max_criticality</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#energy_fault_detector.config.Config.max_criticality" title="Link to this definition"></a></dt>
+<dd><p>Max criticality value.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.protect_conditional_features">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">protect_conditional_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#energy_fault_detector.config.Config.protect_conditional_features" title="Link to this definition"></a></dt>
+<dd><p>Whether to protect conditional features from being dropped by preprocessing.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.config.Config.root_cause_analysis">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">root_cause_analysis</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#energy_fault_detector.config.Config.root_cause_analysis" title="Link to this definition"></a></dt>
+<dd><p>Whether to run ARCANA.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.config.generate_quickstart_config">
+<span class="sig-name descname"><span class="pre">generate_quickstart_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nan_frac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_unique_value_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_col_zero_frac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counter_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imputer_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_quantile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/config/quickstart_config.py#L107-L225"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.config.generate_quickstart_config" title="Link to this definition"></a></dt>
+<dd><p>Generate a minimal, valid configuration for EnergyFaultDetector.</p>
+<p>This function returns a Config object that can directly be used in the EnergyFaultDetector.
+Optionally writes the configuration to YAML if an output path is supplied.</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_quickstart_config</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">generate_quickstart_config</span><span class="p">()</span>
+<span class="n">fault_detector</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – YAML output path; set None to skip writing. Default: None</p></li>
+<li><p><strong>max_nan_frac</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Max fraction of missing values per column for selection. Default: 0.05</p></li>
+<li><p><strong>min_unique_value_count</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimal unique values required to keep a column. Default: 2</p></li>
+<li><p><strong>max_col_zero_frac</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Max fraction of zeros allowed in a column. Default: 1.0</p></li>
+<li><p><strong>angle_columns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optional columns to transform as angles (sin/cos). Default: None</p></li>
+<li><p><strong>counter_columns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optional counter columns to convert to differences. Default: None</p></li>
+<li><p><strong>imputer_strategy</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Strategy for SimpleImputer (“mean”, “median”, etc.). Default: mean</p></li>
+<li><p><strong>scaler</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Scaler selection (“standard” or “minmax”; common aliases allowed). Default: standard</p></li>
+<li><p><strong>early_stopping</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Enable early stopping in the autoencoder training. Default: False</p></li>
+<li><p><strong>validation_split</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Fraction for validation in sklearn splitter (0 &lt; val &lt; 1).</p></li>
+<li><p><strong>threshold_quantile</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Quantile for the “quantile” threshold selector. Default: 0.99</p></li>
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Autoencoder batch size. Default: 128</p></li>
+<li><p><strong>code_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Bottleneck code size. Default: 20</p></li>
+<li><p><strong>epochs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of training epochs. Default: 10</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – Autoencoder layer sizes; defaults to [200, 100, 50] if None.
+For small datasets (&lt;20 features), consider smaller layers like [20, 10, 5].</p></li>
+<li><p><strong>learning_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Optimizer learning rate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configuration ready to use: FaultDetector(config).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.config.Config" title="energy_fault_detector.config.config.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">Config</span></code></a></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If early_stopping is True but validation_split is not in (0, 1).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.autoencoders.sequence_autoencoder.html" class="btn btn-neutral float-left" title="energy_fault_detector.autoencoders.sequence_autoencoder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.core.html" class="btn btn-neutral float-right" title="energy_fault_detector.core" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

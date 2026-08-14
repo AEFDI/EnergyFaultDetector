@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>energy_fault_detector.quick_fault_detection &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="energy_fault_detector.root_cause_analysis" href="energy_fault_detector.root_cause_analysis.html" />
+    <link rel="prev" title="energy_fault_detector.evaluation.predist_dataset" href="energy_fault_detector.evaluation.predist_dataset.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html">energy_fault_detector.autoencoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">energy_fault_detector.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.quick_fault_detection</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.quick_fault_detection.quick_fault_detector"><code class="docutils literal notranslate"><span class="pre">quick_fault_detector()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+      <li class="breadcrumb-item active">energy_fault_detector.quick_fault_detection</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.quick_fault_detection">
+<span id="energy-fault-detector-quick-fault-detection"></span><h1>energy_fault_detector.quick_fault_detection<a class="headerlink" href="#module-energy_fault_detector.quick_fault_detection" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="energy_fault_detector.quick_fault_detection.quick_fault_detector">
+<span class="sig-name descname"><span class="pre">quick_fault_detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv_test_data_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_test_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_test_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_data_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_label_confidence_percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_to_exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">automatic_optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_debug_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_anomaly_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">18</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/quick_fault_detection/pipeline.py#L21-L142"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.quick_fault_detection.quick_fault_detector" title="Link to this definition"></a></dt>
+<dd><p>Analyzes provided data using an autoencoder based approach for identifying anomalies based on a learned normal
+behavior. Anomalies are then aggregated to events and further analyzed.</p>
+<p>This function can also be called via the CLI command <code class="docutils literal notranslate"><span class="pre">quick_fault_detector</span></code>.
+See <a class="reference internal" href="quick_fault_detection.html"><span class="doc">Quick fault detection (CLI)</span></a> for details.</p>
+<p>Runs the entire fault detection module chain in one function call. Sections of this function call are:
+1. Data Loading and verification
+2. Config selection and optimization
+3. AnomalyDetector training
+4. AnomalyDetector prediction
+5. Event aggregation
+6. ARCANA-Analysis of detected events
+7. Visualization of output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>csv_data_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to a csv-file containing tabular data which must contain training data for the
+autoencoder. This data can also contain test data for evaluation, but in this case train_test_column and
+optionally train_test_mapping must be provided.</p></li>
+<li><p><strong>csv_test_data_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to a csv file containing test data for evaluation. If test data is
+provided in both ways (i.e. via csv_test_data_path and in csv_data_path + train_test_column) then both test
+data sets will be fused into one. Default is None.</p></li>
+<li><p><strong>train_test_column_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the column which specifies which part of the data in
+csv_data_path is training data and which is test data. If this column does not contain boolean values or
+values which can be cast into boolean values, then train_test_mapping must be provided.
+True values are interpreted as training data. Default is None.</p></li>
+<li><p><strong>train_test_mapping</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – Dictionary which defines a mapping of all non-boolean values in the
+train_test_column to booleans. Keys of the dictionary must be values from train_test_column, and they must
+have a datatype which can be cast to the datatype of train_test_column. Values of this dictionary must be
+booleans or at least castable to booleans. Default is None.</p></li>
+<li><p><strong>time_column_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the column containing time stamp information.</p></li>
+<li><p><strong>status_data_column_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the column which specifies the status of each row in
+csv_data_path. The status is used to define which rows represent normal behavior (i.e. which rows can be
+used for the autoencoder training) and which rows contain anomalous behavior. If this column does not
+contain boolean values, status_mapping must be provided. If status_data_column_name is not provided, all
+rows in csv_data_path are assumed to be normal and a warning will be logged. Default is None.</p></li>
+<li><p><strong>status_mapping</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>) – Dictionary which defines a mapping of all non-boolean values in the
+status_data_column to booleans. Keys of the dictionary must be values from status_data_column, and they must
+have a datatype which can be cast to the datatype of train_test_column. Values of this dictionary must be
+booleans or at least castable to booleans. True values are interpreted as normal status. Default is None.</p></li>
+<li><p><strong>status_label_confidence_percentage</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – Specifies how sure the user is that the provided status
+labels and derived normal_indexes are correct. This determines the quantile for quantile threshold method.
+Default is 0.95.</p></li>
+<li><p><strong>features_to_exclude</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of column names which are present in the csv-files but which
+should be ignored for this failure detection run. Default is None.</p></li>
+<li><p><strong>angle_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of column names which represent angle-features. This enables a
+specialized preprocessing of angle features, which might otherwise hinder the failure detection process.
+Default is None.</p></li>
+<li><p><strong>automatic_optimization</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, an automatic hyperparameter optimization is done based on the dimension
+of the provided dataset. Default is True.</p></li>
+<li><p><strong>enable_debug_plots</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True advanced information for debugging is added to the result plots.
+Default is False.</p></li>
+<li><p><strong>min_anomaly_length</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Minimal number of consecutive anomalies (i.e. data points with an anomaly score above
+the FaultDetector threshold) to define an anomaly event.</p></li>
+<li><p><strong>save_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Directory to save the output plots. If not provided, the plots are not saved.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>FaultDetectionResult object with the following DataFrames:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>predicted_anomalies: DataFrame with a column ‘anomaly’ (bool).</p></li>
+<li><p>reconstruction: DataFrame with reconstruction of the sensor data with timestamp as index.</p></li>
+<li><p>deviations: DataFrame with reconstruction errors.</p></li>
+<li><p>anomaly_score: DataFrame with anomaly scores for each timestamp.</p></li>
+<li><p>bias_data: DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.</p></li>
+<li><p>arcana_losses: DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.</p></li>
+<li><p>tracked_bias: List of DataFrames. None if ARCANA was not run.</p></li>
+</ul>
+</div></blockquote>
+<p>and the detected anomaly events as dataframe.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult" title="energy_fault_detector.core.fault_detection_result.FaultDetectionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.evaluation.predist_dataset.html" class="btn btn-neutral float-left" title="energy_fault_detector.evaluation.predist_dataset" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.root_cause_analysis.html" class="btn btn-neutral float-right" title="energy_fault_detector.root_cause_analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

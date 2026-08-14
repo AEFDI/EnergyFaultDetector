@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.timestamp\_transformer
+==================================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.timestamp_transformer
+   :members:
+   :show-inheritance:
+   :undoc-members:

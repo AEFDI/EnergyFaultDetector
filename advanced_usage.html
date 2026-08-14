@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced usage and customization &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Logging Configuration" href="logging.html" />
+    <link rel="prev" title="Sequence models" href="sequence_models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced usage and customization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-new-model-classes">Creating new model classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-your-own-pipeline">Creating your own pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Advanced usage and customization</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/advanced_usage.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="advanced-usage-and-customization">
+<span id="advanced-usage"></span><h1>Advanced usage and customization<a class="headerlink" href="#advanced-usage-and-customization" title="Link to this heading"></a></h1>
+<p>This page covers more advanced use cases:</p>
+<ul class="simple">
+<li><p>Creating new model classes that integrate with the <a class="reference internal" href="energy_fault_detector.html#module-energy_fault_detector" title="energy_fault_detector"><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector</span></code></a> registry</p></li>
+<li><p>Building your own pipeline from the building blocks (preprocessors, autoencoders, scores, thresholds)</p></li>
+</ul>
+<section id="creating-new-model-classes">
+<h2>Creating new model classes<a class="headerlink" href="#creating-new-model-classes" title="Link to this heading"></a></h2>
+<p>You can extend the framework by creating new model classes based on the templates in the
+<a class="reference internal" href="energy_fault_detector.core.html#module-energy_fault_detector.core" title="energy_fault_detector.core"><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.core</span></code></a> module and registering the new classes.</p>
+<p>Typical steps:</p>
+<ol class="arabic">
+<li><p>Implement a new class that inherits from one of the core base classes, such as:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="energy_fault_detector.core.autoencoder.html#energy_fault_detector.core.autoencoder.Autoencoder" title="energy_fault_detector.core.autoencoder.Autoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Autoencoder</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore" title="energy_fault_detector.core.anomaly_score.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector" title="energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer" title="energy_fault_detector.core.data_transformer.DataTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></p></li>
+</ul>
+<p>For sequence models:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder" title="energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2OneAutoencoder</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html#energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder" title="energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2SeqAutoencoder</span></code></a></p></li>
+</ul>
+</li>
+<li><p>Register your class in the <a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.Registry" title="energy_fault_detector.registration.Registry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Registry</span></code></a> so it can be referenced
+by name from the YAML config:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.registration</span><span class="w"> </span><span class="kn">import</span> <span class="n">register</span>
+
+<span class="n">register</span><span class="p">(</span>
+    <span class="n">module_path</span><span class="o">=</span><span class="s2">&quot;my_package.my_autoencoder.MyCustomAE&quot;</span><span class="p">,</span>
+    <span class="n">class_type</span><span class="o">=</span><span class="s2">&quot;autoencoder&quot;</span><span class="p">,</span>
+    <span class="n">class_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;MyCustomAE&quot;</span><span class="p">,</span> <span class="s2">&quot;my_custom_ae&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Use the registered name in the config, for example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_ae</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="c1"># your model parameters here</span>
+<span class="w">      </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">128</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">64</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">32</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">code_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Examples are shown in the notebook <code class="docutils literal notranslate"><span class="pre">Example</span> <span class="pre">-</span> <span class="pre">Create</span> <span class="pre">new</span> <span class="pre">model</span> <span class="pre">classes.ipynb</span></code> (see the
+<code class="docutils literal notranslate"><span class="pre">notebooks/</span></code> folder in the repository).</p>
+</section>
+<section id="creating-your-own-pipeline">
+<h2>Creating your own pipeline<a class="headerlink" href="#creating-your-own-pipeline" title="Link to this heading"></a></h2>
+<p>If you want to create your own energy fault detection pipeline using the building blocks of this package,
+you can import the data preprocessor, autoencoder, anomaly score and threshold selection classes directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.data_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataPreprocessor</span><span class="p">,</span> <span class="n">DataClipper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.autoencoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultilayerAutoencoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.anomaly_scores</span><span class="w"> </span><span class="kn">import</span> <span class="n">MahalanobisScore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.threshold_selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FbetaSelector</span>
+</pre></div>
+</div>
+<p>This allows you to add additional steps or use different data preprocessing pipelines.</p>
+<p>An example training pipeline (similar to the <a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> class) would be:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># sensor data as DataFrame</span>
+<span class="n">y</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># normal behaviour indicator as boolean Series</span>
+
+<span class="n">x_normal</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+
+<span class="c1"># 1) Fit data preprocessor on normal data</span>
+<span class="n">data_preprocessor</span> <span class="o">=</span> <span class="n">DataPreprocessor</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">x_normal_prepped</span> <span class="o">=</span> <span class="n">data_preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">x_normal</span><span class="p">)</span>
+
+<span class="c1"># 2) Fit autoencoder on normal data</span>
+<span class="n">ae</span> <span class="o">=</span> <span class="n">MultilayerAutoencoder</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">ae</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_normal_prepped</span><span class="p">)</span>
+
+<span class="c1"># 3) Create and fit score</span>
+<span class="n">anomaly_score</span> <span class="o">=</span> <span class="n">MahalanobisScore</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">x_prepped</span> <span class="o">=</span> <span class="n">data_preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="n">recon_error_normal</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">get_reconstruction_error</span><span class="p">(</span><span class="n">x_normal_prepped</span><span class="p">)</span>
+<span class="n">anomaly_score</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">recon_error_normal</span><span class="p">)</span>
+
+<span class="c1"># 4) Compute scores for all data points</span>
+<span class="n">recon_error</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">get_reconstruction_error</span><span class="p">(</span><span class="n">x_prepped</span><span class="p">)</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">anomaly_score</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">recon_error</span><span class="p">)</span>
+
+<span class="c1"># 5) Set the threshold and get predictions to evaluate</span>
+<span class="n">threshold_selector</span> <span class="o">=</span> <span class="n">FbetaSelector</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># sets optimal threshold based on F1 score</span>
+<span class="n">threshold_selector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">anomalies</span> <span class="o">=</span> <span class="n">threshold_selector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>  <span class="c1"># boolean Series indicating anomaly detected</span>
+</pre></div>
+</div>
+<p>Inference then looks like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x_new</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="n">x_prepped</span> <span class="o">=</span> <span class="n">data_preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_new</span><span class="p">)</span>
+<span class="n">x_recon</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_prepped</span><span class="p">)</span>              <span class="c1"># reconstruction</span>
+<span class="n">x_recon_error</span> <span class="o">=</span> <span class="n">ae</span><span class="o">.</span><span class="n">get_reconstruction_error</span><span class="p">(</span><span class="n">x_prepped</span><span class="p">)</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">anomaly_score</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_recon_error</span><span class="p">)</span>
+<span class="n">anomalies</span> <span class="o">=</span> <span class="n">threshold_selector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This pattern is useful when:</p>
+<ul class="simple">
+<li><p>you want full control over training and evaluation loops,</p></li>
+<li><p>you are integrating EnergyFaultDetector components into a larger existing pipeline,</p></li>
+<li><p>or you are experimenting with custom combinations of preprocessing, models, and thresholds.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sequence_models.html" class="btn btn-neutral float-left" title="Sequence models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="logging.html" class="btn btn-neutral float-right" title="Logging Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

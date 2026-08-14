@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>energy_fault_detector.evaluation.care_score &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="energy_fault_detector.evaluation.predist_dataset" href="energy_fault_detector.evaluation.predist_dataset.html" />
+    <link rel="prev" title="energy_fault_detector.evaluation.care2compare" href="energy_fault_detector.evaluation.care2compare.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html">energy_fault_detector.autoencoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">energy_fault_detector.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html">energy_fault_detector.evaluation.care2compare</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">energy_fault_detector.evaluation.care_score</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.evaluation.predist_dataset.html">energy_fault_detector.evaluation.predist_dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a></li>
+      <li class="breadcrumb-item active">energy_fault_detector.evaluation.care_score</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.evaluation.care_score">
+<span id="energy-fault-detector-evaluation-care-score"></span><h1>energy_fault_detector.evaluation.care_score<a class="headerlink" href="#module-energy_fault_detector.evaluation.care_score" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CAREScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coverage_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reliability_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coverage_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accuracy_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">earliness_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reliability_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criticality_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">72</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_fraction_anomalous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_start_of_descend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">4)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anomaly_detection_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'criticality'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_fraction_anomalous_timestamps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eventwise_f_score_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted_score_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eventwise_f_score_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L25-L553"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Calculate the CARE score for early fault-detection algorithms.</p>
+<p>The CARE score combines Coverage, Accuracy, Reliability and Earliness to evaluate early fault-detection performance
+(see CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in Wind Turbine Data,
+<a class="reference external" href="https://doi.org/10.3390/data9120138">https://doi.org/10.3390/data9120138</a>). The goal of the CARE-Score is to evaluate the ability of a given model to
+separate <cite>normal behavior</cite> from <cite>actionable anomalies</cite> (see glossary for definitions), that lead to a fault or
+indicate a fault.</p>
+<dl class="simple">
+<dt>Usage:</dt><dd><p>For each event in your dataset call <cite>evaluate_event</cite>. Afterward, call <cite>get_final_score</cite> to calculate the
+CARE-score of your model.</p>
+</dd>
+<dt>Requirements:</dt><dd><p>For calculating the CARE-Score presence of at least one evaluated <cite>anomaly-event</cite> and at least one
+evaluated <cite>normal event</cite> (see glossary below) is required.</p>
+</dd>
+<dt>Glossary:</dt><dd><ul class="simple">
+<li><p>normal behavior: Data points representing expected system behavior.</p></li>
+<li><p>actionable anomaly: Unexpected system behavior where maintenance could prevent a fault.</p></li>
+<li><p>non-actionable anomaly: Neither normal behavior nor actionable anomaly (e.g. turbine shut down due to
+maintenance actions).</p></li>
+<li><p>anomaly event: A sequence labeled with actionable anomalies within the prediction window.</p></li>
+<li><p>normal event: A sequence containing normal behavior within the prediction window.</p></li>
+<li><p>normal_index: Boolean mask separating normal behavior (True) from non-actionable anomaly (False).</p></li>
+<li><p>Coverage: Pointwise F-score on anomaly-events.</p></li>
+<li><p>Accuracy: Accuracy on normal-events.</p></li>
+<li><p>Reliability: Eventwise F-score across evaluated events.</p></li>
+<li><p>Earliness: Weighted score measuring how early an anomaly is detected.</p></li>
+<li><p>criticality: Counting measure applied to the prediction of anomaly detection models.
+Used for criticality-based detection. For a detailed explanation see Algorithm 1 in the paper
+(<a class="reference external" href="https://doi.org/10.3390/data9120138">https://doi.org/10.3390/data9120138</a>).
+Choose a criticality threshold based on application needs: e.g. how many anomalous points need to be observed
+in advance to be actionable? After how many anomalous data points is an anomaly significant?</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize CAREScore.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coverage_beta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Beta parameter for Coverage (pointwise F-score). Default: 0.5.</p></li>
+<li><p><strong>reliability_beta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Beta parameter for Reliability (event-wise F-score). Default: 0.5.</p></li>
+<li><p><strong>coverage_w</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight for Coverage (point-wise F-Score) in the final CARE-score. Default: 1.0.</p></li>
+<li><p><strong>accuracy_w</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight for Accuracy in the final CARE-score. Default: 2.0.</p></li>
+<li><p><strong>reliability_w</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight for Reliability (eventwise F-score) in the final CARE-score. Default: 1.0.</p></li>
+<li><p><strong>earliness_w</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight for Earliness (weighted score) in the final CARE-score. Default: 1.0.</p></li>
+<li><p><strong>anomaly_detection_method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Method used to calculate anomaly detection score. Either ‘criticality’ or
+‘fraction’. Default: ‘criticality’.</p></li>
+<li><p><strong>criticality_threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Threshold for criticality-based detection. Default: 72.
+If the criticality exceeds this threshold, the event will be detected as an anomaly.</p></li>
+<li><p><strong>min_fraction_anomalous</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Threshold for fraction-based detection. Default: 0.1.
+If the fraction of event data points exceeds this threshold, the event will be detected as an anomaly.</p></li>
+<li><p><strong>ws_start_of_descend</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Fraction (numerator, denominator) where weights start to decay for
+the Earliness-Score (weighted score). Default is (1, 4).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If anomaly_detection_method is not ‘criticality’ or ‘fraction’.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.calculate_avg_accuracy">
+<span class="sig-name descname"><span class="pre">calculate_avg_accuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L363-L375"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.calculate_avg_accuracy" title="Link to this definition"></a></dt>
+<dd><p>Return the average Accuracy across normal events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event_selection</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of event IDs to include.
+Default: None (use all evaluated events).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mean accuracy for selected normal events. Returns numpy.nan if no normal events are selected.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.calculate_avg_coverage">
+<span class="sig-name descname"><span class="pre">calculate_avg_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L349-L361"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.calculate_avg_coverage" title="Link to this definition"></a></dt>
+<dd><p>Return the average Coverage (pointwise F-score) for anomaly events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event_selection</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of event IDs to include.
+Default: None (use all evaluated events).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mean f_beta_score for selected anomaly events. Returns numpy.nan if no anomaly events are selected.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.calculate_avg_earliness">
+<span class="sig-name descname"><span class="pre">calculate_avg_earliness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L399-L411"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.calculate_avg_earliness" title="Link to this definition"></a></dt>
+<dd><p>Return the average Earliness (weighted score) for anomaly events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event_selection</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of event IDs to include.
+Default: None (use all evaluated events).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Mean weighted_score for selected anomaly events. Returns numpy.nan if no anomaly events are selected.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.calculate_reliability">
+<span class="sig-name descname"><span class="pre">calculate_reliability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L377-L397"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.calculate_reliability" title="Link to this definition"></a></dt>
+<dd><p>Compute the Reliability (event-wise F-score) for selected events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_selection</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of event IDs to include.
+Default: None (use all evaluated events).</p></li>
+<li><p><strong>kwargs</strong> – Other keyword args for sklearn’s fbeta_score.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Event-wise F-score computed with beta=self.reliability_beta.</dt><dd><p>If there are no positive labels or predictions, sklearn’s fbeta_score behavior
+is controlled by zero_division.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.create_ground_truth">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">create_ground_truth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_label</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L413-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.create_ground_truth" title="Link to this definition"></a></dt>
+<dd><p>Create the ground truth labels based on the event_start, event_end, normal_index and event_label.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – Start index/timestamp of the event.</p></li>
+<li><p><strong>event_end</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – End index/timestamp of the event.</p></li>
+<li><p><strong>normal_index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span>) – Boolean mask indicating normal samples. Must be indexed compatibly with
+event_start/event_end.</p></li>
+<li><p><strong>event_label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – ‘anomaly’ or ‘normal’. True label indicating the type of the event.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Boolean series indexed like normal_index. True indicates anomaly (actionable and non-actionable),</dt><dd><p>False otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The returned series is sorted by index.</p></li>
+<li><p>If event_label == ‘anomaly’, values in the interval [event_start:event_end] are set to True.</p></li>
+<li><p>normal_index is inverted to start (anomalies = not normal), then the event window is applied.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.evaluate_event">
+<span class="sig-name descname"><span class="pre">evaluate_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_anomalies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluate_until_event_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_normal_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L141-L275"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.evaluate_event" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the prediction of a fault detection model for a single event.</p>
+<p>If a normal_index is provided, metrics are computed only for timestamps where normal_index is True
+(unless ignore_normal_index is True).</p>
+<p>The argument <cite>evaluate_until_event_end</cite> determines which part of the provided data is used for
+evaluation. It might be useful to set this to True or <cite>anomaly_only</cite> if you expect normal behaviour may change
+after a fault.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – Start index/timestamp of the event.</p></li>
+<li><p><strong>event_end</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – End index/timestamp of the event.</p></li>
+<li><p><strong>event_label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – True label of the event. This can be either ‘anomaly’ or ‘normal’.</p></li>
+<li><p><strong>predicted_anomalies</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span>) – Boolean pandas series, indicating whether an anomaly was detected.
+Index must match the data type of <cite>event_start</cite> and <cite>event_end</cite>.</p></li>
+<li><p><strong>normal_index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – Boolean mask marking normal operation (True) vs non-actionable anomaly
+(False). Index must match the data type of <cite>event_start</cite> and <cite>event_end</cite>. Default: None.</p></li>
+<li><p><strong>evaluate_until_event_end</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>) – If True, evaluation is capped at event_end for all events.
+Allowed string values: ‘normal_only’, ‘anomaly_only’. Default: False.</p></li>
+<li><p><strong>event_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – ID of event. If not specified, a counter is used instead. Defaults to None.</p></li>
+<li><p><strong>ignore_normal_index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to ignore the normal index and evaluate all data points in the prediction
+or test dataset. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>Dictionary with computed metrics, e.g.:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;event_id&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="s1">&#39;event_label&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="s1">&#39;weighted_score&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="s1">&#39;max_criticality&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="s1">&#39;f_beta_score&#39;</span><span class="p">:</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">NaN</span><span class="p">,</span>
+    <span class="s1">&#39;accuracy&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="s1">&#39;tp&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;fp&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;tn&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;fn&#39;</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If event_label is invalid, evaluate_until_event_end has an unknown value,
+    or if no data could be selected for the event.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function sorts inputs by index to ensure alignment.</p></li>
+<li><p>If normal_index is provided, this also influences the criticality calculation: criticality does not change
+if the expected behaviour is not normal.</p></li>
+<li><p>If predicted_anomalies_event is empty, a ValueError is raised.</p></li>
+<li><p>Use evaluate_until_event_end to control whether post-event predictions are considered.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.evaluated_events">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evaluated_events</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></span><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.evaluated_events" title="Link to this definition"></a></dt>
+<dd><p>Returns a DataFrame with evaluated events.</p>
+<p>The DataFrame is built from the internal evaluated-events list. If the DataFrame is non-empty,
+an additional column ‘anomaly_detected’ is computed:</p>
+<ul class="simple">
+<li><p>If anomaly_detection_method == ‘criticality’: anomaly_detected = max_criticality &gt;= criticality_threshold</p></li>
+<li><p>Else (fraction-based): anomaly_detected = (tp + fp) / (tp + fp + fn + tn) &gt;= min_fraction_anomalous</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>DataFrame containing evaluated event records. Expected columns include:</dt><dd><ul class="simple">
+<li><p>event_id (int)</p></li>
+<li><p>event_label (str)</p></li>
+<li><p>weighted_score (float)</p></li>
+<li><p>max_criticality (float)</p></li>
+<li><p>tp, fp, tn, fn (ints)</p></li>
+<li><p>f_beta_score, accuracy (floats)</p></li>
+<li><p>anomaly_detected (bool) — added as described above.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.get_final_score">
+<span class="sig-name descname"><span class="pre">get_final_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_selection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criticality_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_fraction_anomalous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L277-L347"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.get_final_score" title="Link to this definition"></a></dt>
+<dd><p>Calculate the CARE-score for selected evaluated events.</p>
+<p>The CARE score combines average Coverage (pointwise F-score for anomaly events), average Earliness (weighted
+score for anomaly events), average Accuracy (for normal events) and Reliability (eventwise F-score) using the
+configured weights.</p>
+<ul>
+<li><p>If the average accuracy over all normal events &lt; 0.5, CARE-score = average accuracy over all normal events
+(worse than random guessing).</p></li>
+<li><p>If no anomalies were detected, the CARE-score = 0.</p></li>
+<li><p>Else, the CARE-score is calculated as:</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>( (average F-score over all anomaly events) * coverage_w
++ (average weighted score over all anomaly events) * weighted_score_w
++ (average accuracy over all normal events) * accuracy_w
++ event wise F-score * eventwise_f_score_w ) / sum_of_weights
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<p>where <cite>sum_of_weights</cite> = coverage_w + weighted_score_w + accuracy_w + eventwise_f_score_w.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_selection</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – list of event IDs to include. Default: None (use all).</p></li>
+<li><p><strong>criticality_threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – If provided and anomaly_detection_method == ‘criticality’, override the stored
+threshold for this calculation.</p></li>
+<li><p><strong>min_fraction_anomalous</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – If provided and anomaly_detection_method == ‘fraction’,  override the stored
+min_fraction_anomalous for this calculation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CARE-score</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the selected events do not contain at least one normal and one anomalous event.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.load_evaluated_events">
+<span class="sig-name descname"><span class="pre">load_evaluated_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L534-L544"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.load_evaluated_events" title="Link to this definition"></a></dt>
+<dd><p>Load evaluated events from a CSV file and replace the internal evaluated-events list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – The file path from which the evaluated events will be loaded.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.evaluation.care_score.CAREScore.save_evaluated_events">
+<span class="sig-name descname"><span class="pre">save_evaluated_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/evaluation/care_score.py#L526-L532"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.evaluation.care_score.CAREScore.save_evaluated_events" title="Link to this definition"></a></dt>
+<dd><p>Write the evaluated events to a CSV file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – The file path where the evaluated events will be saved.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.evaluation.care2compare.html" class="btn btn-neutral float-left" title="energy_fault_detector.evaluation.care2compare" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.evaluation.predist_dataset.html" class="btn btn-neutral float-right" title="energy_fault_detector.evaluation.predist_dataset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model overview &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sequence models" href="sequence_models.html" />
+    <link rel="prev" title="ARCANA: Root cause analysis" href="arcana.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#autoencoders">Autoencoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#anomaly-scores">Anomaly scores</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#threshold-selectors">Threshold selectors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Model overview</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/models_overview.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="model-overview">
+<span id="models-overview"></span><h1>Model overview<a class="headerlink" href="#model-overview" title="Link to this heading"></a></h1>
+<p>This page summarises the main model types provided by <a class="reference internal" href="energy_fault_detector.html#module-energy_fault_detector" title="energy_fault_detector"><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector</span></code></a>.</p>
+<p>For configuration details see <a class="reference internal" href="configuration.html"><span class="doc">Configuration</span></a> and <a class="reference internal" href="sequence_models.html"><span class="doc">Sequence models</span></a>.</p>
+<section id="autoencoders">
+<h2>Autoencoders<a class="headerlink" href="#autoencoders" title="Link to this heading"></a></h2>
+<p>Autoencoders learn a model of <em>normal</em> behaviour and are configured under <code class="docutils literal notranslate"><span class="pre">train.autoencoder</span></code> in the YAML config.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Typical config names (<code class="docutils literal notranslate"><span class="pre">train.autoencoder.name</span></code>)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder" title="energy_fault_detector.autoencoders.multilayer_autoencoder.MultilayerAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultilayerAutoencoder</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;MultilayerAutoencoder&quot;</span></code></p></td>
+<td><p>Dense symmetric autoencoder for tabular or time-series data treated as independent rows. Good default choice.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE" title="energy_fault_detector.autoencoders.conditional_autoencoder.ConditionalAE"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConditionalAE</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ConditionalAE&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ConditionalAutoencoder&quot;</span></code></p></td>
+<td><p>Dense autoencoder where selected features are used as <em>conditions</em> and not reconstructed (e.g. time-of-day).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder" title="energy_fault_detector.autoencoders.lstm_seq2one_autoencoder.LSTMSeq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LSTMSeq2OneAutoencoder</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;LSTMSeq2OneAutoencoder&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;lstm_seq2one&quot;</span></code></p></td>
+<td><p>Sequence-to-one LSTM autoencoder. Uses windows of historical data to reconstruct the last timestep.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder" title="energy_fault_detector.autoencoders.bidirectional_lstm_seq2one_autoencoder.BidirectionalLSTMSeq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;BidirectionalLSTMSeq2OneAutoencoder&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bilstm_seq2one&quot;</span></code></p></td>
+<td><p>Bidirectional LSTM variant of the seq2one model for richer temporal context.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder" title="energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CNNSeq2OneAutoencoder</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;CNNSeq2OneAutoencoder&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cnn_seq2one&quot;</span></code></p></td>
+<td><p>CNN-based seq2one autoencoder. Efficient, focuses on local temporal patterns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeqAutoencoder" title="energy_fault_detector.autoencoders.lstm_seq2seq_autoencoder.LSTMSeqAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LSTMSeqAutoencoder</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;LSTMSeqAutoencoder&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;lstm_seq2seq&quot;</span></code></p></td>
+<td><p>Sequence-to-sequence LSTM autoencoder. Reconstructs the full window, useful when localisation within the window matters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNAutoencoder" title="energy_fault_detector.autoencoders.cnn_seq_autoencoder.CNNAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CNNAutoencoder</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;CNNAutoencoder&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cnn_seq2seq&quot;</span></code></p></td>
+<td><p>Sequence-to-sequence CNN autoencoder using Conv1D/Conv1DTranspose layers.</p></td>
+</tr>
+</tbody>
+</table>
+<p>All sequence models require a <code class="docutils literal notranslate"><span class="pre">sequence_builder</span></code> block in
+<code class="docutils literal notranslate"><span class="pre">train.autoencoder.params</span></code>. See <a class="reference internal" href="sequence_models.html"><span class="doc">Sequence models</span></a> for details and examples.</p>
+</section>
+<section id="anomaly-scores">
+<h2>Anomaly scores<a class="headerlink" href="#anomaly-scores" title="Link to this heading"></a></h2>
+<p>Anomaly score classes map reconstruction errors to a scalar anomaly score per sample.
+They are configured under <code class="docutils literal notranslate"><span class="pre">train.anomaly_score</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Typical config names (<code class="docutils literal notranslate"><span class="pre">train.anomaly_score.name</span></code>)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore" title="energy_fault_detector.anomaly_scores.rmse_score.RMSEScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">RMSEScore</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;rmse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;RMSEScore&quot;</span></code></p></td>
+<td><p>Root mean squared error over reconstruction errors. Default choice.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore" title="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mahalanobis&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;MahalanobisScore&quot;</span></code></p></td>
+<td><p>Mahalanobis distance on (optionally PCA-transformed) reconstruction errors. Captures feature correlations.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="threshold-selectors">
+<h2>Threshold selectors<a class="headerlink" href="#threshold-selectors" title="Link to this heading"></a></h2>
+<p>Threshold selectors map anomaly scores to boolean anomaly decisions and are configured under <code class="docutils literal notranslate"><span class="pre">train.threshold_selector</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Typical config names (<code class="docutils literal notranslate"><span class="pre">train.threshold_selector.name</span></code>)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector" title="energy_fault_detector.threshold_selectors.quantile_threshold.QuantileThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantileThresholdSelector</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;quantile&quot;</span></code></p></td>
+<td><p>Sets the threshold to a fixed quantile of the (normal) anomaly scores. Works without labels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector" title="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FbetaSelector</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fbeta&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;FbetaSelector&quot;</span></code></p></td>
+<td><p>Chooses the threshold that maximises the F-beta score (requires labels / <code class="docutils literal notranslate"><span class="pre">normal_index</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector" title="energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FDRSelector</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fdr&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;FDRSelector&quot;</span></code></p></td>
+<td><p>Chooses the threshold to match a target false discovery rate (requires labels / <code class="docutils literal notranslate"><span class="pre">normal_index</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector" title="energy_fault_detector.threshold_selectors.adaptive_threshold.AdaptiveThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;adaptive_threshold&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;AdaptiveThresholdSelector&quot;</span></code></p></td>
+<td><p>Learns an input-dependent threshold using a small regression NN on autoencoder inputs and scores.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For a full reference of model parameters, see the API docs:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#module-energy_fault_detector.autoencoders" title="energy_fault_detector.autoencoders"><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.autoencoders</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#module-energy_fault_detector.anomaly_scores" title="energy_fault_detector.anomaly_scores"><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.anomaly_scores</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#module-energy_fault_detector.threshold_selectors" title="energy_fault_detector.threshold_selectors"><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.threshold_selectors</span></code></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="arcana.html" class="btn btn-neutral float-left" title="ARCANA: Root cause analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sequence_models.html" class="btn btn-neutral float-right" title="Sequence models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

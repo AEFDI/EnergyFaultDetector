@@ -1,0 +1,704 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>energy_fault_detector.autoencoders &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="energy_fault_detector.autoencoders.seq2one_autoencoder" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html" />
+    <link rel="prev" title="energy_fault_detector.anomaly_scores" href="energy_fault_detector.anomaly_scores.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">energy_fault_detector.autoencoders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.CNNAutoencoder"><code class="docutils literal notranslate"><span class="pre">CNNAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">CNNSeq2OneAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.ConditionalAE"><code class="docutils literal notranslate"><span class="pre">ConditionalAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">LSTMSeq2OneAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.LSTMSeqAutoencoder"><code class="docutils literal notranslate"><span class="pre">LSTMSeqAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.autoencoders.MultilayerAutoencoder"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html">energy_fault_detector.autoencoders.seq2one_autoencoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html">energy_fault_detector.autoencoders.seq2seq_autoencoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html">energy_fault_detector.autoencoders.sequence_autoencoder</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">energy_fault_detector.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+      <li class="breadcrumb-item active">energy_fault_detector.autoencoders</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.autoencoders">
+<span id="energy-fault-detector-autoencoders"></span><h1>energy_fault_detector.autoencoders<a class="headerlink" href="#module-energy_fault_detector.autoencoders" title="Link to this heading"></a></h1>
+<p>Autoencoder model classes.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stateful</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/bidirectional_lstm_seq2one_autoencoder.py#L21-L196"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder" title="energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2OneAutoencoder</span></code></a></p>
+<p>Bidirectional LSTM-based seq2one autoencoder.</p>
+<p>This model consumes a fixed-length time window and reconstructs the
+main features of the last timestep in that window. Conditional
+features can be provided per timestep and are concatenated to the
+encoder inputs without being reconstructed.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>(batch_size, sequence_length, n_main_features) [+ conditional features]</p>
+</dd>
+<dt>Output:</dt><dd><p>(batch_size, n_main_features)  (last timestep reconstruction)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sequence_builder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html#energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder" title="energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDatasetBuilder</span></code></a>]</span>) – SequenceDatasetBuilder instance used to create the sequence datasets.</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.</p></li>
+<li><p><strong>dropout_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate applied after each LSTM layer.</p></li>
+<li><p><strong>regularization</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – L2 regularization strength for the first encoder LSTM layer.</p></li>
+<li><p><strong>stateful</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to use stateful LSTMs.</p></li>
+<li><p><strong>merge_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – String describing the method for combining the forward and backward layer in bidirectional layers.
+Possible options are [‘concat’, ‘sum’, ‘ave’, ‘mul’]. Defaults to ‘sum’.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">stateful=True</span></code>, the dataset <strong>must not be shuffled</strong> during training,
+as shuffling breaks inter-batch state propagation. The current implementation
+does not enforce this constraint — the caller is responsible for setting
+<code class="docutils literal notranslate"><span class="pre">shuffle=False</span></code> in the data splitter / sequence builder when using stateful mode.</p>
+</div>
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: BidirectionalLSTMSeq2OneAutoencoder
+    params:
+      layers: [100, 50, 25]
+      regularization: 0.01
+      sequence_builder:
+        sequence_length: 10
+        ts_freq: &quot;10m&quot;
+        overlap: 9
+      merge_mode: &quot;sum&quot;
+</pre></div>
+</div>
+<p>Initialize a bidirectional LSTM-based seq2one autoencoder.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/bidirectional_lstm_seq2one_autoencoder.py#L93-L196"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder.create_model" title="Link to this definition"></a></dt>
+<dd><p>Create the underlying bidirectional LSTM seq2one autoencoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.CNNAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CNNAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/cnn_seq_autoencoder.py#L19-L139"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.CNNAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html#energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder" title="energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2SeqAutoencoder</span></code></a></p>
+<p>CNN-based Seq2Seq autoencoder</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sequence_builder</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html#energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder" title="energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDatasetBuilder</span></code></a></span>) – SequenceDatasetBuilder instance used to create the sequence datasets.</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of integers indicating the number of filters of the convolutional layers in the encoder.
+Defaults to [128, 64, 32] if None. The last number of filters is effectively the code size / latent
+dimension of the autoencoder.</p></li>
+<li><p><strong>kernel_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Specifies the length of the 1D convolution window. Default: 3.</p></li>
+<li><p><strong>strides</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Stride length of the 1D convolution window. Default: 1.</p></li>
+<li><p><strong>dropout_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate applied after each convolutional layer. Default: 0.</p></li>
+<li><p><strong>conditional_features</strong> – Optional list of column names treated as conditional features. This will concatenate
+the conditions to the main inputs before feeding them to the encoder.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.CNNAutoencoder.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.CNNAutoencoder.model" title="Link to this definition"></a></dt>
+<dd><p>keras Model object.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.CNNAutoencoder.history">
+<span class="sig-name descname"><span class="pre">history</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.CNNAutoencoder.history" title="Link to this definition"></a></dt>
+<dd><p>dictionary with the losses for each epoch.</p>
+</dd></dl>
+
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: CNNAutoencoder
+    sequence_builder:
+      sequence_length: 36
+      ts_freq: &quot;5m&quot;
+      stride: 6
+    params:
+      dropout_rate: 0.0
+      layers: [128, 64, 32]
+      learning_rate: 0.001
+      batch_size: 128,
+      epochs: 15
+      loss_name: mse
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.CNNAutoencoder.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/cnn_seq_autoencoder.py#L70-L139"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.CNNAutoencoder.create_model" title="Link to this definition"></a></dt>
+<dd><p>Create ConvAE Model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Tuple <code class="docutils literal notranslate"><span class="pre">(sequence_length,</span> <span class="pre">n_main_features)</span></code>.</p></li>
+<li><p><strong>condition_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Number of conditional features per timestep, or None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CNNSeq2OneAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_encoding_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/cnn_seq2one_autoencoder.py#L25-L226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder" title="energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2OneAutoencoder</span></code></a></p>
+<p>CNN-based seq2one autoencoder.</p>
+<p>This model takes a sequence of length <code class="docutils literal notranslate"><span class="pre">sequence_length</span></code> and predicts/reconstructs
+the main features of the <strong>last timestep</strong> in that sequence. Optionally, per-timestep
+conditional features can be used as inputs.</p>
+<p>It is designed as a <em>short-context</em> model: the Conv1D stack captures local temporal dynamics,
+while global seasonality (e.g. daily/weekly patterns) is expected to be provided via
+conditional features such as time-of-day and day-of-week encodings.</p>
+<p>How this Seq2One Architecture works:
+The model will first use a stack of 1D-Convolutional layers to encode sequence data with dimensional reduction.
+After that, a series of MaxPooling-Layers followed by 1D convolutions is used to summarize the encoded sequences
+while subsequently reducing the number of timestamps per sequence. Once the encoded data is compact enough, the
+sample will be flattened and the prediction of the last timestamp of the original input series is done by
+applying a stack of Dense layers.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>(batch_size, sequence_length, n_main_features) [+ conditional features]</p>
+</dd>
+<dt>Output:</dt><dd><p>(batch_size, n_main_features)  (last timestep reconstruction)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sequence_builder</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html#energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder" title="energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDatasetBuilder</span></code></a></span>) – SequenceDatasetBuilder instance used to create the sequence datasets.</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of integers indicating the number of filters of the convolutional layers in the encoder.
+Defaults to [128, 64, 32] if None.</p></li>
+<li><p><strong>decoder_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of integers indicating the number of units in the layers of the decoder.
+If not provided, defaults to [32, 64].</p></li>
+<li><p><strong>code_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Size of the latent representation (encoded vector).</p></li>
+<li><p><strong>kernel_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Specifies the length of the 1D convolution window. Default: 3.</p></li>
+<li><p><strong>strides</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Stride length of the 1D convolution window. Default: 1.</p></li>
+<li><p><strong>dropout_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate applied after each convolutional layer. Default: 0.</p></li>
+<li><p><strong>conditional_features</strong> – Optional list of column names treated as conditional features. This will concatenate
+the conditions to the main inputs before feeding them to the encoder.</p></li>
+<li><p><strong>max_encoding_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum size of the encoded vector. If the encoded vector is larger, it will be reduced
+by a factor of 2 (using max pooling) until it reaches this size. Default: 1000.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: CNNSeq2OneAutoencoder
+    params:
+      layers: [64, 64, 32]
+      code_size: 8
+      kernel_size: 3
+      max_encoding_size: 1000
+      sequence_builder:
+        sequence_length: 36
+        ts_freq: &quot;5m&quot;
+        stride: 6
+      conditional_features:
+        - hour_of_day_sine
+        - hour_of_day_cosine
+        - day_of_week_sine
+        - day_of_week_cosine
+</pre></div>
+</div>
+<p>Initialize a CNN-based seq2one autoencoder.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/cnn_seq2one_autoencoder.py#L112-L226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder.create_model" title="Link to this definition"></a></dt>
+<dd><p>Create the underlying CNN seq2one autoencoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Tuple <code class="docutils literal notranslate"><span class="pre">(sequence_length,</span> <span class="pre">n_main_features)</span></code> for the main inputs.</p></li>
+<li><p><strong>condition_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Number of conditional features per timestep, or None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments (unused, for extensibility).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The created Keras model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.ConditionalAE">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ConditionalAE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditional_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'he_normal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prelu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/conditional_autoencoder.py#L11-L125"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.ConditionalAE" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.autoencoder.html#energy_fault_detector.core.autoencoder.Autoencoder" title="energy_fault_detector.core.autoencoder.Autoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Autoencoder</span></code></a></p>
+<p>Conditional symmetric autoencoder. Same as the MultilayerAutoencoder, where we use certain features in the
+input as conditions. These are concatenated to the input of both the encoder and decoder.</p>
+<dl class="simple">
+<dt>NOTE: If the input of the fit, tune or predict method is a numpy array or a tensorflow tensor, we assume that the</dt><dd><p>first couple of columns are the conditions.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conditional_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – list of feature names that are used as conditions. The conditional feature vector is
+concatenated to the input of both the encoder and decoder.</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – list of integers indicating the size (# units) of the layers in both the encoder and in
+the decoder (reversed order in this case). Default [200]</p></li>
+<li><p><strong>code_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – number of units of the encoded layer (bottleneck layer).
+(number of features to compress the input features to). Default 10.</p></li>
+<li><p><strong>kernel_initializer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – initializer to use in each layer. Default he_normal.</p></li>
+<li><p><strong>act</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – activation function to use, prelu, relu, … Defaults to prelu.</p></li>
+<li><p><strong>last_act</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – activation function for last layer, prelu, relu, sigmoid, linear… Defaults to linear.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.ConditionalAE.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.ConditionalAE.model" title="Link to this definition"></a></dt>
+<dd><p>keras Model object - the autoencoder network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.ConditionalAE.encoder">
+<span class="sig-name descname"><span class="pre">encoder</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.ConditionalAE.encoder" title="Link to this definition"></a></dt>
+<dd><p>keras Model object - encoder network of the autoencoder.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.ConditionalAE.history">
+<span class="sig-name descname"><span class="pre">history</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.ConditionalAE.history" title="Link to this definition"></a></dt>
+<dd><p>dictionary with the losses and metrics for each epoch.</p>
+</dd></dl>
+
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: ConditionalAutoencoder
+    params:
+      layers: [200]
+      code_size: 40
+      learning_rate: 0.001
+      batch_size: 128,
+      epochs: 15
+      loss_name: mse
+      conditional_features:
+       - condition1
+       - condition2
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.ConditionalAE.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dimension</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/conditional_autoencoder.py#L73-L125"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.ConditionalAE.create_model" title="Link to this definition"></a></dt>
+<dd><p>Compile a symmetric dense autoencoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – number of features in input data.</p></li>
+<li><p><strong>condition_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – number of features in conditional data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Keras model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LSTMSeq2OneAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/lstm_seq2one_autoencoder.py#L19-L203"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder" title="energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2OneAutoencoder</span></code></a></p>
+<p>LSTM-based seq2one autoencoder.</p>
+<p>This model takes a sequence of length <code class="docutils literal notranslate"><span class="pre">sequence_length</span></code> and predicts/reconstructs
+the main features of the <strong>last timestep</strong> in that sequence. Optionally, per-timestep
+conditional features can be used as inputs.</p>
+<p>The encoder uses a stack of LSTM layers, while the decoder is an MLP with dense layers.
+The last encoder layer reduces the sequences to the last timestep, which is the fed to the
+MLP decoder.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>(batch_size, sequence_length, n_main_features) [+ conditional features]</p>
+</dd>
+<dt>Output:</dt><dd><p>(batch_size, n_main_features)  (last timestep reconstruction)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sequence_builder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html#energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder" title="energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDatasetBuilder</span></code></a>]</span>) – SequenceDatasetBuilder instance used to create the sequence datasets.</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.</p></li>
+<li><p><strong>code_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Size of the latent representation (encoded vector). Default: 32.</p></li>
+<li><p><strong>decoder_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List of integers indicating the number of units in the layers of the decoder.
+If not provided, defaults to [32, 64].</p></li>
+<li><p><strong>dropout_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate applied after each LSTM layer.</p></li>
+<li><p><strong>regularization</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – L2 regularization strength for the first encoder LSTM layer.</p></li>
+<li><p><strong>conditional_features</strong> – Optional list of column names treated as conditional features. This will concatenate
+the conditions to the main inputs before feeding them to the encoder.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: LSTMSeq2OneAutoencoder
+    params:
+      layers: [100, 50, 25]
+      code_size: 10
+      regularization: 0.01
+      sequence_builder:
+        sequence_length: 10
+        ts_freq: &quot;10m&quot;
+        overlap: 9
+</pre></div>
+</div>
+<p>Initialize an LSTM-based seq2one autoencoder.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/lstm_seq2one_autoencoder.py#L85-L203"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder.create_model" title="Link to this definition"></a></dt>
+<dd><p>Create the underlying LSTM seq2one autoencoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Tuple <code class="docutils literal notranslate"><span class="pre">(sequence_length,</span> <span class="pre">n_main_features)</span></code> for the main inputs.</p></li>
+<li><p><strong>condition_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Number of conditional features per timestep, or None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments (unused, for extensibility).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The created Keras model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.LSTMSeqAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LSTMSeqAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/lstm_seq2seq_autoencoder.py#L21-L172"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.LSTMSeqAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html#energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder" title="energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq2SeqAutoencoder</span></code></a></p>
+<p>LSTM-based sequence autoencoder.</p>
+<p>This model reconstructs only the main features (all columns that are not listed in
+<code class="docutils literal notranslate"><span class="pre">conditional_features</span></code>). It can optionally use per-timestep conditional features
+as additional inputs to the encoder/decoder.</p>
+<p>The input to the model is a sequence of length <code class="docutils literal notranslate"><span class="pre">sequence_length</span></code> with shape
+<code class="docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">sequence_length,</span> <span class="pre">n_main_features)</span></code> (plus conditional features if used).
+The output is a sequence of the same length and feature dimension for the main features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sequence_builder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html#energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder" title="energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceDatasetBuilder</span></code></a>]</span>) – SequenceDatasetBuilder instance used to create the sequence datasets.</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – List with the number of LSTM units per encoder layer. Defaults to [128, 64, 32] if None.</p></li>
+<li><p><strong>dropout_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate applied after each LSTM layer.</p></li>
+<li><p><strong>regularization</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – L2 regularization strength for the first encoder LSTM layer.</p></li>
+<li><p><strong>conditional_features</strong> – Optional list of column names treated as conditional features. This will concatenate
+the conditions to the main inputs before feeding them to the encoder.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: LSTMSeq2OneAutoencoder
+    params:
+      layers: [100, 50, 25]
+      regularization: 0.01
+      sequence_builder:
+        sequence_length: 10
+        ts_freq: &quot;10m&quot;
+        overlap: 9
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.LSTMSeqAutoencoder.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/lstm_seq2seq_autoencoder.py#L73-L172"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.LSTMSeqAutoencoder.create_model" title="Link to this definition"></a></dt>
+<dd><p>Create the underlying LSTM autoencoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Tuple <code class="docutils literal notranslate"><span class="pre">(sequence_length,</span> <span class="pre">n_main_features)</span></code> describing the
+main-feature input shape.</p></li>
+<li><p><strong>condition_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Number of conditional features (per timestep) to use as
+additional inputs, or None if no conditions are used.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments (currently unused, kept for extensibility).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The created Keras model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.MultilayerAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultilayerAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'he_normal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prelu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_act</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/multilayer_autoencoder.py#L17-L112"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.MultilayerAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.autoencoder.html#energy_fault_detector.core.autoencoder.Autoencoder" title="energy_fault_detector.core.autoencoder.Autoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Autoencoder</span></code></a></p>
+<p>Multilayer symmetric autoencoder with Dense layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – list of integers indicating the size (# units) of the layers in both the encoder and in
+the decoder (reversed order in this case). Default [200]</p></li>
+<li><p><strong>code_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – number of units of the encoded layer (bottleneck layer).
+(number of features to compress the input features to). Default 10.</p></li>
+<li><p><strong>kernel_initializer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – initializer to use in each layer. Default he_normal.</p></li>
+<li><p><strong>act</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – activation function to use, prelu, relu, … Defaults to prelu.</p></li>
+<li><p><strong>last_act</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – activation function for last layer, prelu, relu, sigmoid, linear… Defaults to linear.</p></li>
+<li><p><strong>ae_kwargs</strong> – Training-related parameters (learning_rate, batch_size, epochs, loss_name, early_stopping, etc.)
+are accepted as keyword arguments and forwarded to Autoencoder.__init__.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.MultilayerAutoencoder.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.MultilayerAutoencoder.model" title="Link to this definition"></a></dt>
+<dd><p>keras Model object - the autoencoder network.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.MultilayerAutoencoder.encoder">
+<span class="sig-name descname"><span class="pre">encoder</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.MultilayerAutoencoder.encoder" title="Link to this definition"></a></dt>
+<dd><p>keras Model object - encoder network of the autoencoder.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.MultilayerAutoencoder.history">
+<span class="sig-name descname"><span class="pre">history</span></span><a class="headerlink" href="#energy_fault_detector.autoencoders.MultilayerAutoencoder.history" title="Link to this definition"></a></dt>
+<dd><p>dictionary with the losses and metrics for each epoch.</p>
+</dd></dl>
+
+<p>Configuration example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>train:
+  autoencoder:
+    name: MultilayerAutoencoder
+    params:
+      layers: [200]
+      code_size: 40
+      learning_rate: 0.001
+      batch_size: 128,
+      epochs: 15
+      loss_name: mse
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.MultilayerAutoencoder.create_model">
+<span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dimension</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/multilayer_autoencoder.py#L69-L112"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.MultilayerAutoencoder.create_model" title="Link to this definition"></a></dt>
+<dd><p>Compile a symmetric autoencoder model in Keras.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – number of features in input data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Keras model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html">energy_fault_detector.autoencoders.seq2one_autoencoder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">Seq2OneAutoencoder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html">energy_fault_detector.autoencoders.seq2seq_autoencoder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html#energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder"><code class="docutils literal notranslate"><span class="pre">Seq2SeqAutoencoder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html">energy_fault_detector.autoencoders.sequence_autoencoder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder.encode"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder.encode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder.fit"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder.get_reconstruction_error"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder.get_reconstruction_error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder.predict"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder.predict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder.tune"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder.tune()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder.tune_decoder"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder.tune_decoder()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.anomaly_scores.html" class="btn btn-neutral float-left" title="energy_fault_detector.anomaly_scores" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.autoencoders.seq2one_autoencoder.html" class="btn btn-neutral float-right" title="energy_fault_detector.autoencoders.seq2one_autoencoder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

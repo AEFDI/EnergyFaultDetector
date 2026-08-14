@@ -1,0 +1,14 @@
+energy\_fault\_detector.core
+============================
+
+.. automodule:: energy_fault_detector.core
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.core.autoencoder

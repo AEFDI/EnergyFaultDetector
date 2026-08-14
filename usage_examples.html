@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage examples &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quick fault detection (CLI)" href="quick_fault_detection.html" />
+    <link rel="prev" title="Energy Fault Detector" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#key-concepts-and-expected-input">Key concepts and expected input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minimal-end-to-end-example">Minimal end-to-end example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#standard-faultdetector-usage">Standard <cite>FaultDetector</cite> usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-fault-detection-cli">Quick fault detection (CLI)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#root-cause-analysis-with-arcana">Root cause analysis with ARCANA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation-and-care-score">Evaluation and CARE-Score</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiindex-and-sequence-models">MultiIndex and sequence models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#more-advanced-usage">More advanced usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage examples</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/usage_examples.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage-examples">
+<h1>Usage examples<a class="headerlink" href="#usage-examples" title="Link to this heading"></a></h1>
+<p>To see interactive demonstrations of the energy fault detection package,
+refer to the example notebooks in the repository’s notebooks folder.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#key-concepts-and-expected-input" id="id2">Key concepts and expected input</a></p></li>
+<li><p><a class="reference internal" href="#minimal-end-to-end-example" id="id3">Minimal end-to-end example</a></p></li>
+<li><p><a class="reference internal" href="#standard-faultdetector-usage" id="id4">Standard <cite>FaultDetector</cite> usage</a></p></li>
+<li><p><a class="reference internal" href="#quick-fault-detection-cli" id="id5">Quick fault detection (CLI)</a></p></li>
+<li><p><a class="reference internal" href="#configuration" id="id6">Configuration</a></p></li>
+<li><p><a class="reference internal" href="#root-cause-analysis-with-arcana" id="id7">Root cause analysis with ARCANA</a></p></li>
+<li><p><a class="reference internal" href="#evaluation-and-care-score" id="id8">Evaluation and CARE-Score</a></p></li>
+<li><p><a class="reference internal" href="#multiindex-and-sequence-models" id="id9">MultiIndex and sequence models</a></p></li>
+<li><p><a class="reference internal" href="#more-advanced-usage" id="id10">More advanced usage</a></p></li>
+</ul>
+</nav>
+<section id="key-concepts-and-expected-input">
+<span id="key-concepts"></span><h2><a class="toc-backref" href="#id2" role="doc-backlink">Key concepts and expected input</a><a class="headerlink" href="#key-concepts-and-expected-input" title="Link to this heading"></a></h2>
+<p>Throughout this documentation we use the following objects and conventions.</p>
+<ul>
+<li><p><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FaultDetector</span></code></a>:
+the main high-level interface. It wraps the whole fault detection pipeline (preprocessing, autoencoder training,
+anomaly scoring and threshold selection) into a single object with:</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit</span></code> to train on <code class="docutils literal notranslate"><span class="pre">sensor_data</span></code> / <code class="docutils literal notranslate"><span class="pre">normal_index</span></code>, and</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict</span></code> to compute anomaly scores and
+predicted anomalies.</p></li>
+</ul>
+</li>
+<li><p>Configuration: <a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> behaviour
+is controlled via a YAML configuration parsed by <a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config" title="energy_fault_detector.config.config.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">Config</span></code></a>.
+For most users, the easiest entry point is
+<code class="xref py py-func docutils literal notranslate"><span class="pre">generate_quickstart_config</span></code>,
+which returns a minimal, valid configuration. For more control, you can provide your own YAML file; see
+<a class="reference internal" href="configuration.html"><span class="doc">Configuration</span></a> for examples.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor_data</span></code>: a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> in <strong>wide format</strong>.
+Each row is a timestamp (or index entry), each column a sensor or feature.
+The index is typically:</p>
+<ul class="simple">
+<li><p>a unique, sorted <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DatetimeIndex</span></code>, or</p></li>
+<li><p>a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.MultiIndex</span></code> such as <code class="docutils literal notranslate"><span class="pre">(asset_id,</span> <span class="pre">timestamp)</span></code> for multi-device data.</p></li>
+</ul>
+<p>The columns must be numeric (or convertible to numeric).</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normal_index</span></code>: an optional <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code> with the same index as <code class="docutils literal notranslate"><span class="pre">sensor_data</span></code> and boolean values.
+<code class="docutils literal notranslate"><span class="pre">True</span></code> marks normal operation, <code class="docutils literal notranslate"><span class="pre">False</span></code> marks non-normal operation (faults, maintenance, curtailment, etc.).</p>
+<p>If you do not provide <code class="docutils literal notranslate"><span class="pre">normal_index</span></code>, the models assume that all samples in <code class="docutils literal notranslate"><span class="pre">sensor_data</span></code> represent normal
+behaviour. In that case you cannot use label-based threshold selectors such as
+<a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector" title="energy_fault_detector.threshold_selectors.fbeta_threshold.FbetaSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FbetaSelector</span></code></a>
+or <a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector" title="energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FDRSelector</span></code></a>, but
+you can still use quantile-based or adaptive thresholds.</p>
+</li>
+</ul>
+<p>A summary of available model classes (autoencoders, anomaly scores, and threshold selectors) is given in
+<a class="reference internal" href="models_overview.html"><span class="doc">Model overview</span></a>.</p>
+</section>
+<section id="minimal-end-to-end-example">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Minimal end-to-end example</a><a class="headerlink" href="#minimal-end-to-end-example" title="Link to this heading"></a></h2>
+<p>The following example shows the full workflow in a few lines: load data,
+create a configuration, train a model and predict.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span><span class="p">,</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_quickstart_config</span>
+
+<span class="c1"># 1. Load your data</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;my_data.csv&quot;</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">],</span> <span class="n">index_col</span><span class="o">=</span><span class="s2">&quot;timestamp&quot;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>  <span class="c1"># ensure sorted</span>
+<span class="c1"># Keep only numeric sensor columns</span>
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;power&quot;</span><span class="p">,</span> <span class="s2">&quot;wind_speed&quot;</span><span class="p">,</span> <span class="s2">&quot;pitch&quot;</span><span class="p">]]</span>  <span class="c1"># adapt to your dataset</span>
+
+<span class="c1"># Boolean normal_index: True = normal operation</span>
+<span class="c1"># This is optional; if omitted, all data is treated as normal</span>
+<span class="n">normal_index</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span>
+
+<span class="c1"># 2. Generate and load a base config</span>
+<span class="n">generate_quickstart_config</span><span class="p">(</span><span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;base_config.yaml&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s2">&quot;base_config.yaml&quot;</span><span class="p">)</span>
+
+<span class="c1"># 3. Train a normal-behavior model</span>
+<span class="n">fault_detector</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">model_directory</span><span class="o">=</span><span class="s2">&quot;fault_detector_model&quot;</span><span class="p">)</span>
+<span class="n">model_meta</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">,</span> <span class="n">normal_index</span><span class="o">=</span><span class="n">normal_index</span><span class="p">)</span>  <span class="c1"># returns ModelMetadata</span>
+
+<span class="c1"># 4. Predict anomalies</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">)</span>
+
+<span class="n">anomalies</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">predicted_anomalies</span>    <span class="c1"># pd.Series[bool]</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">anomaly_score</span>             <span class="c1"># pd.Series[float]</span>
+<span class="n">recon</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">reconstruction</span>             <span class="c1"># pd.DataFrame</span>
+<span class="n">recon_error</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">recon_error</span>          <span class="c1"># pd.DataFrame</span>
+</pre></div>
+</div>
+<p>For more configuration options and details (e.g. updating at runtime and listing available model classes),
+see <a class="reference internal" href="configuration.html#configuration-guide"><span class="std std-ref">Configuration</span></a>.</p>
+</section>
+<section id="standard-faultdetector-usage">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Standard <cite>FaultDetector</cite> usage</a><a class="headerlink" href="#standard-faultdetector-usage" title="Link to this heading"></a></h2>
+<p>The main interface for the <cite>energy-fault-detector</cite> package is the <a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> class, which
+needs a configuration object <a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config" title="energy_fault_detector.config.config.Config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Config</span></code></a>.</p>
+<p>To create a new <a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> model,
+create a configuration, as described below in the <a class="reference internal" href="#configuration"><span class="std std-ref">Configuration</span></a> section, and run:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span><span class="p">,</span> <span class="n">Config</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s1">&#39;path/to/your/configuration/file.yaml&#39;</span><span class="p">)</span>
+<span class="n">fault_detector</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">model_directory</span><span class="o">=</span><span class="s1">&#39;model_directory&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To train new models, you need to provide the input data and call the <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector.fit</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get data from database / csv / API ...</span>
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># a pandas DataFrame with timestamp as index and numerical sensor values as columns</span>
+<span class="n">normal_index</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># a pandas Series with timestamp as index and booleans indicating normal behaviour</span>
+<span class="c1"># NOTE: The normal_index is optional; it is used to select training data for the autoencoder.</span>
+<span class="c1"># If not provided, we assume all data represents normal behaviour.</span>
+<span class="c1"># If you do not have normal_index labels, you cannot use the F-beta-score- and FDR-based thresholds.</span>
+<span class="c1"># In that case, use the quantile-based threshold (default) or AdaptiveThreshold.</span>
+
+<span class="c1"># If you do not use the models for time series, the index can also be a standard RangeIndex,</span>
+<span class="c1"># as long as the sensor_data DataFrame and the normal_index Series share the same index.</span>
+
+<span class="n">model_data</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">,</span> <span class="n">normal_index</span><span class="o">=</span><span class="n">normal_index</span><span class="p">,</span> <span class="n">save_models</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># to save model manually:</span>
+<span class="c1"># fault_detector.save_models(&#39;model_name&#39;)  # model_name is optional</span>
+</pre></div>
+</div>
+<p>The trained models are saved locally in the provided <code class="docutils literal notranslate"><span class="pre">model_directory</span></code>. The <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector.fit</span></code> method returns a
+<a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ModelMetadata" title="energy_fault_detector.core.fault_detection_result.ModelMetadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelMetadata</span></code></a> object with
+the model metadata such as the model date and the model path.</p>
+<p>To predict using the trained model, use the <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector.predict</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">test_sensor_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result is a <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult" title="energy_fault_detector.core.fault_detection_result.FaultDetectionResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code></a> object
+with the following information:</p>
+<ul class="simple">
+<li><p>predicted_anomalies: pandas Series with the predicted anomalies (bool).</p></li>
+<li><p>reconstruction: pandas DataFrame with reconstruction of the sensor data with timestamp as index.</p></li>
+<li><p>deviations: pandas DataFrame with reconstruction errors.</p></li>
+<li><p>anomaly_score: pandas Series with anomaly scores for each timestamp.</p></li>
+<li><p>bias_data: pandas DataFrame with ARCANA results with timestamp as index. None if ARCANA was not run.</p></li>
+<li><p>arcana_losses: pandas DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.</p></li>
+<li><p>tracked_bias: List of pandas DataFrames. None if ARCANA was not run.</p></li>
+</ul>
+<p>You can also create a <a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector</span></code></a> object and load
+trained models using the <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector.load</span></code> class method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span>
+
+<span class="n">fault_detector</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;path_to_trained_models&#39;</span><span class="p">)</span>
+
+<span class="c1"># get data from database / csv / API ...</span>
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">fault_detector</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For an overview of the available autoencoders, anomaly scores and threshold
+selectors that can be used in the configuration, see <a class="reference internal" href="models_overview.html"><span class="doc">Model overview</span></a>.</p>
+</section>
+<section id="quick-fault-detection-cli">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Quick fault detection (CLI)</a><a class="headerlink" href="#quick-fault-detection-cli" title="Link to this heading"></a></h2>
+<p>For a one-command experiment on a CSV file, you can use the
+<a class="reference internal" href="quick_fault_detection.html#quick-fault-detector-cli"><span class="std std-ref">Quick fault detection (CLI)</span></a> command-line interface:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quick_fault_detector<span class="w"> </span>path/to/data.csv<span class="w"> </span>--options<span class="w"> </span>path/to/options.yaml
+</pre></div>
+</div>
+<p>This runs the full pipeline (training, prediction, event aggregation and ARCANA) and produces plots and CSV outputs.</p>
+<p>For details, see <a class="reference internal" href="quick_fault_detection.html"><span class="doc">Quick fault detection (CLI)</span></a>.</p>
+</section>
+<section id="configuration">
+<span id="id1"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">Configuration</a><a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
+<p>The behaviour of the <a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector" title="energy_fault_detector.fault_detector.FaultDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">FaultDetector</span></code></a>
+is controlled by a YAML configuration, parsed by <a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config" title="energy_fault_detector.config.config.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">Config</span></code></a>.
+The config typically has:</p>
+<ul class="simple">
+<li><p>a <code class="docutils literal notranslate"><span class="pre">train</span></code> section:
+- <code class="docutils literal notranslate"><span class="pre">data_preprocessor</span></code>: preprocessing pipeline (imputation, scaling, etc.),
+- <code class="docutils literal notranslate"><span class="pre">autoencoder</span></code>: model type and training parameters,
+- <code class="docutils literal notranslate"><span class="pre">anomaly_score</span></code>: how reconstruction errors are turned into scores,
+- <code class="docutils literal notranslate"><span class="pre">threshold_selector</span></code>: how a score threshold is chosen,
+- <code class="docutils literal notranslate"><span class="pre">data_splitter</span></code>: how training/validation sets are split,
+- optional <code class="docutils literal notranslate"><span class="pre">data_clipping</span></code>: outlier clipping on training data only.</p></li>
+<li><p>an optional <code class="docutils literal notranslate"><span class="pre">root_cause_analysis</span></code> section for ARCANA.</p></li>
+<li><p>an optional <code class="docutils literal notranslate"><span class="pre">predict</span></code> section (e.g. criticality settings).</p></li>
+</ul>
+<p>For most users, the easiest way to create a valid configuration is via <code class="xref py py-func docutils literal notranslate"><span class="pre">generate_quickstart_config</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config.quickstart_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_quickstart_config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+
+<span class="c1"># Create a minimal, valid config file</span>
+<span class="n">generate_quickstart_config</span><span class="p">(</span><span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;base_config.yaml&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load and use it</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s2">&quot;base_config.yaml&quot;</span><span class="p">)</span>
+<span class="n">fd</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you prefer to write the YAML yourself or need more control, see the <a class="reference internal" href="configuration.html#configuration-guide"><span class="std std-ref">Configuration guide</span></a>
+for a full reference and examples.</p>
+</section>
+<section id="root-cause-analysis-with-arcana">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Root cause analysis with ARCANA</a><a class="headerlink" href="#root-cause-analysis-with-arcana" title="Link to this heading"></a></h2>
+<p>The <code class="xref py py-meth docutils literal notranslate"><span class="pre">FaultDetector.run_root_cause_analysis</span></code>
+method runs the ARCANA algorithm on a trained model and returns per-feature bias information.</p>
+<p>For a dedicated explanation and examples, see <a class="reference internal" href="arcana.html#arcana-docs"><span class="std std-ref">ARCANA: Root cause analysis</span></a>.</p>
+</section>
+<section id="evaluation-and-care-score">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Evaluation and CARE-Score</a><a class="headerlink" href="#evaluation-and-care-score" title="Link to this heading"></a></h2>
+<p>For evaluation, the package provides:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="energy_fault_detector.utils.analysis.html#energy_fault_detector.utils.analysis.create_events" title="energy_fault_detector.utils.analysis.create_events"><code class="xref py py-func docutils literal notranslate"><span class="pre">energy_fault_detector.utils.analysis.create_events()</span></code></a> to aggregate
+point-wise anomaly predictions into contiguous anomaly events, and</p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore" title="energy_fault_detector.evaluation.care_score.CAREScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care_score.CAREScore</span></code></a> to compute
+the CARE-Score for early fault detection (Coverage, Accuracy, Reliability,
+Earliness), as introduced in the CARE2Compare paper.</p></li>
+</ul>
+<p>For now, we recommend using the example notebooks for a full
+walkthrough of the evaluation workflow (event creation, criticality, CARE-Score
+on benchmark datasets such as CARE2Compare and PreDist). A higher-level
+evaluation helper/script may be added in a future version.</p>
+</section>
+<section id="multiindex-and-sequence-models">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">MultiIndex and sequence models</a><a class="headerlink" href="#multiindex-and-sequence-models" title="Link to this heading"></a></h2>
+<p>When using a <code class="docutils literal notranslate"><span class="pre">MultiIndex</span></code> for multi-device data, each level should be well-defined, e.g.
+<code class="docutils literal notranslate"><span class="pre">(asset_id,</span> <span class="pre">timestamp)</span></code>. However:</p>
+<ul class="simple">
+<li><p>Sequence-based models <strong>require</strong> a single-device <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DatetimeIndex</span></code>.
+Select one group from a <code class="docutils literal notranslate"><span class="pre">MultiIndex</span></code> before passing data to
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">FaultDetector.fit</span></code> or
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">FaultDetector.predict</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">quick_fault_detector</span></code> CLI expects single-device CSV files (one asset per file).</p></li>
+</ul>
+<p>For sequence-based models, a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DatetimeIndex</span></code> is required.
+See <a class="reference internal" href="sequence_models.html"><span class="doc">Sequence models</span></a> for details on the available sequence autoencoders and their configuration.</p>
+</section>
+<section id="more-advanced-usage">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">More advanced usage</a><a class="headerlink" href="#more-advanced-usage" title="Link to this heading"></a></h2>
+<p>For creating new model classes and building custom pipelines from the building blocks
+(preprocessors, autoencoders, scores, thresholds), see <a class="reference internal" href="advanced_usage.html"><span class="doc">Advanced usage and customization</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Energy Fault Detector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quick_fault_detection.html" class="btn btn-neutral float-right" title="Quick fault detection (CLI)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

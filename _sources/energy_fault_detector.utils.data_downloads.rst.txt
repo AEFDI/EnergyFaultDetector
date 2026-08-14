@@ -1,0 +1,7 @@
+energy\_fault\_detector.utils.data\_downloads
+=============================================
+
+.. automodule:: energy_fault_detector.utils.data_downloads
+   :members:
+   :show-inheritance:
+   :undoc-members:

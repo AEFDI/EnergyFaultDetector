@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.angle\_transformer
+==============================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.angle_transformer
+   :members:
+   :show-inheritance:
+   :undoc-members:

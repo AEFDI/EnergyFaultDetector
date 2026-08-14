@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>energy_fault_detector &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="energy_fault_detector" href="energy_fault_detector.html" />
+    <link rel="prev" title="Logging Configuration" href="logging.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The EnergyFaultDetector package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">energy_fault_detector</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="energy-fault-detector">
+<h1>energy_fault_detector<a class="headerlink" href="#energy-fault-detector" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.arcana_params"><code class="docutils literal notranslate"><span class="pre">Config.arcana_params</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.data_clipping"><code class="docutils literal notranslate"><span class="pre">Config.data_clipping</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.data_clipping_params"><code class="docutils literal notranslate"><span class="pre">Config.data_clipping_params</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.data_preprocessor_steps"><code class="docutils literal notranslate"><span class="pre">Config.data_preprocessor_steps</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.data_split_params"><code class="docutils literal notranslate"><span class="pre">Config.data_split_params</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.dtype"><code class="docutils literal notranslate"><span class="pre">Config.dtype</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.fit_threshold_on_val"><code class="docutils literal notranslate"><span class="pre">Config.fit_threshold_on_val</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.max_criticality"><code class="docutils literal notranslate"><span class="pre">Config.max_criticality</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.protect_conditional_features"><code class="docutils literal notranslate"><span class="pre">Config.protect_conditional_features</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config.root_cause_analysis"><code class="docutils literal notranslate"><span class="pre">Config.root_cause_analysis</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.anomaly_score"><code class="docutils literal notranslate"><span class="pre">FaultDetector.anomaly_score</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.autoencoder"><code class="docutils literal notranslate"><span class="pre">FaultDetector.autoencoder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.threshold_selector"><code class="docutils literal notranslate"><span class="pre">FaultDetector.threshold_selector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.data_preprocessor"><code class="docutils literal notranslate"><span class="pre">FaultDetector.data_preprocessor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.save_timestamps"><code class="docutils literal notranslate"><span class="pre">FaultDetector.save_timestamps</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.fit"><code class="docutils literal notranslate"><span class="pre">FaultDetector.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.predict"><code class="docutils literal notranslate"><span class="pre">FaultDetector.predict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.predict_anomalies"><code class="docutils literal notranslate"><span class="pre">FaultDetector.predict_anomalies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.predict_anomaly_score"><code class="docutils literal notranslate"><span class="pre">FaultDetector.predict_anomaly_score()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.preprocess_train_data"><code class="docutils literal notranslate"><span class="pre">FaultDetector.preprocess_train_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.run_root_cause_analysis"><code class="docutils literal notranslate"><span class="pre">FaultDetector.run_root_cause_analysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector.tune"><code class="docutils literal notranslate"><span class="pre">FaultDetector.tune()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore.fit"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore.set_fit_request"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore.set_transform_request"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore.set_transform_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore.transform"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore"><code class="docutils literal notranslate"><span class="pre">RMSEScore</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore.scale"><code class="docutils literal notranslate"><span class="pre">RMSEScore.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore.fit"><code class="docutils literal notranslate"><span class="pre">RMSEScore.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore.set_fit_request"><code class="docutils literal notranslate"><span class="pre">RMSEScore.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore.set_transform_request"><code class="docutils literal notranslate"><span class="pre">RMSEScore.set_transform_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore.transform"><code class="docutils literal notranslate"><span class="pre">RMSEScore.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.autoencoders.html">energy_fault_detector.autoencoders</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder.create_model"><code class="docutils literal notranslate"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNAutoencoder"><code class="docutils literal notranslate"><span class="pre">CNNAutoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNAutoencoder.model"><code class="docutils literal notranslate"><span class="pre">CNNAutoencoder.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNAutoencoder.history"><code class="docutils literal notranslate"><span class="pre">CNNAutoencoder.history</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNAutoencoder.create_model"><code class="docutils literal notranslate"><span class="pre">CNNAutoencoder.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">CNNSeq2OneAutoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder.create_model"><code class="docutils literal notranslate"><span class="pre">CNNSeq2OneAutoencoder.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE"><code class="docutils literal notranslate"><span class="pre">ConditionalAE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE.model"><code class="docutils literal notranslate"><span class="pre">ConditionalAE.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE.encoder"><code class="docutils literal notranslate"><span class="pre">ConditionalAE.encoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE.history"><code class="docutils literal notranslate"><span class="pre">ConditionalAE.history</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE.create_model"><code class="docutils literal notranslate"><span class="pre">ConditionalAE.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">LSTMSeq2OneAutoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder.create_model"><code class="docutils literal notranslate"><span class="pre">LSTMSeq2OneAutoencoder.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeqAutoencoder"><code class="docutils literal notranslate"><span class="pre">LSTMSeqAutoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeqAutoencoder.create_model"><code class="docutils literal notranslate"><span class="pre">LSTMSeqAutoencoder.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder.model"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder.encoder"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder.encoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder.history"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder.history</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder.create_model"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder.create_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html">energy_fault_detector.autoencoders.seq2one_autoencoder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2one_autoencoder.html#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">Seq2OneAutoencoder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html">energy_fault_detector.autoencoders.seq2seq_autoencoder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html#energy_fault_detector.autoencoders.seq2seq_autoencoder.Seq2SeqAutoencoder"><code class="docutils literal notranslate"><span class="pre">Seq2SeqAutoencoder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html">energy_fault_detector.autoencoders.sequence_autoencoder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder"><code class="docutils literal notranslate"><span class="pre">SequenceAutoencoder</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.config.html">energy_fault_detector.config</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.arcana_params"><code class="docutils literal notranslate"><span class="pre">Config.arcana_params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.data_clipping"><code class="docutils literal notranslate"><span class="pre">Config.data_clipping</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.data_clipping_params"><code class="docutils literal notranslate"><span class="pre">Config.data_clipping_params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.data_preprocessor_steps"><code class="docutils literal notranslate"><span class="pre">Config.data_preprocessor_steps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.data_split_params"><code class="docutils literal notranslate"><span class="pre">Config.data_split_params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.dtype"><code class="docutils literal notranslate"><span class="pre">Config.dtype</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.fit_threshold_on_val"><code class="docutils literal notranslate"><span class="pre">Config.fit_threshold_on_val</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.max_criticality"><code class="docutils literal notranslate"><span class="pre">Config.max_criticality</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.protect_conditional_features"><code class="docutils literal notranslate"><span class="pre">Config.protect_conditional_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.Config.root_cause_analysis"><code class="docutils literal notranslate"><span class="pre">Config.root_cause_analysis</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html#energy_fault_detector.config.generate_quickstart_config"><code class="docutils literal notranslate"><span class="pre">generate_quickstart_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore"><code class="docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore.fit"><code class="docutils literal notranslate"><span class="pre">AnomalyScore.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore.set_fit_request"><code class="docutils literal notranslate"><span class="pre">AnomalyScore.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore.set_transform_request"><code class="docutils literal notranslate"><span class="pre">AnomalyScore.set_transform_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore.transform"><code class="docutils literal notranslate"><span class="pre">AnomalyScore.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer"><code class="docutils literal notranslate"><span class="pre">DataTransformer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.fit"><code class="docutils literal notranslate"><span class="pre">DataTransformer.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.get_feature_names_out"><code class="docutils literal notranslate"><span class="pre">DataTransformer.get_feature_names_out()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.inverse_transform"><code class="docutils literal notranslate"><span class="pre">DataTransformer.inverse_transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.set_fit_request"><code class="docutils literal notranslate"><span class="pre">DataTransformer.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.set_inverse_transform_request"><code class="docutils literal notranslate"><span class="pre">DataTransformer.set_inverse_transform_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.set_transform_request"><code class="docutils literal notranslate"><span class="pre">DataTransformer.set_transform_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer.transform"><code class="docutils literal notranslate"><span class="pre">DataTransformer.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.anomaly_score"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.anomaly_score</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.arcana_losses"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.arcana_losses</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.bias_data"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.bias_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.criticality"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.criticality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.load"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.predicted_anomalies"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.predicted_anomalies</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.recon_error"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.recon_error</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.reconstruction"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.reconstruction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.save"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult.tracked_bias"><code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.tracked_bias</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ModelMetadata"><code class="docutils literal notranslate"><span class="pre">ModelMetadata</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ModelMetadata.model_date"><code class="docutils literal notranslate"><span class="pre">ModelMetadata.model_date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ModelMetadata.model_path"><code class="docutils literal notranslate"><span class="pre">ModelMetadata.model_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ModelMetadata.train_recon_error"><code class="docutils literal notranslate"><span class="pre">ModelMetadata.train_recon_error</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ModelMetadata.val_recon_error"><code class="docutils literal notranslate"><span class="pre">ModelMetadata.val_recon_error</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.threshold"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.__sklearn_is_fitted__"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.__sklearn_is_fitted__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.fit"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.predict"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.predict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.set_fit_request"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.set_predict_request"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.set_predict_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector.set_score_request"><code class="docutils literal notranslate"><span class="pre">ThresholdSelector.set_score_request()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.autoencoder.html">energy_fault_detector.core.autoencoder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.autoencoder.html#energy_fault_detector.core.autoencoder.Autoencoder"><code class="docutils literal notranslate"><span class="pre">Autoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.core.autoencoder.html#energy_fault_detector.core.autoencoder.split_inputs"><code class="docutils literal notranslate"><span class="pre">split_inputs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html">energy_fault_detector.data_preprocessing.angle_transformer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html#energy_fault_detector.data_preprocessing.angle_transformer.AngleTransformer"><code class="docutils literal notranslate"><span class="pre">AngleTransformer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html">energy_fault_detector.data_preprocessing.column_selector</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html#energy_fault_detector.data_preprocessing.column_selector.ColumnSelector"><code class="docutils literal notranslate"><span class="pre">ColumnSelector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.counter_diff_transformer.html">energy_fault_detector.data_preprocessing.counter_diff_transformer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.counter_diff_transformer.html#energy_fault_detector.data_preprocessing.counter_diff_transformer.CounterDiffTransformer"><code class="docutils literal notranslate"><span class="pre">CounterDiffTransformer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">energy_fault_detector.data_preprocessing.data_clipper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper"><code class="docutils literal notranslate"><span class="pre">DataClipper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">energy_fault_detector.data_preprocessing.data_preprocessor</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html#energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor"><code class="docutils literal notranslate"><span class="pre">DataPreprocessor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">energy_fault_detector.data_preprocessing.duplicate_value_to_nan</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html#energy_fault_detector.data_preprocessing.duplicate_value_to_nan.DuplicateValuesToNan"><code class="docutils literal notranslate"><span class="pre">DuplicateValuesToNan</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html">energy_fault_detector.data_preprocessing.low_unique_value_filter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html#energy_fault_detector.data_preprocessing.low_unique_value_filter.LowUniqueValueFilter"><code class="docutils literal notranslate"><span class="pre">LowUniqueValueFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.timestamp_transformer.html">energy_fault_detector.data_preprocessing.timestamp_transformer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.timestamp_transformer.html#energy_fault_detector.data_preprocessing.timestamp_transformer.TimestampTransformer"><code class="docutils literal notranslate"><span class="pre">TimestampTransformer</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.data_gap_handler.html">energy_fault_detector.data_splitting.data_gap_handler</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_splitting.data_gap_handler.html#energy_fault_detector.data_splitting.data_gap_handler.DataGapHandler"><code class="docutils literal notranslate"><span class="pre">DataGapHandler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_splitting.data_gap_handler.html#energy_fault_detector.data_splitting.data_gap_handler.shift_array"><code class="docutils literal notranslate"><span class="pre">shift_array()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.data_splitter.html">energy_fault_detector.data_splitting.data_splitter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_splitting.data_splitter.html#energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter"><code class="docutils literal notranslate"><span class="pre">BlockDataSplitter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html">energy_fault_detector.data_splitting.sequence_dataset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_splitting.sequence_dataset.html#energy_fault_detector.data_splitting.sequence_dataset.SequenceDatasetBuilder"><code class="docutils literal notranslate"><span class="pre">SequenceDatasetBuilder</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html">energy_fault_detector.evaluation.care2compare</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html#energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="docutils literal notranslate"><span class="pre">Care2CompareDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html">energy_fault_detector.evaluation.care_score</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore"><code class="docutils literal notranslate"><span class="pre">CAREScore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.predist_dataset.html">energy_fault_detector.evaluation.predist_dataset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.evaluation.predist_dataset.html#energy_fault_detector.evaluation.predist_dataset.PreDistDataset"><code class="docutils literal notranslate"><span class="pre">PreDistDataset</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html#energy_fault_detector.quick_fault_detection.quick_fault_detector"><code class="docutils literal notranslate"><span class="pre">quick_fault_detector()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana.html">energy_fault_detector.root_cause_analysis.arcana</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana.html#energy_fault_detector.root_cause_analysis.arcana.Arcana"><code class="docutils literal notranslate"><span class="pre">Arcana</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana_utils.html">energy_fault_detector.root_cause_analysis.arcana_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana_utils.html#energy_fault_detector.root_cause_analysis.arcana_utils.calculate_arcana_importance_time_series"><code class="docutils literal notranslate"><span class="pre">calculate_arcana_importance_time_series()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana_utils.html#energy_fault_detector.root_cause_analysis.arcana_utils.calculate_mean_arcana_importances"><code class="docutils literal notranslate"><span class="pre">calculate_mean_arcana_importances()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector.fit"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector.predict"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.predict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector.set_fit_request"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector.set_predict_request"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.set_predict_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.AdaptiveThresholdSelector.set_score_request"><code class="docutils literal notranslate"><span class="pre">AdaptiveThresholdSelector.set_score_request()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector"><code class="docutils literal notranslate"><span class="pre">FDRSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector.threshold"><code class="docutils literal notranslate"><span class="pre">FDRSelector.threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector.actual_false_discovery_rate_"><code class="docutils literal notranslate"><span class="pre">FDRSelector.actual_false_discovery_rate_</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector.fit"><code class="docutils literal notranslate"><span class="pre">FDRSelector.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector.set_fit_request"><code class="docutils literal notranslate"><span class="pre">FDRSelector.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector.set_predict_request"><code class="docutils literal notranslate"><span class="pre">FDRSelector.set_predict_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FDRSelector.set_score_request"><code class="docutils literal notranslate"><span class="pre">FDRSelector.set_score_request()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector"><code class="docutils literal notranslate"><span class="pre">FbetaSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector.threshold"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector.fit"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector.mark_normal_outliers"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.mark_normal_outliers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector.set_fit_request"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector.set_predict_request"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.set_predict_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.FbetaSelector.set_score_request"><code class="docutils literal notranslate"><span class="pre">FbetaSelector.set_score_request()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector.threshold"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector.fit"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector.set_fit_request"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.set_fit_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector.set_predict_request"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.set_predict_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html#energy_fault_detector.threshold_selectors.QuantileThresholdSelector.set_score_request"><code class="docutils literal notranslate"><span class="pre">QuantileThresholdSelector.set_score_request()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.analysis.html">energy_fault_detector.utils.analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.analysis.html#energy_fault_detector.utils.analysis.calculate_criticality"><code class="docutils literal notranslate"><span class="pre">calculate_criticality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.analysis.html#energy_fault_detector.utils.analysis.create_events"><code class="docutils literal notranslate"><span class="pre">create_events()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.data_downloads.html">energy_fault_detector.utils.data_downloads</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.data_downloads.html#energy_fault_detector.utils.data_downloads.download_backblaze_data"><code class="docutils literal notranslate"><span class="pre">download_backblaze_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.data_downloads.html#energy_fault_detector.utils.data_downloads.download_zenodo_data"><code class="docutils literal notranslate"><span class="pre">download_zenodo_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html">energy_fault_detector.utils.visualisation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.animate_bias"><code class="docutils literal notranslate"><span class="pre">animate_bias()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.animate_corrected_input"><code class="docutils literal notranslate"><span class="pre">animate_corrected_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_arcana_importance_series"><code class="docutils literal notranslate"><span class="pre">plot_arcana_importance_series()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_arcana_losses"><code class="docutils literal notranslate"><span class="pre">plot_arcana_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_arcana_mean_importances"><code class="docutils literal notranslate"><span class="pre">plot_arcana_mean_importances()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_learning_curve"><code class="docutils literal notranslate"><span class="pre">plot_learning_curve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_reconstruction"><code class="docutils literal notranslate"><span class="pre">plot_reconstruction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_reconstruction_with_model"><code class="docutils literal notranslate"><span class="pre">plot_reconstruction_with_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.utils.visualisation.html#energy_fault_detector.utils.visualisation.plot_score_with_threshold"><code class="docutils literal notranslate"><span class="pre">plot_score_with_threshold()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.Registry"><code class="docutils literal notranslate"><span class="pre">Registry</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.Registry.get"><code class="docutils literal notranslate"><span class="pre">Registry.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.Registry.get_alternative_class_names"><code class="docutils literal notranslate"><span class="pre">Registry.get_alternative_class_names()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.Registry.print_available_classes"><code class="docutils literal notranslate"><span class="pre">Registry.print_available_classes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.Registry.register"><code class="docutils literal notranslate"><span class="pre">Registry.register()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html#energy_fault_detector.registration.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="logging.html" class="btn btn-neutral float-left" title="Logging Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.html" class="btn btn-neutral float-right" title="energy_fault_detector" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

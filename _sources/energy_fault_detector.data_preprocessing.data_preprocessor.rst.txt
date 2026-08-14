@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.data\_preprocessor
+==============================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.data_preprocessor
+   :members:
+   :show-inheritance:
+   :undoc-members:

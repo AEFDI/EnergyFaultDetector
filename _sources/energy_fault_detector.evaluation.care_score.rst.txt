@@ -1,0 +1,7 @@
+energy\_fault\_detector.evaluation.care\_score
+==============================================
+
+.. automodule:: energy_fault_detector.evaluation.care_score
+   :members:
+   :show-inheritance:
+   :undoc-members:

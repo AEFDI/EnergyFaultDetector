@@ -1,0 +1,16 @@
+energy\_fault\_detector.utils
+=============================
+
+.. automodule:: energy_fault_detector.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.utils.analysis
+   energy_fault_detector.utils.data_downloads
+   energy_fault_detector.utils.visualisation

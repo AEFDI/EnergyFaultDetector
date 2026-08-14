@@ -1,0 +1,7 @@
+energy\_fault\_detector.root\_cause\_analysis.arcana
+====================================================
+
+.. automodule:: energy_fault_detector.root_cause_analysis.arcana
+   :members:
+   :show-inheritance:
+   :undoc-members:

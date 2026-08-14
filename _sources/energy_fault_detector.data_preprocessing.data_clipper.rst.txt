@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.data\_clipper
+=========================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.data_clipper
+   :members:
+   :show-inheritance:
+   :undoc-members:

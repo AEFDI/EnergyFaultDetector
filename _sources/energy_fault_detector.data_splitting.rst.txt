@@ -1,0 +1,16 @@
+energy\_fault\_detector.data\_splitting
+=======================================
+
+.. automodule:: energy_fault_detector.data_splitting
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.data_splitting.data_gap_handler
+   energy_fault_detector.data_splitting.data_splitter
+   energy_fault_detector.data_splitting.sequence_dataset

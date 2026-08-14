@@ -1,0 +1,7 @@
+energy\_fault\_detector.core.autoencoder
+========================================
+
+.. automodule:: energy_fault_detector.core.autoencoder
+   :members:
+   :show-inheritance:
+   :undoc-members:

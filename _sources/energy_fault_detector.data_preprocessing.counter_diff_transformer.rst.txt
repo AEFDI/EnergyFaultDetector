@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.counter\_diff\_transformer
+======================================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.counter_diff_transformer
+   :members:
+   :show-inheritance:
+   :undoc-members:

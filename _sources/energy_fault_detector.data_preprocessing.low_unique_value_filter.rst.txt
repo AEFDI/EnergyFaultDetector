@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.low\_unique\_value\_filter
+======================================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.low_unique_value_filter
+   :members:
+   :show-inheritance:
+   :undoc-members:

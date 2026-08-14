@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_splitting.data\_splitter
+======================================================
+
+.. automodule:: energy_fault_detector.data_splitting.data_splitter
+   :members:
+   :show-inheritance:
+   :undoc-members:

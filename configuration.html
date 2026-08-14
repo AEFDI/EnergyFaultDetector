@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ARCANA: Root cause analysis" href="arcana.html" />
+    <link rel="prev" title="Quick fault detection (CLI)" href="quick_fault_detection.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start-minimal-configuration">Quick start: minimal configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-updates">Configuration updates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#detailed-configuration">Detailed configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#datapreprocessor-specification">DataPreprocessor specification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-training-configuration-sections">Other training configuration sections</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#prediction-options">Prediction options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#root-cause-analysis-arcana">Root cause analysis (ARCANA)</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Configuration</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/configuration.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration">
+<span id="configuration-guide"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h1>
+<p>This page explains how to configure training, prediction, and optional root cause analysis (ARCANA).</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#quick-start-minimal-configuration" id="id1">Quick start: minimal configuration</a></p></li>
+<li><p><a class="reference internal" href="#configuration-updates" id="id2">Configuration updates</a></p></li>
+<li><p><a class="reference internal" href="#detailed-configuration" id="id3">Detailed configuration</a></p>
+<ul>
+<li><p><a class="reference internal" href="#datapreprocessor-specification" id="id4">DataPreprocessor specification</a></p></li>
+<li><p><a class="reference internal" href="#other-training-configuration-sections" id="id5">Other training configuration sections</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#prediction-options" id="id6">Prediction options</a></p></li>
+<li><p><a class="reference internal" href="#root-cause-analysis-arcana" id="id7">Root cause analysis (ARCANA)</a></p></li>
+</ul>
+</nav>
+<section id="quick-start-minimal-configuration">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Quick start: minimal configuration</a><a class="headerlink" href="#quick-start-minimal-configuration" title="Link to this heading"></a></h2>
+<p>A minimal configuration that clips outliers, imputes missing values, and scales features:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">:</span>
+  <span class="c1"># clip training data to remove outliers (only applied for training)</span>
+  <span class="n">data_clipping</span><span class="p">:</span>  <span class="c1"># (optional) if not specified, not applied.</span>
+    <span class="c1"># Use features_to_exclude or features_to_clip: [feature] to skip or to apply to specific features</span>
+    <span class="n">lower_percentile</span><span class="p">:</span> <span class="mf">0.001</span>
+    <span class="n">upper_percentile</span><span class="p">:</span> <span class="mf">0.999</span>
+
+  <span class="n">data_preprocessor</span><span class="p">:</span>
+    <span class="n">steps</span><span class="p">:</span>
+      <span class="c1"># This drops features where &gt; 20% is missing</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">column_selector</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">max_nan_frac_per_col</span><span class="p">:</span> <span class="mf">0.2</span>
+      <span class="c1"># This drops constants by default (controlled by `min_unique_value_count`)</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">low_unique_value_filter</span>
+      <span class="c1"># SimpleImputer and StandardScaler are always added</span>
+
+  <span class="n">data_splitter</span><span class="p">:</span>
+    <span class="c1"># How to split data in train and validation sets for the autoencoder</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">sklearn</span>
+    <span class="n">validation_split</span><span class="p">:</span> <span class="mf">0.2</span>
+    <span class="n">shuffle</span><span class="p">:</span> <span class="n">true</span>
+
+  <span class="n">autoencoder</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">default</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">layers</span><span class="p">:</span>  <span class="c1"># Symmetric autoencoder: inputs - 200 - 100 - 50 - 20 - 50 - 100 - 200 - outputs</span>
+      <span class="o">-</span> <span class="mi">200</span>
+      <span class="o">-</span> <span class="mi">100</span>
+      <span class="o">-</span> <span class="mi">50</span>
+      <span class="n">code_size</span><span class="p">:</span> <span class="mi">20</span>  <span class="c1"># Size of the bottleneck layer</span>
+
+  <span class="n">anomaly_score</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">rmse</span>
+
+  <span class="n">threshold_selector</span><span class="p">:</span>
+    <span class="n">fit_on_val</span><span class="p">:</span> <span class="n">true</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">quantile</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">quantile</span><span class="p">:</span> <span class="mf">0.95</span>
+
+<span class="n">root_cause_analysis</span><span class="p">:</span>
+  <span class="n">alpha</span><span class="p">:</span> <span class="mf">0.8</span>
+  <span class="n">init_x_bias</span><span class="p">:</span> <span class="n">recon</span>
+  <span class="n">num_iter</span><span class="p">:</span> <span class="mi">1000</span>
+</pre></div>
+</div>
+<p>This setup:</p>
+<ul class="simple">
+<li><p>Applies DataClipper if specified.</p></li>
+<li><p>Builds a DataPreprocessor with:</p>
+<ul>
+<li><p>ColumnSelector that drops columns with more than 20% NaNs (configurable).</p></li>
+<li><p>LowUniqueValueFilter that removes constant features by default (configurable).</p></li>
+<li><p>SimpleImputer (mean) and a scaler (StandardScaler by default). If you do not add an imputer/scaler explicitly,
+the pipeline ensures mean-imputation and StandardScaler are added.</p></li>
+</ul>
+</li>
+<li><p>Trains a default autoencoder (with provided architecture, otherwise default values), with an RMSE anomaly score and a
+quantile threshold selector.</p></li>
+<li><p>Runs ARCANA with provided parameters when calling <code class="xref py py-obj docutils literal notranslate"><span class="pre">FaultDetector.predict(...,</span> <span class="pre">root_cause_analysis=True)</span></code>.
+If not provided, default ARCANA parameters are used (see <a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana.html#energy_fault_detector.root_cause_analysis.arcana.Arcana" title="energy_fault_detector.root_cause_analysis.arcana.Arcana"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ARCANA</span> <span class="pre">docs</span></code></a>).</p></li>
+</ul>
+<p>If you leave out the data_preprocessor configuration (i.e., <code class="docutils literal notranslate"><span class="pre">data_preprocessor:</span> <span class="pre">{}</span></code>), a default preprocessing pipeline
+is generated, which drops constant and binary features, features where &gt;5% of the data is missing, imputes remaining
+missing values with the mean value and scales the data to zero mean and unit standard deviation.</p>
+<p>You can also generate this kind of configuration programmatically using
+<code class="xref py py-func docutils literal notranslate"><span class="pre">generate_quickstart_config</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config.quickstart_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_quickstart_config</span>
+<span class="c1"># generate a Config instance and save as YAML to base_config.yaml</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">generate_quickstart_config</span><span class="p">(</span><span class="n">output_path</span><span class="o">=</span><span class="s2">&quot;base_config.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can look up the names for the available model classes in the class registry:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">registry</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">print_available_classes</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration-updates">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Configuration updates</a><a class="headerlink" href="#configuration-updates" title="Link to this heading"></a></h2>
+<p>To update the configuration ‘on the fly’ (for example for hyperparameter optimization), you provide a new
+configuration dictionary via the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Config.update_config</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s1">&#39;configs/base_config.yaml&#39;</span><span class="p">)</span>
+
+<span class="c1"># update some parameters:</span>
+<span class="n">new_config_dict</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">config_dict</span><span class="p">)</span>
+<span class="n">new_config_dict</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">][</span><span class="s1">&#39;anomaly_score&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mahalanobis&#39;</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="n">new_config_dict</span><span class="p">)</span>
+
+<span class="c1"># or create a new configuration object and model</span>
+<span class="n">new_model</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">Config</span><span class="p">(</span><span class="n">config_dict</span><span class="o">=</span><span class="n">new_config_dict</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="detailed-configuration">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Detailed configuration</a><a class="headerlink" href="#detailed-configuration" title="Link to this heading"></a></h2>
+<p>Below is a more thorough configuration. It shows how to specify preprocessing steps and more model parameters.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">:</span>
+  <span class="c1"># clip training data to remove outliers (only applied for training)</span>
+  <span class="n">data_clipping</span><span class="p">:</span>  <span class="c1"># (optional) if not specified, not applied.</span>
+    <span class="n">lower_percentile</span><span class="p">:</span> <span class="mf">0.01</span>
+    <span class="n">upper_percentile</span><span class="p">:</span> <span class="mf">0.99</span>
+    <span class="c1"># Choose one of:</span>
+    <span class="c1"># features_to_exclude:</span>
+    <span class="c1">#   - do_not_clip_this_feature</span>
+    <span class="c1"># features_to_clip:</span>
+    <span class="c1">#   - clip_only_this_feature</span>
+
+  <span class="n">data_preprocessor</span><span class="p">:</span>
+    <span class="n">steps</span><span class="p">:</span>
+      <span class="c1"># Replace consecutive duplicate 0-values with NaN</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">duplicate_to_nan</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">value_to_replace</span><span class="p">:</span> <span class="mi">0</span>
+          <span class="n">n_max_duplicates</span><span class="p">:</span> <span class="mi">6</span>
+          <span class="n">features_to_exclude</span><span class="p">:</span>
+            <span class="o">-</span> <span class="n">do_not_replace_value_with_nan_for_this_feature</span>
+      <span class="c1"># Normalize counters to differences (configure your counter columns)</span>
+      <span class="c1"># If needed, you can create multiple counter_diff_transformer steps with different settings for different counters</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">counter_diff_transformer</span>
+        <span class="n">step_name</span><span class="p">:</span> <span class="n">counter_diff_energy</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">counters</span><span class="p">:</span>
+            <span class="o">-</span> <span class="n">energy_total_kwh</span>
+          <span class="n">compute_rate</span><span class="p">:</span> <span class="n">false</span>
+          <span class="n">reset_strategy</span><span class="p">:</span> <span class="n">zero</span>
+          <span class="n">fill_first</span><span class="p">:</span> <span class="n">nan</span>
+      <span class="c1"># Column selection: drop columns where &gt; 20% is missing and exclude specific features</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">column_selector</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">max_nan_frac_per_col</span><span class="p">:</span> <span class="mf">0.20</span>
+          <span class="n">features_to_exclude</span><span class="p">:</span>
+            <span class="o">-</span> <span class="n">feature1</span>
+            <span class="o">-</span> <span class="n">feature2</span>
+          <span class="c1"># Alternatively, keep only selected features:</span>
+          <span class="c1"># features_to_select:</span>
+          <span class="c1">#   - temp_outdoor</span>
+          <span class="c1">#   - flow</span>
+          <span class="c1">#   - power</span>
+      <span class="c1"># Filter low unique value features or high-zero-fraction columns</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">low_unique_value_filter</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">min_unique_value_count</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="n">max_col_zero_frac</span><span class="p">:</span> <span class="mf">0.99</span>
+      <span class="c1"># Transform angles to sin/cos</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">angle_transformer</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">angles</span><span class="p">:</span>
+            <span class="o">-</span> <span class="n">angle1</span>
+            <span class="o">-</span> <span class="n">angle2</span>
+      <span class="c1"># Imputer (explicit; will be auto-inserted if omitted)</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">simple_imputer</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">strategy</span><span class="p">:</span> <span class="n">mean</span>
+      <span class="c1"># Scaler (choose one; StandardScaler is auto-added by default if omitted)</span>
+      <span class="o">-</span> <span class="n">name</span><span class="p">:</span> <span class="n">standard_scaler</span>
+        <span class="n">params</span><span class="p">:</span>
+          <span class="n">with_mean</span><span class="p">:</span> <span class="n">true</span>
+          <span class="n">with_std</span><span class="p">:</span> <span class="n">true</span>
+
+  <span class="n">data_splitter</span><span class="p">:</span>
+    <span class="c1"># How to split data in train and validation sets for the autoencoder</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">sklearn</span>
+    <span class="n">validation_split</span><span class="p">:</span> <span class="mf">0.2</span>
+    <span class="n">shuffle</span><span class="p">:</span> <span class="n">true</span>  <span class="c1"># false by default (last part of the data is taken as validation data in this case)</span>
+    <span class="c1"># or block splitting, 4 weeks training, 1 week validation</span>
+    <span class="c1"># type: DataSplitter</span>
+    <span class="c1"># train_block_size: 4032</span>
+    <span class="c1"># val_block_size: 1008</span>
+
+  <span class="n">autoencoder</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">MultilayerAutoencoder</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">batch_size</span><span class="p">:</span> <span class="mi">128</span>
+      <span class="c1"># Use a ExponentialDecay schedule for the learning rate:</span>
+      <span class="n">learning_rate</span><span class="p">:</span> <span class="mf">0.001</span>  <span class="c1"># starting point</span>
+      <span class="n">decay_rate</span><span class="p">:</span> <span class="mf">0.99</span>
+      <span class="n">decay_steps</span><span class="p">:</span> <span class="mi">100000</span>
+      <span class="c1"># Set early stopping with max 1000 epochs, minimal improvement of 1e-4 and patience of 5 epochs</span>
+      <span class="n">early_stopping</span><span class="p">:</span> <span class="kc">True</span>
+      <span class="n">min_delta</span><span class="p">:</span> <span class="mf">0.0001</span>
+      <span class="n">patience</span><span class="p">:</span> <span class="mi">5</span>
+      <span class="n">epochs</span><span class="p">:</span> <span class="mi">1000</span>
+      <span class="c1"># architecture settings</span>
+      <span class="n">layers</span><span class="p">:</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">]</span>
+      <span class="n">code_size</span><span class="p">:</span> <span class="mi">20</span>
+      <span class="n">act</span><span class="p">:</span> <span class="n">prelu</span>  <span class="c1"># activation to use for hidden layers</span>
+      <span class="n">last_act</span><span class="p">:</span> <span class="n">linear</span>  <span class="c1"># output layer activation</span>
+
+  <span class="n">anomaly_score</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">rmse</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">scale</span><span class="p">:</span> <span class="n">false</span>
+
+  <span class="n">threshold_selector</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">fbeta</span>
+    <span class="n">params</span><span class="p">:</span>
+      <span class="n">beta</span><span class="p">:</span> <span class="mf">0.5</span>
+
+<span class="n">root_cause_analysis</span><span class="p">:</span>
+  <span class="n">alpha</span><span class="p">:</span> <span class="mf">0.5</span>
+  <span class="n">init_x_bias</span><span class="p">:</span> <span class="n">recon</span>
+  <span class="n">num_iter</span><span class="p">:</span> <span class="mi">1000</span>
+  <span class="n">verbose</span><span class="p">:</span> <span class="n">true</span>
+
+<span class="n">predict</span><span class="p">:</span>
+  <span class="n">criticality</span><span class="p">:</span>
+    <span class="n">max_criticality</span><span class="p">:</span> <span class="mi">144</span>
+</pre></div>
+</div>
+<section id="datapreprocessor-specification">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">DataPreprocessor specification</a><a class="headerlink" href="#datapreprocessor-specification" title="Link to this heading"></a></h3>
+<p>A steps-based preprocessing pipeline can be configured under <code class="docutils literal notranslate"><span class="pre">train.data_preprocessor.steps</span></code>. Each step is a dict
+with the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> (str): the registered step name (see table below).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code> (bool, optional): default <code class="docutils literal notranslate"><span class="pre">True</span></code>; set to <code class="docutils literal notranslate"><span class="pre">False</span></code> to skip a step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code> (dict, optional): constructor arguments for the step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step_name</span></code> (str, optional): custom key for the sklearn pipeline; useful if a step is repeated.</p></li>
+</ul>
+<p>Allowed step names and aliases:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Step name</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Aliases</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>column_selector</p></td>
+<td><p>Drop columns with too many NaNs</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p>low_unique_value_filter</p></td>
+<td><p>Drop columns with low variance/many zeros</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p>angle_transformer</p></td>
+<td><p>Convert angles to sin/cos pairs</p></td>
+<td><p>angle_transform</p></td>
+</tr>
+<tr class="row-odd"><td><p>counter_diff_transformer</p></td>
+<td><p>Convert counters to differences/rates</p></td>
+<td><p>counter_diff, counter_diff_transform</p></td>
+</tr>
+<tr class="row-even"><td><p>timestamp_transformer</p></td>
+<td><p>Extract time features (hour, day, etc.)</p></td>
+<td><p>timestamp_transform,timestamp_features</p></td>
+</tr>
+<tr class="row-odd"><td><p>simple_imputer</p></td>
+<td><p>Impute missing values</p></td>
+<td><p>imputer</p></td>
+</tr>
+<tr class="row-even"><td><p>standard_scaler</p></td>
+<td><p>Standardize features (z-score)</p></td>
+<td><p>standardize, standardscaler, standard</p></td>
+</tr>
+<tr class="row-odd"><td><p>minmax_scaler</p></td>
+<td><p>Scale to [0, 1]</p></td>
+<td><p>minmax</p></td>
+</tr>
+<tr class="row-even"><td><p>duplicate_to_nan</p></td>
+<td><p>Replace consecutive duplicate values with NaN</p></td>
+<td><p>duplicate_value_to_nan, duplicate_values_to_nan</p></td>
+</tr>
+</tbody>
+</table>
+<p>For detailed documentation of the data preprocessor pipeline, refer to the
+<a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html#energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor" title="energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataPreprocessor</span></code></a> docs.</p>
+<p><strong>Multi-device data (MultiIndex support)</strong></p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">counter_diff_transformer</span></code> and <code class="docutils literal notranslate"><span class="pre">timestamp_transformer</span></code> support multi-device data via pandas MultiIndex.
+By default (<code class="docutils literal notranslate"><span class="pre">groupby_level='auto'</span></code>), they automatically detect and group by non-datetime index levels:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">data_preprocessor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">counter_diff_transformer</span>
+<span class="w">        </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">counters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;energy_total&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">          </span><span class="nt">compute_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">          </span><span class="nt">groupby_level</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;auto&#39;</span><span class="w">  </span><span class="c1"># Default: auto-detects device_id from (device_id, timestamp)</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">timestamp_transformer</span>
+<span class="w">        </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">features</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;hour_of_day&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;day_of_week&#39;</span><span class="p p-Indicator">]</span>
+<span class="w">          </span><span class="nt">groupby_level</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;auto&#39;</span><span class="w">  </span><span class="c1"># Default: auto-detects device_id</span>
+</pre></div>
+</div>
+<p>For a MultiIndex like <code class="docutils literal notranslate"><span class="pre">(device_id,</span> <span class="pre">timestamp)</span></code>, this automatically computes counter diffs and time features
+per device. You can also specify the level explicitly: <code class="docutils literal notranslate"><span class="pre">groupby_level:</span> <span class="pre">'device_id'</span></code> or <code class="docutils literal notranslate"><span class="pre">groupby_level:</span> <span class="pre">0</span></code>.
+Set <code class="docutils literal notranslate"><span class="pre">groupby_level:</span> <span class="pre">null</span></code> to disable grouping for single-device data with a simple DatetimeIndex.</p>
+<p>Please note that the sequence-based autoencoders do not (yet) support MultiIndex data.</p>
+</section>
+<section id="other-training-configuration-sections">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Other training configuration sections</a><a class="headerlink" href="#other-training-configuration-sections" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Data clipping:
+<a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html#energy_fault_detector.data_preprocessing.data_clipper.DataClipper" title="energy_fault_detector.data_preprocessing.data_clipper.DataClipper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataClipper</span></code></a> supports
+<code class="docutils literal notranslate"><span class="pre">features_to_exclude</span></code> and <code class="docutils literal notranslate"><span class="pre">features_to_clip</span></code> for fine-grained control.</p></li>
+<li><p>Data splitter (<code class="docutils literal notranslate"><span class="pre">train.data_splitter</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: one of <code class="docutils literal notranslate"><span class="pre">BlockDataSplitter</span></code> (aliases: <code class="docutils literal notranslate"><span class="pre">blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">DataSplitter</span></code>), or <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> (alias <code class="docutils literal notranslate"><span class="pre">train_test_split</span></code>).</p></li>
+<li><p>For sklearn: <code class="docutils literal notranslate"><span class="pre">validation_split</span></code> (float in (0, 1)) and <code class="docutils literal notranslate"><span class="pre">shuffle</span></code> (bool).</p></li>
+<li><p>For <a class="reference internal" href="energy_fault_detector.data_splitting.data_splitter.html#energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter" title="energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BlockDataSplitter</span></code></a>: <code class="docutils literal notranslate"><span class="pre">train_block_size</span></code> and <code class="docutils literal notranslate"><span class="pre">val_block_size</span></code>.</p></li>
+<li><p>Early stopping guard: if <code class="docutils literal notranslate"><span class="pre">train.autoencoder.params.early_stopping</span></code> is true, you must either set a
+valid <code class="docutils literal notranslate"><span class="pre">validation_split</span></code> in (0, 1), or use <a class="reference internal" href="energy_fault_detector.data_splitting.data_splitter.html#energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter" title="energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BlockDataSplitter</span></code></a>
+with a positive <code class="docutils literal notranslate"><span class="pre">val_block_size</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>MultiIndex / multi-device data:</strong> When using MultiIndex data <code class="docutils literal notranslate"><span class="pre">(device_id,</span> <span class="pre">timestamp)</span></code> with
+<code class="docutils literal notranslate"><span class="pre">shuffle:</span> <span class="pre">false</span></code>, the validation split is taken positionally from the end of the
+sorted data — which may contain only one device. Set <code class="docutils literal notranslate"><span class="pre">shuffle:</span> <span class="pre">true</span></code> to ensure
+both devices appear in the validation set, leading to more representative early
+stopping and validation metrics.</p>
+</div>
+<ul class="simple">
+<li><p>Autoencoder (<code class="docutils literal notranslate"><span class="pre">train.autoencoder</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: class name in the registry.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: architecture and training args (e.g., <code class="docutils literal notranslate"><span class="pre">layers</span></code>, <code class="docutils literal notranslate"><span class="pre">epochs</span></code>, <code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">early_stopping</span></code>).
+See (<a class="reference internal" href="energy_fault_detector.autoencoders.html#module-energy_fault_detector.autoencoders" title="energy_fault_detector.autoencoders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">autoencoders</span></code></a>) for specific params and their defaults.</p></li>
+</ul>
+</li>
+<li><p>Anomaly score (<code class="docutils literal notranslate"><span class="pre">train.anomaly_score</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: score name (e.g., <code class="docutils literal notranslate"><span class="pre">rmse</span></code>, <code class="docutils literal notranslate"><span class="pre">mahalanobis</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: score-specific parameters.
+See <a class="reference internal" href="energy_fault_detector.anomaly_scores.html#module-energy_fault_detector.anomaly_scores" title="energy_fault_detector.anomaly_scores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">anomaly_scores</span></code></a> docs.</p></li>
+</ul>
+</li>
+<li><p>Threshold selector (<code class="docutils literal notranslate"><span class="pre">train.threshold_selector</span></code>):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: e.g., <code class="docutils literal notranslate"><span class="pre">quantile</span></code>, <code class="docutils literal notranslate"><span class="pre">fbeta</span></code>, etc.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit_on_val</span></code>: fit the threshold on validation only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: selector-specific parameters (e.g., <code class="docutils literal notranslate"><span class="pre">quantile</span></code> for the quantile selector).
+See the <a class="reference internal" href="energy_fault_detector.threshold_selectors.html#module-energy_fault_detector.threshold_selectors" title="energy_fault_detector.threshold_selectors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">threshold_selectors</span></code></a> docs for more info on the settings.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="prediction-options">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Prediction options</a><a class="headerlink" href="#prediction-options" title="Link to this heading"></a></h2>
+<p>Under <code class="docutils literal notranslate"><span class="pre">predict</span></code>, you can set:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">criticality.max_criticality</span></code>: cap the calculated criticality (anomaly counter) to this value.</p></li>
+</ul>
+</section>
+<section id="root-cause-analysis-arcana">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Root cause analysis (ARCANA)</a><a class="headerlink" href="#root-cause-analysis-arcana" title="Link to this heading"></a></h2>
+<p>If <code class="docutils literal notranslate"><span class="pre">root_cause_analysis</span></code> is provided, ARCANA will attempt to attribute anomalies to specific features using the
+provided settings. If not provided, default settings are used. For detailed documentation refer to
+<a class="reference internal" href="energy_fault_detector.root_cause_analysis.arcana.html#energy_fault_detector.root_cause_analysis.arcana.Arcana" title="energy_fault_detector.root_cause_analysis.arcana.Arcana"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ARCANA</span> <span class="pre">docs</span></code></a> and <a class="reference internal" href="arcana.html#arcana-docs"><span class="std std-ref">ARCANA: Root cause analysis</span></a> for a full example.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quick_fault_detection.html" class="btn btn-neutral float-left" title="Quick fault detection (CLI)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="arcana.html" class="btn btn-neutral float-right" title="ARCANA: Root cause analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

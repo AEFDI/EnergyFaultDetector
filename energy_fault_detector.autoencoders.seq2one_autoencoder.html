@@ -1,0 +1,182 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>energy_fault_detector.autoencoders.seq2one_autoencoder &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="energy_fault_detector.autoencoders.seq2seq_autoencoder" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html" />
+    <link rel="prev" title="energy_fault_detector.autoencoders" href="energy_fault_detector.autoencoders.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">energy_fault_detector.anomaly_scores</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="energy_fault_detector.autoencoders.html">energy_fault_detector.autoencoders</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNAutoencoder"><code class="docutils literal notranslate"><span class="pre">CNNAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">CNNSeq2OneAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE"><code class="docutils literal notranslate"><span class="pre">ConditionalAE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder"><code class="docutils literal notranslate"><span class="pre">LSTMSeq2OneAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeqAutoencoder"><code class="docutils literal notranslate"><span class="pre">LSTMSeqAutoencoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder"><code class="docutils literal notranslate"><span class="pre">MultilayerAutoencoder</span></code></a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">energy_fault_detector.autoencoders.seq2one_autoencoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html">energy_fault_detector.autoencoders.seq2seq_autoencoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html">energy_fault_detector.autoencoders.sequence_autoencoder</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">energy_fault_detector.config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">energy_fault_detector.core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">energy_fault_detector.data_preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">energy_fault_detector.data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">energy_fault_detector.evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">energy_fault_detector.quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">energy_fault_detector.root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">energy_fault_detector.threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">energy_fault_detector.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">energy_fault_detector.registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.autoencoders.html">energy_fault_detector.autoencoders</a></li>
+      <li class="breadcrumb-item active">energy_fault_detector.autoencoders.seq2one_autoencoder</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.autoencoders.seq2one_autoencoder">
+<span id="energy-fault-detector-autoencoders-seq2one-autoencoder"></span><h1>energy_fault_detector.autoencoders.seq2one_autoencoder<a class="headerlink" href="#module-energy_fault_detector.autoencoders.seq2one_autoencoder" title="Link to this heading"></a></h1>
+<p>Seq2One (causal half-autoencoder) base class.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Seq2OneAutoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_builder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">ae_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/autoencoders/seq2one_autoencoder.py#L15-L61"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.autoencoders.seq2one_autoencoder.Seq2OneAutoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.autoencoders.sequence_autoencoder.html#energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder" title="energy_fault_detector.autoencoders.sequence_autoencoder.SequenceAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceAutoencoder</span></code></a></p>
+<p>Sequence-to-one autoencoder: maps a window to a single output (last timestep).</p>
+<p>Subclasses must implement <code class="docutils literal notranslate"><span class="pre">create_model</span></code>.</p>
+<p>This class trains models that map a sequence of length <code class="docutils literal notranslate"><span class="pre">sequence_length</span></code> to a single
+output vector (typically corresponding to the last timestep in the window).</p>
+<p>It reuses the same initialization and latent handling as Seq2SeqAutoencoder, but uses
+<code class="docutils literal notranslate"><span class="pre">SequenceDatasetBuilder.build_seq2one_dataset</span></code> instead of <code class="docutils literal notranslate"><span class="pre">build_sliding_dataset</span></code>.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.autoencoders.html" class="btn btn-neutral float-left" title="energy_fault_detector.autoencoders" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.autoencoders.seq2seq_autoencoder.html" class="btn btn-neutral float-right" title="energy_fault_detector.autoencoders.seq2seq_autoencoder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

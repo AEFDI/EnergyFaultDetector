@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_splitting.data\_gap\_handler
+==========================================================
+
+.. automodule:: energy_fault_detector.data_splitting.data_gap_handler
+   :members:
+   :show-inheritance:
+   :undoc-members:

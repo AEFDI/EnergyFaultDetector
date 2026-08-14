@@ -1,0 +1,500 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sequence models &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced usage and customization" href="advanced_usage.html" />
+    <link rel="prev" title="Model overview" href="models_overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Sequence models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#when-to-use-sequence-models">When to use sequence models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-requirements">Data requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-configuration-sequence-builder">Common configuration: <code class="docutils literal notranslate"><span class="pre">sequence_builder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conditional-features-all-sequence-models">Conditional features (all sequence models)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-usage-all-sequence-models">Example usage (all sequence models)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#when-to-use-seq2one-models">When to use Seq2One models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-configuration">Example configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bidirectional-encoder-variant">Bidirectional encoder variant</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#when-to-use-seq2seq-models">When to use Seq2Seq models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#seq2one-vs-seq2seq">Seq2One vs Seq2Seq</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-example-lstmseqautoencoder">Configuration example (LSTMSeqAutoencoder)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cnn-seq2seq-variant">CNN seq2seq variant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overlap-averaging">Overlap averaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-usage-seq2seq">Example usage (Seq2Seq)</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Sequence models</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/sequence_models.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sequence-models">
+<h1>Sequence models<a class="headerlink" href="#sequence-models" title="Link to this heading"></a></h1>
+<p>Sequence models operate on <strong>windows</strong> of time-series data and require:</p>
+<ul class="simple">
+<li><p>a <cite>pandas.DataFrame</cite> with a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DatetimeIndex</span></code>,</p></li>
+<li><p>sorted in ascending time order,</p></li>
+<li><p>numeric columns only (after the <code class="xref py py-class docutils literal notranslate"><span class="pre">DataPreprocessor</span></code>),</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">sequence_builder</span></code> configuration in the YAML config.</p></li>
+</ul>
+<p>The package provides two families:</p>
+<ul class="simple">
+<li><p><strong>Seq2One</strong> (sequence-to-one): reconstruct the <strong>last timestep</strong> of each window.</p></li>
+<li><p><strong>Seq2Seq</strong> (sequence-to-sequence): reconstruct the <strong>entire window</strong>.</p></li>
+</ul>
+<p>For purely static data (one row = one independent sample), the dense
+<a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.MultilayerAutoencoder" title="energy_fault_detector.autoencoders.MultilayerAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultilayerAutoencoder</span></code></a> is
+usually sufficient. In many time-series applications, the dense
+<a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.ConditionalAE" title="energy_fault_detector.autoencoders.ConditionalAE"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConditionalAE</span></code></a> can also work well
+if time features such as hour-of-day or day-of-week are provided as conditionals.</p>
+<section id="when-to-use-sequence-models">
+<h2>When to use sequence models<a class="headerlink" href="#when-to-use-sequence-models" title="Link to this heading"></a></h2>
+<p>Sequence models are useful when:</p>
+<ul class="simple">
+<li><p>your data is <strong>time-correlated</strong> and recent history matters for the current timestep,</p></li>
+<li><p>you want to take advantage of temporal context instead of treating each row independently.</p></li>
+</ul>
+<p>They assume <strong>causal</strong> windows by construction (only past timesteps in each window).</p>
+</section>
+<section id="data-requirements">
+<h2>Data requirements<a class="headerlink" href="#data-requirements" title="Link to this heading"></a></h2>
+<p>For all sequence models, your <code class="docutils literal notranslate"><span class="pre">sensor_data</span></code> must be:</p>
+<ul class="simple">
+<li><p>a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> with a <code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DatetimeIndex</span></code>,</p></li>
+<li><p>sorted in ascending time order,</p></li>
+<li><p>with numeric columns only.</p></li>
+</ul>
+<p>Any gaps larger than <code class="docutils literal notranslate"><span class="pre">ts_freq</span></code> are treated as <strong>data gaps</strong>. Windows that cross such gaps
+are dropped, so sequences always represent contiguous data.</p>
+<p>Sequence models do not (yet) support MultiIndex data (e.g. <code class="docutils literal notranslate"><span class="pre">(asset_id,</span> <span class="pre">timestamp)</span></code>).</p>
+</section>
+<section id="common-configuration-sequence-builder">
+<h2>Common configuration: <code class="docutils literal notranslate"><span class="pre">sequence_builder</span></code><a class="headerlink" href="#common-configuration-sequence-builder" title="Link to this heading"></a></h2>
+<p>All sequence models (Seq2One and Seq2Seq) use a <code class="docutils literal notranslate"><span class="pre">sequence_builder</span></code> block under
+<code class="docutils literal notranslate"><span class="pre">train.autoencoder.params</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTMSeq2OneAutoencoder</span><span class="w">    </span><span class="c1"># or LSTMSeqAutoencoder, CNNAutoencoder, ...</span>
+<span class="w">    </span><span class="nt">verbose</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">sequence_builder</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span><span class="w">       </span><span class="c1"># window length (number of time steps)</span>
+<span class="w">        </span><span class="nt">stride</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">                 </span><span class="c1"># step between window starts</span>
+<span class="w">        </span><span class="nt">ts_freq</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;30s&quot;</span><span class="w">            </span><span class="c1"># expected time delta between rows</span>
+<span class="w">        </span><span class="nt">pad_incomplete</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">        </span><span class="nt">pad_value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">      </span><span class="c1"># model-specific params go here (layers, dropout_rate, etc.)</span>
+</pre></div>
+</div>
+<p>Important points:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sequence_length</span></code>: size of each input window, in number of rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stride</span></code>:
+- <code class="docutils literal notranslate"><span class="pre">stride=1</span></code> → heavily overlapping windows,
+- <code class="docutils literal notranslate"><span class="pre">stride=sequence_length</span></code> → disjoint windows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ts_freq</span></code>: expected sampling interval. The config parser converts
+strings like <code class="docutils literal notranslate"><span class="pre">&quot;30s&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;10m&quot;</span></code> into <code class="docutils literal notranslate"><span class="pre">numpy.timedelta64</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_incomplete</span></code>: if <code class="docutils literal notranslate"><span class="pre">true</span></code>, the data is resampled to a regular
+grid at <code class="docutils literal notranslate"><span class="pre">ts_freq</span></code> and missing timestamps are filled with <code class="docutils literal notranslate"><span class="pre">pad_value</span></code>.</p></li>
+</ul>
+</section>
+<section id="conditional-features-all-sequence-models">
+<h2>Conditional features (all sequence models)<a class="headerlink" href="#conditional-features-all-sequence-models" title="Link to this heading"></a></h2>
+<p>All sequence models can use additional <strong>conditional features</strong> that are
+fed to the model at each timestep but are <strong>not reconstructed</strong>.</p>
+<p>Configure them as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTMSeq2OneAutoencoder</span><span class="w">    </span><span class="c1"># or any sequence model</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">sequence_builder</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span>
+<span class="w">        </span><span class="nt">stride</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">ts_freq</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10m&quot;</span>
+<span class="w">      </span><span class="nt">conditional_features</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hour_of_day_sine</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hour_of_day_cosine</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day_of_week_sine</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day_of_week_cosine</span>
+
+<span class="w">      </span><span class="c1"># rest as before ...</span>
+</pre></div>
+</div>
+<p>Then add these columns to your DataFrame before training. The model will reconstruct only
+the <strong>main</strong> features (all columns that are not listed as conditional).</p>
+</section>
+<section id="example-usage-all-sequence-models">
+<h2>Example usage (all sequence models)<a class="headerlink" href="#example-usage-all-sequence-models" title="Link to this heading"></a></h2>
+<p>Training and prediction are identical to the dense autoencoder case:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span><span class="p">,</span> <span class="n">Config</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;my_timeseries.csv&quot;</span><span class="p">,</span>
+                 <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">],</span>
+                 <span class="n">index_col</span><span class="o">=</span><span class="s2">&quot;timestamp&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;power&quot;</span><span class="p">,</span> <span class="s2">&quot;wind_speed&quot;</span><span class="p">,</span> <span class="s2">&quot;pitch&quot;</span><span class="p">]]</span>
+<span class="n">normal_index</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s2">&quot;lstm_seq2one_config.yaml&quot;</span><span class="p">)</span>    <span class="c1"># or a seq2seq config</span>
+<span class="n">fd</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+
+<span class="n">model_meta</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">,</span> <span class="n">normal_index</span><span class="o">=</span><span class="n">normal_index</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reconstruction</span><span class="o">.</span><span class="n">index</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reconstruction</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="seq2one-models-sequence-to-one">
+<h1>Seq2One models (sequence-to-one)<a class="headerlink" href="#seq2one-models-sequence-to-one" title="Link to this heading"></a></h1>
+<p>Seq2One models take a window of length <code class="docutils literal notranslate"><span class="pre">sequence_length</span></code> and reconstruct the
+<strong>last timestep</strong> of that window:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.LSTMSeq2OneAutoencoder" title="energy_fault_detector.autoencoders.lstm_seq2one_autoencoder.LSTMSeq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">LSTMSeq2OneAutoencoder</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.BidirectionalLSTMSeq2OneAutoencoder" title="energy_fault_detector.autoencoders.bidirectional_lstm_seq2one_autoencoder.BidirectionalLSTMSeq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BidirectionalLSTMSeq2OneAutoencoder</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.autoencoders.html#energy_fault_detector.autoencoders.CNNSeq2OneAutoencoder" title="energy_fault_detector.autoencoders.cnn_seq2one_autoencoder.CNNSeq2OneAutoencoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CNNSeq2OneAutoencoder</span></code></a></p></li>
+</ul>
+<dl class="simple">
+<dt>Input:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">sequence_length,</span> <span class="pre">n_main_features)</span></code> [+ conditional features]</p>
+</dd>
+<dt>Output:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">n_main_features)</span></code> (reconstruction of the last timestep)</p>
+</dd>
+</dl>
+<section id="when-to-use-seq2one-models">
+<h2>When to use Seq2One models<a class="headerlink" href="#when-to-use-seq2one-models" title="Link to this heading"></a></h2>
+<p>Seq2One autoencoders are useful when:</p>
+<ul class="simple">
+<li><p>you care primarily about the <strong>current</strong> (last) timestep,</p></li>
+<li><p>you want <strong>causal</strong> models that only look at past data in the window,</p></li>
+<li><p>you want a single reconstruction per timestep (aligned to the last timestamp of each window).</p></li>
+</ul>
+</section>
+<section id="example-configuration">
+<h2>Example configuration<a class="headerlink" href="#example-configuration" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTMSeq2OneAutoencoder</span>
+<span class="w">    </span><span class="nt">verbose</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">sequence_builder</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span>
+<span class="w">        </span><span class="nt">stride</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">ts_freq</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;30s&quot;</span>
+<span class="w">        </span><span class="nt">pad_incomplete</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">        </span><span class="nt">pad_value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">      </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">32</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">code_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="w">      </span><span class="nt">decoder_layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">32</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">64</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">dropout_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">      </span><span class="nt">regularization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">      </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<span class="w">      </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="w">      </span><span class="nt">epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+<span class="w">      </span><span class="nt">loss_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;mean_squared_error&quot;</span>
+<span class="w">      </span><span class="nt">metrics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;mean_absolute_error&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">early_stopping</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">noise</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+</pre></div>
+</div>
+</section>
+<section id="bidirectional-encoder-variant">
+<h2>Bidirectional encoder variant<a class="headerlink" href="#bidirectional-encoder-variant" title="Link to this heading"></a></h2>
+<p>The bidirectional variant uses the same configuration, plus <code class="docutils literal notranslate"><span class="pre">merge_mode</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BidirectionalLSTMSeq2OneAutoencoder</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">sequence_builder</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span>
+<span class="w">        </span><span class="nt">stride</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">ts_freq</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;30s&quot;</span>
+<span class="w">      </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">64</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">32</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">merge_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span><span class="w">   </span><span class="c1"># &quot;concat&quot;, &quot;sum&quot;, &quot;ave&quot;, or &quot;mul&quot;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">merge_mode</span></code> controls how forward and backward encoder outputs are merged. The
+recommended setting is <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code>.</p>
+</section>
+</section>
+<section id="seq2seq-models-sequence-to-sequence">
+<h1>Seq2Seq models (sequence-to-sequence)<a class="headerlink" href="#seq2seq-models-sequence-to-sequence" title="Link to this heading"></a></h1>
+<p>Seq2Seq autoencoders reconstruct the <strong>entire input window</strong>:</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">LSTMSeqAutoencoder</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CNNAutoencoder</span></code></p></li>
+</ul>
+<dl class="simple">
+<dt>Input:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">sequence_length,</span> <span class="pre">n_main_features)</span></code> [+ conditional features]</p>
+</dd>
+<dt>Output:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">(batch_size,</span> <span class="pre">sequence_length,</span> <span class="pre">n_main_features)</span></code> (reconstruction of the full window)</p>
+</dd>
+</dl>
+<section id="when-to-use-seq2seq-models">
+<h2>When to use Seq2Seq models<a class="headerlink" href="#when-to-use-seq2seq-models" title="Link to this heading"></a></h2>
+<p>Seq2Seq autoencoders are useful when:</p>
+<ul class="simple">
+<li><p>you want to detect anomalies <strong>anywhere within a window</strong>, not just at the last timestep,</p></li>
+<li><p>you care about temporal <em>patterns</em> (e.g. “rise then fall”) rather than point-wise deviations,</p></li>
+<li><p>you want a richer reconstruction error signal (one value per feature and timestep) to localise
+<em>when</em> within a window the anomaly occurs.</p></li>
+</ul>
+</section>
+<section id="seq2one-vs-seq2seq">
+<h2>Seq2One vs Seq2Seq<a class="headerlink" href="#seq2one-vs-seq2seq" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 35.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Aspect</p></th>
+<th class="head"><p>Seq2One</p></th>
+<th class="head"><p>Seq2Seq</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Output shape</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">n_features)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(batch,</span> <span class="pre">sequence_length,</span> <span class="pre">n_features)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Anomaly localisation</p></td>
+<td><p>Single point (last timestep)</p></td>
+<td><p>Per-timestep within window</p></td>
+</tr>
+<tr class="row-even"><td><p>Overlap handling</p></td>
+<td><p>Each timestep gets one prediction</p></td>
+<td><p>Overlapping predictions are averaged</p></td>
+</tr>
+<tr class="row-odd"><td><p>Training cost</p></td>
+<td><p>Lower (smaller decoder)</p></td>
+<td><p>Higher (decoder mirrors encoder)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="configuration-example-lstmseqautoencoder">
+<h2>Configuration example (LSTMSeqAutoencoder)<a class="headerlink" href="#configuration-example-lstmseqautoencoder" title="Link to this heading"></a></h2>
+<p>Seq2Seq models use the same <code class="docutils literal notranslate"><span class="pre">sequence_builder</span></code> block:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTMSeqAutoencoder</span>
+<span class="w">    </span><span class="nt">verbose</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">sequence_builder</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span>
+<span class="w">        </span><span class="nt">stride</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">ts_freq</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;30s&quot;</span>
+<span class="w">        </span><span class="nt">pad_incomplete</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">        </span><span class="nt">pad_value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">      </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">128</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">64</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">32</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">dropout_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+<span class="w">      </span><span class="nt">regularization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">      </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<span class="w">      </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="w">      </span><span class="nt">epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">      </span><span class="nt">loss_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;mean_squared_error&quot;</span>
+<span class="w">      </span><span class="nt">early_stopping</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">noise</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+</pre></div>
+</div>
+</section>
+<section id="cnn-seq2seq-variant">
+<h2>CNN seq2seq variant<a class="headerlink" href="#cnn-seq2seq-variant" title="Link to this heading"></a></h2>
+<p>The CNN autoencoder uses symmetric <code class="docutils literal notranslate"><span class="pre">Conv1D</span></code> / <code class="docutils literal notranslate"><span class="pre">Conv1DTranspose</span></code> stacks with batch
+normalisation:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">autoencoder</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CNNAutoencoder</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">sequence_builder</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span>
+<span class="w">        </span><span class="nt">stride</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">        </span><span class="nt">ts_freq</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;5m&quot;</span>
+
+<span class="w">      </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">128</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">64</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">32</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">kernel_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">      </span><span class="nt">strides</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">      </span><span class="nt">dropout_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">      </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<span class="w">      </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+<span class="w">      </span><span class="nt">epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+<span class="w">      </span><span class="nt">loss_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;mean_squared_error&quot;</span>
+</pre></div>
+</div>
+<p>Key parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">layers</span></code>: Number of filters per Conv1D layer in the encoder. The decoder mirrors these
+layers in reverse. The last number of filters effectively determines the latent dimension
+(per timestep).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kernel_size</span></code>: Width of the 1D convolution window.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strides</span></code>: Stride of the convolution (usually <code class="docutils literal notranslate"><span class="pre">1</span></code> with <code class="docutils literal notranslate"><span class="pre">padding=&quot;same&quot;</span></code> to preserve
+sequence length).</p></li>
+</ul>
+</section>
+<section id="overlap-averaging">
+<h2>Overlap averaging<a class="headerlink" href="#overlap-averaging" title="Link to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">stride</span> <span class="pre">&lt;</span> <span class="pre">sequence_length</span></code>, consecutive windows overlap. During prediction, each
+timestep may appear in multiple output windows. The seq2seq base class <strong>averages</strong> overlapping
+predictions to produce a single value per timestep, resulting in a smoother reconstruction signal.</p>
+</section>
+<section id="example-usage-seq2seq">
+<h2>Example usage (Seq2Seq)<a class="headerlink" href="#example-usage-seq2seq" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector</span><span class="w"> </span><span class="kn">import</span> <span class="n">FaultDetector</span><span class="p">,</span> <span class="n">Config</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;my_timeseries.csv&quot;</span><span class="p">,</span>
+                 <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">],</span>
+                 <span class="n">index_col</span><span class="o">=</span><span class="s2">&quot;timestamp&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+<span class="n">sensor_data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;power&quot;</span><span class="p">,</span> <span class="s2">&quot;wind_speed&quot;</span><span class="p">,</span> <span class="s2">&quot;pitch&quot;</span><span class="p">]]</span>
+<span class="n">normal_index</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span><span class="s2">&quot;lstm_seq2seq_config.yaml&quot;</span><span class="p">)</span>
+<span class="n">fd</span> <span class="o">=</span> <span class="n">FaultDetector</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+
+<span class="n">model_meta</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">,</span> <span class="n">normal_index</span><span class="o">=</span><span class="n">normal_index</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_data</span><span class="p">)</span>
+
+<span class="c1"># Reconstruction has one row per timestep (overlaps averaged):</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reconstruction</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">reconstruction</span><span class="o">.</span><span class="n">index</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="models_overview.html" class="btn btn-neutral float-left" title="Model overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="advanced_usage.html" class="btn btn-neutral float-right" title="Advanced usage and customization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

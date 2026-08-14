@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.column\_selector
+============================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.column_selector
+   :members:
+   :show-inheritance:
+   :undoc-members:

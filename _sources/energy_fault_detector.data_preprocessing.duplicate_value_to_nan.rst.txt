@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_preprocessing.duplicate\_value\_to\_nan
+=====================================================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.duplicate_value_to_nan
+   :members:
+   :show-inheritance:
+   :undoc-members:

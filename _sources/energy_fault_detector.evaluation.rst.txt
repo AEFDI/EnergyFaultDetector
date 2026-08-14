@@ -1,0 +1,16 @@
+energy\_fault\_detector.evaluation
+==================================
+
+.. automodule:: energy_fault_detector.evaluation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.evaluation.care2compare
+   energy_fault_detector.evaluation.care_score
+   energy_fault_detector.evaluation.predist_dataset

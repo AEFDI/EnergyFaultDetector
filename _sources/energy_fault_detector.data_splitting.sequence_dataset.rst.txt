@@ -1,0 +1,7 @@
+energy\_fault\_detector.data\_splitting.sequence\_dataset
+=========================================================
+
+.. automodule:: energy_fault_detector.data_splitting.sequence_dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:

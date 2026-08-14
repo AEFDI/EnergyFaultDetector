@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick fault detection (CLI) &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6528a44c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Usage examples" href="usage_examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick fault detection (CLI)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#expected-csv-format">Expected CSV format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output">Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2one-models-sequence-to-one">Seq2One models (sequence-to-one)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#seq2seq-models-sequence-to-sequence">Seq2Seq models (sequence-to-sequence)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick fault detection (CLI)</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/quick_fault_detection.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-fault-detection-cli">
+<span id="quick-fault-detector-cli"></span><h1>Quick fault detection (CLI)<a class="headerlink" href="#quick-fault-detection-cli" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">quick_fault_detector</span></code> command-line tool runs the complete fault detection pipeline on a CSV file:</p>
+<ul class="simple">
+<li><p>load and split data (train / test),</p></li>
+<li><p>configure a normal-behavior model (optionally optimize hyperparameters),</p></li>
+<li><p>train the autoencoder and threshold,</p></li>
+<li><p>predict anomalies on test data,</p></li>
+<li><p>aggregate anomalies into events,</p></li>
+<li><p>optionally run ARCANA on each event,</p></li>
+<li><p>save plots and CSV results to a directory.</p></li>
+</ul>
+<section id="basic-usage">
+<h2>Basic usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quick_fault_detector<span class="w"> </span>path/to/train_and_test.csv
+</pre></div>
+</div>
+</section>
+<section id="expected-csv-format">
+<h2>Expected CSV format<a class="headerlink" href="#expected-csv-format" title="Link to this heading"></a></h2>
+<p>Internally, the CLI converts your CSV into:</p>
+<ul class="simple">
+<li><p>a training <code class="docutils literal notranslate"><span class="pre">sensor_data</span></code> DataFrame (numeric, wide format), and</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">normal_index</span></code> Series indicating normal behaviour during training, and</p></li>
+<li><p>a test <code class="docutils literal notranslate"><span class="pre">sensor_data</span></code> DataFrame used for prediction.</p></li>
+</ul>
+<p>This is done by <code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.quick_fault_detection.data_loading</span></code>.</p>
+<p>Internally, the timestamp column is converted to a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code> on the
+training and test DataFrames before passing them to the models.</p>
+<p>Your CSV should contain:</p>
+<ul class="simple">
+<li><p><strong>A timestamp column</strong> (optional but recommended), e.g. <code class="docutils literal notranslate"><span class="pre">time_stamp</span></code></p>
+<ul>
+<li><p>Parsed to a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code> if <code class="docutils literal notranslate"><span class="pre">time_column_name</span></code> is provided in the options.</p></li>
+<li><p>Timestamps are sorted and duplicate rows are dropped upstream by the user if needed.</p></li>
+</ul>
+</li>
+<li><p><strong>An optional train/test column</strong>, e.g. <code class="docutils literal notranslate"><span class="pre">train_test</span></code></p>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">train_test_column_name</span></code> is given, it is converted to a boolean mask
+(True = training, False = test).</p></li>
+<li><p>If the column is not already boolean, the mapping in <code class="docutils literal notranslate"><span class="pre">train_test_mapping</span></code> is applied.</p></li>
+</ul>
+</li>
+<li><p><strong>An optional status column</strong>, e.g. <code class="docutils literal notranslate"><span class="pre">status</span></code> or <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code></p>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">status_data_column_name</span></code> is given, it is converted to a boolean mask
+(True = normal, False = non‑normal / faulty / maintenance).</p></li>
+<li><p>If the column is not boolean, the mapping in <code class="docutils literal notranslate"><span class="pre">status_mapping</span></code> is applied.</p></li>
+<li><p>This becomes the <code class="docutils literal notranslate"><span class="pre">normal_index</span></code> used for training.</p></li>
+<li><p>If no status column is provided, <strong>all training samples are assumed normal</strong>, and a warning is logged.</p></li>
+</ul>
+</li>
+<li><p><strong>All other columns</strong> are treated as sensor features:</p>
+<ul>
+<li><p>Numeric columns are used directly.</p></li>
+<li><p>Non‑numeric columns that can be cast to numeric are converted (e.g. strings of numbers).</p></li>
+<li><p>Remaining non‑numeric columns are ignored for the model input.</p></li>
+</ul>
+</li>
+</ul>
+<p>Conceptually:</p>
+<ul class="simple">
+<li><p>Training data: rows where the train/test mask is True (or all rows if no split is provided).</p></li>
+<li><p>Test data: rows where the train/test mask is False, plus any separate test file provided via
+<code class="docutils literal notranslate"><span class="pre">csv_test_data_path</span></code> (these are concatenated).</p></li>
+</ul>
+<p>Example layout:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time_stamp</span><span class="p">,</span><span class="n">train_test</span><span class="p">,</span><span class="n">status</span><span class="p">,</span><span class="n">power</span><span class="p">,</span><span class="n">wind_speed</span><span class="p">,</span><span class="n">pitch</span><span class="p">,</span><span class="n">asset_id</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">train</span><span class="p">,</span><span class="n">production</span><span class="p">,</span>  <span class="mi">500</span><span class="p">,</span>  <span class="mf">7.3</span><span class="p">,</span>  <span class="mf">2.0</span><span class="p">,</span> <span class="mi">1234</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="mi">00</span><span class="p">:</span><span class="mi">10</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">train</span><span class="p">,</span><span class="n">production</span><span class="p">,</span>  <span class="mi">520</span><span class="p">,</span>  <span class="mf">7.5</span><span class="p">,</span>  <span class="mf">2.1</span><span class="p">,</span> <span class="mi">1234</span>
+<span class="mi">2024</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">02</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">prediction</span><span class="p">,</span><span class="n">error</span><span class="p">,</span>  <span class="mi">100</span><span class="p">,</span>  <span class="mf">3.0</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">,</span> <span class="mi">1234</span>
+</pre></div>
+</div>
+<p>With an options YAML like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time_column_name</span><span class="p">:</span> <span class="s2">&quot;time_stamp&quot;</span>
+<span class="n">train_test_column_name</span><span class="p">:</span> <span class="s2">&quot;train_test&quot;</span>
+<span class="n">train_test_mapping</span><span class="p">:</span>
+  <span class="n">train</span><span class="p">:</span> <span class="n">true</span>
+  <span class="n">prediction</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">status_data_column_name</span><span class="p">:</span> <span class="s2">&quot;status&quot;</span>
+<span class="n">status_mapping</span><span class="p">:</span>
+  <span class="n">production</span><span class="p">:</span> <span class="n">true</span>
+  <span class="n">service</span><span class="p">:</span> <span class="n">false</span>
+  <span class="n">error</span><span class="p">:</span> <span class="n">false</span>
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<p>You can pass an options YAML file to control how data is interpreted:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>quick_fault_detector<span class="w"> </span>path/to/data.csv<span class="w"> </span>--options<span class="w"> </span>path/to/options.yaml
+</pre></div>
+</div>
+<p>The options are defined in <code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.main</span></code> and correspond to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Options</span></code>
+dataclass. An example options file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">csv_test_data_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;path/to/separate_test.csv&quot;</span>
+<span class="nt">train_test_column_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;train_test&quot;</span><span class="w">      </span><span class="c1"># True = training data</span>
+<span class="nt">train_test_mapping</span><span class="p">:</span><span class="w">                       </span><span class="c1"># mapping if train test column is not boolean</span>
+<span class="w">  </span><span class="nt">train</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">prediction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">time_column_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;time_stamp&quot;</span>
+<span class="nt">status_data_column_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;status&quot;</span><span class="w">        </span><span class="c1"># True = normal behaviour</span>
+<span class="nt">status_mapping</span><span class="p">:</span><span class="w">                          </span><span class="c1"># mapping if status column is not boolean</span>
+<span class="w">  </span><span class="nt">production</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">service</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">error</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">status_label_confidence_percentage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.95</span>
+<span class="nt">min_anomaly_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">18</span>
+<span class="nt">features_to_exclude</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">do_not_use_this_feature</span>
+<span class="nt">angle_features</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wind_direction</span>
+<span class="nt">automatic_optimization</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">enable_debug_plots</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</pre></div>
+</div>
+<p>The underlying helper functions are implemented in:</p>
+<ul class="simple">
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.quick_fault_detection.data_loading</span></code></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.quick_fault_detection.configuration</span></code></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">energy_fault_detector.quick_fault_detection.pipeline</span></code></p></li>
+</ul>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
+<p>The CLI writes:</p>
+<ul class="simple">
+<li><p>a combined results figure <code class="docutils literal notranslate"><span class="pre">results.png</span></code>,</p></li>
+<li><p>CSV files for <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.FaultDetectionResult" title="energy_fault_detector.core.fault_detection_result.FaultDetectionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">FaultDetectionResult</span></code></a>
+via <code class="docutils literal notranslate"><span class="pre">FaultDetectionResult.save()</span></code>,</p></li>
+<li><p>an <code class="docutils literal notranslate"><span class="pre">events.csv</span></code> file with aggregated anomaly events.</p></li>
+</ul>
+<p>See the notebook
+<code class="docutils literal notranslate"><span class="pre">Example</span> <span class="pre">-</span> <span class="pre">Quick</span> <span class="pre">Fault</span> <span class="pre">Detection.ipynb</span></code> for an interactive walkthrough.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage_examples.html" class="btn btn-neutral float-left" title="Usage examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

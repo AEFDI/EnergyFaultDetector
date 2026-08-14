@@ -1,0 +1,7 @@
+energy\_fault\_detector.evaluation.care2compare
+===============================================
+
+.. automodule:: energy_fault_detector.evaluation.care2compare
+   :members:
+   :show-inheritance:
+   :undoc-members:
