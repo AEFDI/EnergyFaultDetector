@@ -48,9 +48,8 @@ class CNNAutoencoder(Seq2SeqAutoencoder):
               ts_freq: "5m"
               stride: 6
             params:
-              sequence_length: 12
               dropout_rate: 0.0
-              filters: [128, 64, 32]
+              layers: [128, 64, 32]
               learning_rate: 0.001
               batch_size: 128,
               epochs: 15
