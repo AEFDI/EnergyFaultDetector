@@ -88,34 +88,51 @@ class SequenceDatasetBuilder:
         """
 
         n_samples = len(timestamps)
+
         if n_samples < self.sequence_length:
-            raise ValueError("No valid windows found (series shorter than sequence_length).")
+            raise ValueError(
+                "No valid windows found (series shorter than sequence_length)."
+            )
 
-        # Fast path: no gaps at all → all windows are valid
+        candidate_starts = np.arange(
+            0,
+            n_samples - self.sequence_length + 1,
+            stride,
+            dtype=int,
+        )
+
+        # Fast path: every candidate window is valid.
         if gap_handler.data_gaps is None:
-            # starts: 0, step, 2*step, ...
-            starts = np.arange(0, n_samples - self.sequence_length + 1, stride, dtype=int)
-            # Build an index matrix of shape (n_windows, sequence_length)
-            window_idx = starts[:, None] + np.arange(self.sequence_length)[None, :]
-            window_timestamps = timestamps[window_idx]
-            return starts, window_timestamps
+            window_idx = (
+                    candidate_starts[:, None]
+                    + np.arange(self.sequence_length, dtype=int)[None, :]
+            )
+            return candidate_starts, timestamps[window_idx]
 
-        starts: List[int] = []
-        window_timestamps: List[np.ndarray] = []
+        # A window is invalid if it contains any adjacent timestamp gap.
+        adjacent_gaps = np.diff(timestamps) > gap_handler.freq
 
-        for start_idx in range(0, n_samples - self.sequence_length + 1, stride):
-            start_ts = timestamps[start_idx]
-            end_ts = timestamps[start_idx + self.sequence_length - 1]
-            if gap_handler.has_data_gaps(start_ts, end_ts):
-                continue
+        gap_prefix = np.concatenate(
+            [np.array([0], dtype=np.int64), np.cumsum(adjacent_gaps, dtype=np.int64)]
+        )
 
-            starts.append(start_idx)
-            window_timestamps.append(timestamps[start_idx: start_idx + self.sequence_length])
+        gaps_per_window = (
+                gap_prefix[candidate_starts + self.sequence_length - 1]
+                - gap_prefix[candidate_starts]
+        )
 
-        if not starts:
+        starts = candidate_starts[gaps_per_window == 0]
+
+        if len(starts) == 0:
             raise ValueError("No valid windows found (all windows cross data gaps).")
 
-        return np.array(starts, dtype=int), np.array(window_timestamps)
+        window_idx = (
+                starts[:, None]
+                + np.arange(self.sequence_length, dtype=int)[None, :]
+        )
+        window_timestamps = timestamps[window_idx]
+
+        return starts, window_timestamps
 
     def build_sliding_dataset(
         self,
