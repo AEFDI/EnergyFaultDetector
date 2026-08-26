@@ -128,7 +128,6 @@ class FaultDetector(FaultDetectionModel):
         self._resolve_conditional_features(x_prepped)
 
         # Post-preprocessing check: conditionals may have been dropped
-        # TODO: consider adding the encoded categorical features to conditional_features at this point. Declared categorical features can be used as conditions after encoding.
         if not self.config.protect_conditional_features and self.autoencoder.is_conditional:
             # Check if conditionals survived preprocessing
             surviving = [
@@ -476,8 +475,8 @@ class FaultDetector(FaultDetectionModel):
         if not configured:
             return []
 
-        available = [f for f in configured if f in sensor_data.columns]
-        missing = set(configured) - set(available)
+        available = [col for col in sensor_data.columns if any(declared_condition in col for declared_condition in configured)] # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring.
+        missing = [col for col in configured if not any(col in available_condition for available_condition in available)] # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring.
 
         if missing:
             logger.warning(f"Conditional features not found in sensor_data and will be ignored: "
