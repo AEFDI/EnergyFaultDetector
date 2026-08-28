@@ -67,7 +67,6 @@ class FaultDetector(FaultDetectionModel):
         ) if protect else []
 
         # Data clipping (outlier clipping)
-        # TODO: what happens in DataClipper if data contains non-numerical features?
         if self.config.data_clipping:
             logger.debug('Clip data before scaling.')
             clipper_params = self.config.data_clipping_params.copy()
@@ -475,8 +474,9 @@ class FaultDetector(FaultDetectionModel):
         configured = self.autoencoder.conditional_features or []
         if not configured:
             return []
-
-        available = [col for col in sensor_data.columns if any(declared_condition in col for declared_condition in configured)] # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring.
+        # TODO: this can produce undesired results if any column in the original data contains a substring of a declared conditional feature name.
+        # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring. The applies for timestamp and column_diff transformers.
+        available = [col for col in sensor_data.columns if any(declared_condition in col for declared_condition in configured)] 
 
         if not available:
             self._fallback_if_no_conditionals()

@@ -195,17 +195,14 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         result = super().fit(X=X, y=y, **fit_params)
 
         # Validate that protected features are in the output
+        # TODO: protected features shouldnt be dropped. Include this in a test.
         if protected_features:
             output_features = self.get_feature_names_out()
-            missing_features = [f for f in protected_features if f not in output_features]
+            available_protected = [f for f in protected_features if f in X.columns]
+            missing_features = [col for col in output_features if not any(available_feature in col for available_feature in available_protected)]
             if missing_features:
                 raise ValueError(
-                    f"Protected features were dropped by the preprocessing pipeline: {missing_features}. "
-                    f"This may be caused by AngleTransformer or CounterDiffTransformer modifying these features. "
-                    f"Please ensure protected features (e.g., conditional features for autoencoders) are not "
-                    f"transformed by these steps or consider the transformed version of these features (e.g. "
-                    f"<feature_name>_sin, <feature_name>_cos, <feature_name>_rate, <feature_name>_diff) as "
-                    f"conditional features."
+                    f"Protected features were dropped by the preprocessing pipeline: {missing_features}."
                 )
 
         return result
