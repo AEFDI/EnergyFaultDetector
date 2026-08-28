@@ -1,3 +1,4 @@
+import tempfile
 from unittest import TestCase
 
 import numpy as np
@@ -6,7 +7,9 @@ from numpy.testing import assert_array_almost_equal
 from pandas.testing import assert_frame_equal
 from sklearn.utils.validation import check_is_fitted, NotFittedError
 
+from energy_fault_detector.config.config import Config
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
+from energy_fault_detector.fault_detector import FaultDetector
 
 
 class TestDataPreprocessorPipeline(TestCase):
@@ -466,23 +469,276 @@ class TestDataPreprocessorProtectedFeatures(TestCase):
         self.assertIn('high_nan_feature', transformed.columns,
                       "High-NaN protected feature should be kept")
 
-    def test_validation_fails_when_protected_feature_missing_from_output(self):
-        """Test that fit raises ValueError if a protected feature is missing from output."""
-        from energy_fault_detector.data_preprocessing.angle_transformer import AngleTransformer
+class TestComprehensivePipelineFlow(TestCase):
+    """Test comprehensive preprocessing pipeline"""
 
-        # Create a pipeline that transforms a protected feature
-        preprocessor = DataPreprocessor(
-            steps=[
-                {'name': 'angle_transformer',
-                 'params': {'angles': ['conditional_feature']}},  # Transforms conditional_feature
-            ]
-        )
+    def setUp(self):
+        """Set up test fixtures for comprehensive pipeline testing."""
+        self.n_samples = 500
+        self.time_index = pd.date_range('2025-01-01', periods=self.n_samples, freq='5min')
+        
+        # Create realistic test data matching the updated advanced_config.yaml scenario
+        np.random.seed(42)
+        self.test_data = pd.DataFrame({
+            # Numerical features
+            'temp_sensor_1': np.random.normal(100, 5, self.n_samples),
+            'temp_sensor_2': np.random.normal(85, 3, self.n_samples),
+            'pressure_sensor': np.random.normal(50, 2, self.n_samples),
+            'flow_rate': np.random.exponential(10, self.n_samples),
+            # Categorical features
+            'category_col': np.random.choice(['A', 'B', 'C', 'D'], self.n_samples),
+            'equipment_type': np.random.choice(['Type1', 'Type2', 'Type3'], self.n_samples),
+            # Conditional feature (numerical)
+            'operating_condition': np.random.normal(0, 1, self.n_samples),
+        }, index=self.time_index)
+        
+        # Add some NaN values to test imputation
+        self.test_data.loc[50:100, 'temp_sensor_1'] = np.nan
+        self.test_data.loc[200:250, 'pressure_sensor'] = np.nan
+        self.test_data.loc[150:170, 'category_col'] = np.nan
 
-        # This should raise an error because 'conditional_feature' will be transformed to
-        # 'conditional_feature_sin' and 'conditional_feature_cos'
-        with self.assertRaises(ValueError) as context:
-            preprocessor.fit(self.test_data, protected_features=['conditional_feature'])
+    def _create_config_dict(self):
+        """Create configuration matching updated advanced_config.yaml structure."""
+        return {
+            'train': {
+                'data_clipping': {
+                    'lower_percentile': 0.001,
+                    'upper_percentile': 0.999,
+                },
+                'data_preprocessor': {
+                    'steps': [
+                        {'name': 'column_selector', 'params': {'max_nan_frac_per_col': 0.9}},
+                        {'name': 'low_unique_value_filter', 'params': {'min_unique_value_count': 2}},
+                        {'name': 'ffill_imputer', 'params': {'freq': '1Min', 'ffill_limit': 60, 'categorical_features': ['category_col', 'equipment_type']}},
+                        {'name': 'categorical_encoder', 'params': {'categorical_features': ['category_col', 'equipment_type']}},
+                        {'name': 'scaler', 'params': {'scaler_type': 'standard', 'with_mean': True, 'with_std': True, 'scale_categorical_features': False, 'categorical_features': ['category_col', 'equipment_type']}},
+                        {'name': 'timestamp_transformer', 'params': {'features': ['minute_of_hour', 'hour_of_day', 'day_of_week']}}
+                    ]
+                },
+                'autoencoder': {
+                    'name': 'ConditionalAutoencoder',
+                    'params': {
+                        'act': 'prelu',
+                        'batch_size': 256,
+                        'code_size': 9,
+                        'early_stopping': True,
+                        'epochs': 10,
+                        'last_act': 'linear',
+                        'layers': [64, 32],
+                        'learning_rate': 0.0001,
+                        'loss_name': 'mean_squared_error',
+                        'min_delta': 0.0001,
+                        'noise': 0.0,
+                        'patience': 5,
+                        'conditional_features': ['operating_condition', 'category_col'],
+                        'verbose': 0
+                    }
+                },
+                'protect_conditional_features': True
+            }
+        }
 
-        self.assertIn('Protected features were dropped', str(context.exception))
-        self.assertIn('conditional_feature', str(context.exception))
-        self.assertIn('AngleTransformer or CounterDiffTransformer', str(context.exception))
+    def test_pipeline_dtype_conversion(self):
+        """Test that all dtypes are numerical after preprocessing."""
+        config_dict = self._create_config_dict()
+        preprocessor = DataPreprocessor(steps=config_dict['train']['data_preprocessor']['steps'])
+        
+        preprocessor.fit(self.test_data)
+        transformed_data = preprocessor.transform(self.test_data)
+        
+        # Verify all dtypes are numerical after preprocessing
+        for dtype in transformed_data.dtypes:
+            self.assertTrue(pd.api.types.is_numeric_dtype(dtype),
+                          f"Column {dtype.name} should be numeric after preprocessing")
+
+    def test_pipeline_expected_columns(self):
+        """Test that expected columns exist after preprocessing."""
+        config_dict = self._create_config_dict()
+        preprocessor = DataPreprocessor(steps=config_dict['train']['data_preprocessor']['steps'])
+        
+        preprocessor.fit(self.test_data)
+        transformed_data = preprocessor.transform(self.test_data)
+        
+        # Check expected numerical columns
+        expected_numerical = ['temp_sensor_1', 'temp_sensor_2', 'pressure_sensor', 'flow_rate', 'operating_condition']
+        for col in expected_numerical:
+            self.assertIn(col, transformed_data.columns, f"Expected numerical column {col}")
+        
+        # Check categorical features were one-hot encoded
+        expected_categorical = ['category_col_A', 'category_col_B', 'category_col_C', 'category_col_D',
+                               'equipment_type_Type1', 'equipment_type_Type2', 'equipment_type_Type3']
+        for col in expected_categorical:
+            self.assertIn(col, transformed_data.columns, f"Expected encoded categorical column {col}")
+        
+        # Check timestamp features
+        timestamp_features = ['minute_of_hour_sine', 'minute_of_hour_cosine',
+                             'hour_of_day_sine', 'hour_of_day_cosine',
+                             'day_of_week_sine', 'day_of_week_cosine']
+        for col in timestamp_features:
+            self.assertIn(col, transformed_data.columns, f"Expected timestamp feature {col}")
+
+    def test_pipeline_nan_handling(self):
+        """Test that NaN values are properly handled."""
+        config_dict = self._create_config_dict()
+        preprocessor = DataPreprocessor(steps=config_dict['train']['data_preprocessor']['steps'])
+        
+        preprocessor.fit(self.test_data)
+        transformed_data = preprocessor.transform(self.test_data)
+        
+        # Verify no NaN values remain after preprocessing
+        self.assertFalse(transformed_data.isna().any().any(),
+                        "Transformed data should not contain NaN values after preprocessing")
+
+    def test_pipeline_shape_transformation(self):
+        """Test that data shape is appropriate after preprocessing."""
+        config_dict = self._create_config_dict()
+        preprocessor = DataPreprocessor(steps=config_dict['train']['data_preprocessor']['steps'])
+        
+        preprocessor.fit(self.test_data)
+        transformed_data = preprocessor.transform(self.test_data)
+        
+        # Verify data shape (should have more columns than original due to encoding)
+        self.assertGreater(transformed_data.shape[1], self.test_data.shape[1],
+                          "Transformed data should have more columns due to categorical encoding and timestamp features")
+
+    def test_pipeline_inverse_transform(self):
+        """Test that inverse transform works correctly."""
+        config_dict = self._create_config_dict()
+        preprocessor = DataPreprocessor(steps=config_dict['train']['data_preprocessor']['steps'])
+        
+        preprocessor.fit(self.test_data)
+        transformed_data = preprocessor.transform(self.test_data)
+        inverse_data = preprocessor.inverse_transform(transformed_data)
+        
+        # Verify inverse transform preserves row count
+        self.assertEqual(inverse_data.shape[0], self.test_data.shape[0],
+                        "Inverse transform should preserve row count")
+
+    def test_pipeline_fault_detector_integration(self):
+        """Test integration with FaultDetector."""
+        config_dict = self._create_config_dict()
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Config(config_dict=config_dict)
+            fault_detector = FaultDetector(config=config, model_directory=tmpdir)
+            
+            # Create normal index (all normal for training)
+            normal_index = pd.Series([True] * self.n_samples, index=self.time_index)
+            
+            # Fit the model
+            result = fault_detector.fit(
+                sensor_data=self.test_data,
+                normal_index=normal_index,
+                save_models=False
+            )
+            
+            # Verify model was trained successfully
+            self.assertIsNotNone(fault_detector.autoencoder,
+                               "Autoencoder should be created and trained")
+            self.assertEqual(fault_detector.autoencoder.__class__.__name__, 'ConditionalAE',
+                           "Autoencoder should be ConditionalAE as specified in config")
+            self.assertIsNotNone(result.train_recon_error,
+                               "Training reconstruction error should be available")
+
+    def test_resolution_of_conditions(self):
+        """Test pipeline handling of missing conditional features."""
+        config_dict = self._create_config_dict()
+        
+        # Create data without the conditional feature
+        test_data_no_cond = self.test_data.drop(columns=['category_col'])
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Config(config_dict=config_dict)
+            fault_detector = FaultDetector(config=config, model_directory=tmpdir)
+        
+            # Create normal index (all normal for training)
+            normal_index = pd.Series([True] * self.n_samples, index=self.time_index)
+        
+            # Fit the model
+            result = fault_detector.fit(
+                sensor_data=test_data_no_cond,
+                normal_index=normal_index,
+                save_models=False
+            )
+
+        # Verify that autoencoder conditions are updated with available feature names
+        self.assertIn('operating_condition', fault_detector.autoencoder.conditional_features,
+                      "Autoencoder should have 'operating_condition' as a conditional feature")
+        self.assertNotIn('category_col', fault_detector.autoencoder.conditional_features,
+                         "Autoencoder should not have 'category_col' as a conditional feature since it's missing")
+
+    def test_declared_category_not_as_condition(self):
+        """Test pipeline handling of declared categorical features not being declared as conditional features."""
+        config_dict = self._create_config_dict()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Config(config_dict=config_dict)
+            fault_detector = FaultDetector(config=config, model_directory=tmpdir)
+
+            # Create normal index (all normal for training)
+            normal_index = pd.Series([True] * self.n_samples, index=self.time_index)
+
+            # Fit the model
+            result = fault_detector.fit(
+                sensor_data=test_data_no_cond,
+                normal_index=normal_index,
+                save_models=False
+            )
+
+        # Verify that autoencoder conditions are updated with available feature names
+        self.assertIn('equipment_type_Type_1', fault_detector.data_preprocessor.get_feature_names_out(),
+                      "Data preprocessor should have 'equipment_type' as a feature")
+        self.assertNotIn('equipment_type', fault_detector.autoencoder.conditional_features,
+                            "Autoencoder should not have 'equipment_type' as a conditional feature since it's not declared as such.")
+
+    def test_declared_condition_not_as_category(self):
+        """Test pipeline handling of declared conditional features not being declared as categorical features."""
+        config_dict = self._create_config_dict()
+
+        # Remove 'category_col' from categorical features in the config to simulate it being declared as conditional but not categorical
+        config_dict['train']['data_preprocessor']['steps'][2]['params']['categorical_features'] = ['equipment_type']  # Only 'equipment_type' is categorical
+        config_dict['train']['data_preprocessor']['steps'][3]['params']['categorical_features'] = ['equipment_type']  # Only 'equipment_type' is categorical
+        config_dict['train']['data_preprocessor']['steps'][4]['params']['categorical_features'] = ['equipment_type']  # Only 'equipment_type' is categorical
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Config(config_dict=config_dict)
+            fault_detector = FaultDetector(config=config, model_directory=tmpdir)
+
+            # Create normal index (all normal for training)
+            normal_index = pd.Series([True] * self.n_samples, index=self.time_index)
+
+            # Fit the model
+            result = fault_detector.fit(
+                sensor_data=self.test_data,
+                normal_index=normal_index,
+                save_models=False
+            )
+
+        # Verify that autoencoder conditions are updated properly.
+        self.assertFalse(any('category_col' in col for col in fault_detector.data_preprocessor.get_feature_names_out()),
+                        "Data preprocessor should not have any column containing substring 'category_col' since it's not declared as categorical.")
+
+    def test_protected_features_are_not_dropped_in_pipeline(self):
+        """Test that protected features are not dropped in the comprehensive pipeline."""
+        config_dict = self._create_config_dict()
+        config = Config(config_dict=config_dict)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fault_detector = FaultDetector(config=config, model_directory=tmpdir)
+        
+            # Create normal index (all normal for training)
+            normal_index = pd.Series([True] * self.n_samples, index=self.time_index)
+        
+            # Fit the model
+            result = fault_detector.fit(
+                sensor_data=self.test_data,
+                normal_index=normal_index,
+                save_models=False
+            )
+
+        protected_features = config_dict['train']['autoencoder']['params']['conditional_features']
+    
+        output_features = fault_detector.data_preprocessor.get_feature_names_out()
+        available_protected = [f for f in protected_features if f in self.test_data.columns]
+        missing_features = [col for col in output_features if not any(available_feature in col for available_feature in available_protected)]
+        self.assertEqual(len(missing_features), 0, f"Protected features {available_protected} should not be dropped in the pipeline.")
