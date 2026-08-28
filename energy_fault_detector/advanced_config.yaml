@@ -55,7 +55,7 @@ train:
     validation_split: 0.2
 
   autoencoder:
-    name: MultilayerAutoencoder
+    name: ConditionalAutoencoder
     params:
       act: prelu
       batch_size: 256
@@ -71,6 +71,7 @@ train:
       min_delta: 0.0001
       noise: 0.0
       patience: 5
+      conditional_features: [] # Include conditional features in the list
     verbose: 0
 
   anomaly_score:
