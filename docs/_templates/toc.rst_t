@@ -1,4 +1,4 @@
-{{ header | heading }}
+{{ header | replace('energy_fault_detector.', '') | heading }}
 
 .. toctree::
    :maxdepth: {{ maxdepth }}

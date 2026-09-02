@@ -125,6 +125,7 @@ class ForwardFillImputer(DataTransformer):
         """Applies time-based forward-fill imputation and cleaning pipeline to input data.
 
         The steps executed are:
+
         1. Forward-fill all NaN values.
         2. Invalidate fills where the elapsed time from the last valid observation exceeds
            ``ffill_limit_`` (set those values back to NaN).

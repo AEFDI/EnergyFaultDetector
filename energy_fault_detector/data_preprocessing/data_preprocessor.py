@@ -195,8 +195,10 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # Call parent fit
         result = super().fit(X=X, y=y, **fit_params)
 
-        # Validate that protected features are in the output
-        # TODO: protected features shouldnt be dropped. Include this in a test.
+        # Validate that protected features survive the pipeline. ColumnSelector and LowUniqueValueFilter
+        # receive protected_features via fit_params and skip dropping them, but other steps (e.g. imputers
+        # dropping all-NaN columns) do not. This check enforces that protected features are still present
+        # in the output and raises if they were dropped (tested in test_data_preprocessor.py).
         if protected_features:
             output_features = self.get_feature_names_out()
             available_protected = [f for f in protected_features if f in X.columns]

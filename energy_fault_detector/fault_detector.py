@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
-from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
@@ -44,6 +43,7 @@ class FaultDetector(FaultDetectionModel):
         If categorical features are declared in config file, data is split into categorical and numerical features.
         Boolean features are treated the same as numerical features. Encoded categorical features are scaled or not
         depending on the config flag.
+
         Returns:
             Tuple[pd.DataFrame, pd.DataFrame, pd.Series]: Preprocessed training data after filtering only normal index, 
             original sensor data (clipped if data clipping is enabled), and normal index.
@@ -126,17 +126,23 @@ class FaultDetector(FaultDetectionModel):
         # Resolve declared conditions against preprocessed data
         self._resolve_conditional_features(x_prepped)
 
-        # Check conditionals: avilable conditions in original data and surviving conditions during preprocessing.
+        # Check conditionals: available conditions in original data and surviving conditions during preprocessing.
         if self.autoencoder.is_conditional:
             configured = self.autoencoder.conditional_features or []
-            available = [declared_condition for declared_condition in configured if any(declared_condition in col for col in sensor_data.columns)] # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring.
+            # Uses nested for loop in case categorical cols have been encoded already and contain the original
+            # conditional feature name as a substring.
+            available = [declared_condition for declared_condition in configured
+                         if any(declared_condition in col for col in sensor_data.columns)]
             missing = [declared_condition for declared_condition in configured if declared_condition not in available]
             if missing:
                 logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
                                f"{sorted(missing)}. Using: {available or 'none'}")
 
             if not self.config.protect_conditional_features:
-                surviving = [declared_condition for declared_condition in available if any(declared_condition in col for col in x_prepped.columns)] # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring.
+                # Uses nested for loop in case categorical cols have been encoded already and contain the original
+                # conditional feature name as a substring.
+                surviving = [declared_condition for declared_condition in available
+                             if any(declared_condition in col for col in x_prepped.columns)]
                 dropped_by_pipeline = set(available or []) - set(surviving)
                 
                 if dropped_by_pipeline:
@@ -474,9 +480,10 @@ class FaultDetector(FaultDetectionModel):
         configured = self.autoencoder.conditional_features or []
         if not configured:
             return []
-        # TODO: this can produce undesired results if any column in the original data contains a substring of a declared conditional feature name.
-        # Uses nested for loop in case categorical cols have been encoded already and contain the original conditional feature name as a substring. The applies for timestamp and column_diff transformers.
-        available = [col for col in sensor_data.columns if any(declared_condition in col for declared_condition in configured)] 
+
+        # TODO: this can produce undesired results if any column in the original data contains a substring of a declared
+        #  conditional feature name.
+        available = [col for col in sensor_data.columns if any(declared_condition in col for declared_condition in configured)]
 
         if not available:
             self._fallback_if_no_conditionals()

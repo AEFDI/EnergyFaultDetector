@@ -53,6 +53,16 @@ suppress_warnings = [
 
 autoclass_content = 'both'
 
+# Exclude sklearn boilerplate methods (metadata routing, set_output) that are
+# not re-implemented in our classes.
+autodoc_default_options = {
+    'exclude-members': (
+        'set_fit_request, set_transform_request, set_inverse_transform_request, '
+        'set_predict_request, set_score_request, set_output, get_metadata_routing, '
+        '__sklearn_is_fitted__'
+    ),
+}
+
 # ======================================================================================
 # No configurable options below this line
 
@@ -209,78 +219,92 @@ texinfo_documents = [
 ]
 
 
-# def run_apidoc(app):
-#     """Generate API .rst files with sphinx-apidoc, like in CI:
+def run_apidoc(app):
+    """Generate API .rst files with sphinx-apidoc, like in CI:
 
-#        sphinx-apidoc -o docs energy_fault_detector/ --module-first --force --separate --templatedir docs/_templates
-#     """
+       sphinx-apidoc -o docs energy_fault_detector/ --module-first --force --separate --templatedir docs/_templates
+    """
 
-#     # Only run this step if we're building the HTML docs
-#     if app.builder.name != "html":
-#         return
+    # Only run this step if we're building the HTML docs
+    if app.builder.name != "html":
+        return
 
-#     from sphinx.ext.apidoc import main as apidoc_main
-#     from pathlib import Path
+    from sphinx.ext.apidoc import main as apidoc_main
+    from pathlib import Path
 
-#     here = Path(__file__).parent
-#     pkg_dir = here.parent / IMPORT_NAME
-#     out_dir = here
-#     templates = here / "_templates"
+    here = Path(__file__).parent
+    pkg_dir = here.parent / IMPORT_NAME
+    out_dir = here
+    templates = here / "_templates"
 
-#     apidoc_main([
-#         "-o", str(out_dir),
-#         str(pkg_dir),
-#         "--module-first",
-#         "--force",
-#         "--separate",
-#         "--templatedir", str(templates),
-#         # Following files are skipped
-#         # Quick fault detection internals
-#         str(pkg_dir / "main.py"),
-#         str(pkg_dir / "quick_fault_detection" / "configuration.py"),
-#         str(pkg_dir / "quick_fault_detection" / "data_loading.py"),
-#         str(pkg_dir / "quick_fault_detection" / "optimization.py"),
-#         str(pkg_dir / "quick_fault_detection" / "output.py"),
-#         str(pkg_dir / "quick_fault_detection" / "pipeline.py"),
-#         str(pkg_dir / "quick_fault_detection" / "quick_fault_detector.py"),
-#         # core internals
-#         str(pkg_dir / "core" / "anomaly_score.py"),
-#         str(pkg_dir / "core" / "data_transformer.py"),
-#         str(pkg_dir / "core" / "threshold_selector.py"),
-#         str(pkg_dir / "core" / "fault_detection_result.py"),
-#         str(pkg_dir / "core" / "fault_detection_model.py"),
-#         str(pkg_dir / "core" / "model_factory.py"),
-#         str(pkg_dir / "core" / "save_load_mixin.py"),
-#         # internal utilities
-#         str(pkg_dir / "utils" / "index_utils.py"),
-#         # config internals
-#         str(pkg_dir / "config" / "base_config.py"),
-#         str(pkg_dir / "config" / "config.py"),
-#         str(pkg_dir / "config" / "quickstart_config.py"),
-#         # Class specific files (documented directly under the top module)
-#         # autoencoder
-#         str(pkg_dir / "autoencoders" / "multilayer_autoencoder.py"),
-#         str(pkg_dir / "autoencoders" / "conditional_autoencoder.py"),
-#         str(pkg_dir / "autoencoders" / "lstm_seq2one_autoencoder.py"),
-#         str(pkg_dir / "autoencoders" / "cnn_seq2one_autoencoder.py"),
-#         str(pkg_dir / "autoencoders" / "bidirectional_lstm_seq2one_autoencoder.py"),
-#         str(pkg_dir / "autoencoders" / "cnn_seq_autoencoder.py"),
-#         str(pkg_dir / "autoencoders" / "lstm_seq2seq_autoencoder.py"),
-#         # anomaly score
-#         str(pkg_dir / "anomaly_scores" / "rmse_score.py"),
-#         str(pkg_dir / "anomaly_scores" / "mahalanobis_score.py"),
-#         # threshold selector
-#         str(pkg_dir / "threshold_selectors" / "adaptive_threshold.py"),
-#         str(pkg_dir / "threshold_selectors" / "fdr_threshold.py"),
-#         str(pkg_dir / "threshold_selectors" / "fbeta_threshold.py"),
-#         str(pkg_dir / "threshold_selectors" / "quantile_threshold.py"),
-#         # main class (documented directly under the top module)
-#         str(pkg_dir / "fault_detector.py"),
-#     ])
+    apidoc_main([
+        "-o", str(out_dir),
+        str(pkg_dir),
+        "--module-first",
+        "--force",
+        "--separate",
+        "--templatedir", str(templates),
+        # Following files are skipped
+        # Quick fault detection internals
+        str(pkg_dir / "main.py"),
+        str(pkg_dir / "quick_fault_detection" / "configuration.py"),
+        str(pkg_dir / "quick_fault_detection" / "data_loading.py"),
+        str(pkg_dir / "quick_fault_detection" / "optimization.py"),
+        str(pkg_dir / "quick_fault_detection" / "output.py"),
+        str(pkg_dir / "quick_fault_detection" / "pipeline.py"),
+        str(pkg_dir / "quick_fault_detection" / "quick_fault_detector.py"),
+        # core internals
+        str(pkg_dir / "core" / "anomaly_score.py"),
+        str(pkg_dir / "core" / "data_transformer.py"),
+        str(pkg_dir / "core" / "threshold_selector.py"),
+        str(pkg_dir / "core" / "fault_detection_result.py"),
+        str(pkg_dir / "core" / "fault_detection_model.py"),
+        str(pkg_dir / "core" / "model_factory.py"),
+        str(pkg_dir / "core" / "save_load_mixin.py"),
+        # internal utilities
+        str(pkg_dir / "utils" / "index_utils.py"),
+        # config internals
+        str(pkg_dir / "config" / "base_config.py"),
+        str(pkg_dir / "config" / "config.py"),
+        str(pkg_dir / "config" / "quickstart_config.py"),
+        # Class specific files (documented directly under the top module)
+        # autoencoder
+        str(pkg_dir / "autoencoders" / "multilayer_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "conditional_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "lstm_seq2one_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "cnn_seq2one_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "bidirectional_lstm_seq2one_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "cnn_seq_autoencoder.py"),
+        str(pkg_dir / "autoencoders" / "lstm_seq2seq_autoencoder.py"),
+        # anomaly score
+        str(pkg_dir / "anomaly_scores" / "rmse_score.py"),
+        str(pkg_dir / "anomaly_scores" / "mahalanobis_score.py"),
+        # threshold selector
+        str(pkg_dir / "threshold_selectors" / "adaptive_threshold.py"),
+        str(pkg_dir / "threshold_selectors" / "fdr_threshold.py"),
+        str(pkg_dir / "threshold_selectors" / "fbeta_threshold.py"),
+        str(pkg_dir / "threshold_selectors" / "quantile_threshold.py"),
+        # main class (documented directly under the top module)
+        str(pkg_dir / "fault_detector.py"),
+    ])
 
 
-# def setup(app):
-#     app.connect("builder-inited", run_apidoc)
+def _skip_sklearn_dunders(app, what, name, obj, skip, options):
+    """Skip sklearn boilerplate dunder methods that have docstrings.
+
+    ``napoleon_include_special_with_doc = True`` forces inclusion of special
+    methods with docstrings via ``emit_first_result``, overriding
+    ``exclude-members``. This handler runs with higher priority (lower number)
+    so it is called before Napoleon's handler and takes precedence.
+    """
+    if name == '__sklearn_is_fitted__':
+        return True
+    return None
+
+
+def setup(app):
+    app.connect("builder-inited", run_apidoc)
+    app.connect("autodoc-skip-member", _skip_sklearn_dunders, priority=100)
 
 
 def linkcode_resolve(domain, info):
