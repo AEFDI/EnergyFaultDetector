@@ -4,8 +4,7 @@ CARE2Compare guide
 .. note::
 
     This page documents how CARE2Compare support is exposed in EnergyFaultDetector.
-    For generated API reference pages, see the corresponding module documentation.
-    For interpretation caveats and recurring dataset questions, see :doc:`care2compare_faq`.
+    For interpretation and recurring dataset questions, see :doc:`care2compare_faq`.
 
 EnergyFaultDetector provides support for:
 
@@ -161,7 +160,7 @@ Example:
 CARE score overview
 -------------------
 
-The CARE score combines four aspects of detection quality:
+The CARE score combines four aspects of fault detection quality:
 
 - **Coverage**
 - **Accuracy**
@@ -174,7 +173,7 @@ At a high level:
 - Accuracy is computed on normal events,
 - Reliability is an event-wise score based on event decisions.
 
-The package implementation follows the CARE benchmark logic provided in the publication and subsequent
+The package implementation follows the CARE logic provided in the publication and subsequent
 package support. For detailed interpretation notes, see :doc:`care2compare_faq`.
 
 Wind-farm-specific interpretation
