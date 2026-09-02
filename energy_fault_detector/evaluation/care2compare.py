@@ -15,7 +15,7 @@ logger = logging.getLogger('energy_fault_detector')
 class Care2CompareDataset:
     """Loads the Care to Compare Dataset (accompanying paper https://doi.org/10.3390/data9120138).
 
-    The data can be downloaded either manually from https://doi.org/10.5281/zenodo.14958989 (in this case specify
+    The data can be downloaded either manually from https://doi.org/10.5281/zenodo.10958774 (in this case specify
     `path`) or it can be downloaded automatically by setting download_dataset to True.
 
     By default, only the averages are read. See statistics argument of the data loading methods.
@@ -46,7 +46,7 @@ class Care2CompareDataset:
             logger.info("Downloading CARE to Compare dataset (~5 GB) from zenodo. Depending on your internet "
                         "connection this can take some time. Additionally the downloaded zip-file will be unzipped "
                         "(~20 GB) which can also take longer.")
-            path = download_zenodo_data(identifier="10.5281/zenodo.15846963", dest=path, overwrite=False)
+            path = download_zenodo_data(identifier="10.5281/zenodo.10958774", dest=path, overwrite=False)
         self.path: Path = Path(path)
 
         self.wind_farms: Dict[str, Path] = {
