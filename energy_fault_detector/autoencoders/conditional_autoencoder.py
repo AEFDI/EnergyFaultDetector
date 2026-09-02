@@ -35,7 +35,7 @@ class ConditionalAE(Autoencoder):
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           autoencoder:
@@ -44,7 +44,7 @@ class ConditionalAE(Autoencoder):
               layers: [200]
               code_size: 40
               learning_rate: 0.001
-              batch_size: 128,
+              batch_size: 128
               epochs: 15
               loss_name: mse
               conditional_features:

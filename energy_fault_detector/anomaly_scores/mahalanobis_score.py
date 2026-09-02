@@ -25,7 +25,7 @@ class MahalanobisScore(AnomalyScore):
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           anomaly_score:

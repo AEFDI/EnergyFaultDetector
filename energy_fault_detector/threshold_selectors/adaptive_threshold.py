@@ -35,7 +35,7 @@ class AdaptiveThresholdSelector(ThresholdSelector):
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           threshold_selector:

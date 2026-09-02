@@ -25,7 +25,7 @@ class BlockDataSplitter:
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           data_splitter:

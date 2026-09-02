@@ -38,7 +38,7 @@ class CNNAutoencoder(Seq2SeqAutoencoder):
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           autoencoder:

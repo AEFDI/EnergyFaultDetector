@@ -50,7 +50,7 @@ class BidirectionalLSTMSeq2OneAutoencoder(Seq2OneAutoencoder):
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           autoencoder:

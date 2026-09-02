@@ -25,7 +25,7 @@ class DataClipper(DataTransformer):
 
     Configuration example:
 
-        .. code-block:: text
+        .. code-block:: yaml
 
             train:
               data_clipping:
