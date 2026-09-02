@@ -65,7 +65,7 @@ class Arcana:
 
     Configuration example:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         root_cause_analysis:
           alpha: 0.8

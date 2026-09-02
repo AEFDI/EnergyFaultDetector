@@ -82,7 +82,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
 
         Configuration example:
 
-            .. code-block:: text
+            .. code-block:: yaml
 
                 train:
                   data_preprocessor:
@@ -103,7 +103,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
                         counters: ['energy_total_kwh']
                         compute_rate: False
                         fill_first: 'zero'
-                        reset_strategy: 'rollover',
+                        reset_strategy: 'rollover'
                         rollover_values:
                           'energy_total_kwh': 100000.0
         """
