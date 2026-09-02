@@ -109,11 +109,24 @@ class Imputer(DataTransformer):
                         f"They will be dropped. Consider adding them to the categorical_features list if they should be"
                         f" treated as categorical.")
 
+        # Drop columns that are entirely NaN — they cannot be imputed and would cause
+        # SimpleImputer to silently skip them, leading to a column-count mismatch on transform.
+        all_nan_cols = [col for col in self.numerical_columns + self.categorical_columns
+                        if x[col].isna().all()]
+        if all_nan_cols:
+            logger.warning(f"Columns containing only NaN values found: {all_nan_cols}. "
+                        f"They will be dropped as they cannot be imputed.")
+            self.numerical_columns = [col for col in self.numerical_columns if col not in all_nan_cols]
+            self.categorical_columns = [col for col in self.categorical_columns if col not in all_nan_cols]
+            numerical_data = numerical_data.loc[:, self.numerical_columns]
+            categorical_data = categorical_data.loc[:, self.categorical_columns]
+
         logger.debug(f"Numerical columns: {self.numerical_columns}")
         logger.debug(f"Categorical columns: {self.categorical_columns}")
 
         # Fit the imputers
-        self.numerical_imputer.fit(numerical_data)
+        if not numerical_data.empty:
+            self.numerical_imputer.fit(numerical_data)
         if not categorical_data.empty:
             self.categorical_imputer.fit(categorical_data)
 
@@ -158,11 +171,14 @@ class Imputer(DataTransformer):
         categorical_data = x.loc[:, self.categorical_columns]
 
         # Transform the data
-        numerical_transformed = pd.DataFrame(
-            self.numerical_imputer.transform(numerical_data),
-            columns=self.numerical_columns,
-            index=x.index
-        )
+        if not numerical_data.empty:
+            numerical_transformed = pd.DataFrame(
+                self.numerical_imputer.transform(numerical_data),
+                columns=self.numerical_columns,
+                index=x.index
+            )
+        else:
+            numerical_transformed = pd.DataFrame(index=x.index)
         if not categorical_data.empty:
             categorical_transformed = pd.DataFrame(
                 self.categorical_imputer.transform(categorical_data),
