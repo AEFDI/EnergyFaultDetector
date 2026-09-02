@@ -10,14 +10,11 @@ logger = logging.getLogger('energy_fault_detector')
 
 
 class CategoricalEncoder(DataTransformer):
-    """
-    CategoricalEncoder is a transformer for encoding categorical features in a dataset.
+    """Transformer for encoding categorical features using one-hot encoding.
 
-    This class is designed to handle preprocessing of datasets by encoding specified categorical
-    features using one-hot encoding while maintaining numerical features unchanged. It provides
-    methods to fit to the dataset, transform it into an encoded format, inversely transform
-    encoded data back to the original format, and retrieve the transformed feature names.
-    It assumes the input data will be in the form of a DataFrame.
+    Encodes specified categorical features using one-hot encoding while maintaining numerical
+    features unchanged. Non-declared object-type columns in numerical slots are automatically
+    detected and excluded. Column matching for ``categorical_features`` is by exact name.
 
     Attributes:
         categorical_features (list): A list of strings representing the categorical feature names to be one-hot encoded (matched by exact name).
@@ -26,79 +23,11 @@ class CategoricalEncoder(DataTransformer):
         numerical_columns (list): The list of numerical feature names identified from the input data.
         n_features_in_ (int): The total number of input features in the dataset.
         feature_names_in_ (list): The list of input feature names identified during the fit process.
-        one_hot_encoder (OneHotEncoder): An instance of `OneHotEncoder` used for transforming categorical features.
+        one_hot_encoder (OneHotEncoder): An instance of ``OneHotEncoder`` used for transforming categorical features.
         categorical_columns (list): The list of categorical columns identified from the input data.
-
-    Methods:
-        fit(x: pd.DataFrame, y=None):
-            Fits the OneHotEncoder to the categorical features in the provided DataFrame.
-
-            Args:
-                x (pd.DataFrame): The input data containing all features.
-                                  Only the specified categorical features will be fitted.
-                y: Ignored. Retained for compatibility with scikit-learn API.
-
-            Returns:
-                self: The fitted CategoricalEncoder instance.
-
-        transform(x: pd.DataFrame) -> pd.DataFrame:
-            Transforms the input DataFrame by applying one-hot encoding to categorical features
-            and combining them with numerical features.
-
-            Args:
-                x (pd.DataFrame): The input data to be transformed.
-
-            Returns:
-                pd.DataFrame: The transformed DataFrame with one-hot encoded categorical features
-                              and numerical features.
-
-            Raises:
-                KeyError: If the input DataFrame is missing any of the features fitted during the `fit` step.
-
-        inverse_transform(x: pd.DataFrame) -> pd.DataFrame:
-            Reverts the transformed data back to its original form by mapping one-hot encoded
-            categorical features back to the original categorical values.
-
-            Args:
-                x (pd.DataFrame): The transformed input data.
-
-            Returns:
-                pd.DataFrame: The original data with categorical features restored to their original values.
-
-        get_feature_names_out(input_features=None) -> list:
-            Returns the names of features after the transformation.
-
-            Args:
-                input_features (list, optional): Unused. Retained for compatibility with scikit-learn API.
-
-            Returns:
-                list: List of output feature names including both numerical and one-hot encoded features.
-
-    Example:
-        ```python
-        import pandas as pd
-        from categorical_encoder import CategoricalEncoder
-
-        # Example dataset
-        data = pd.DataFrame({
-            'Category1': ['A', 'B', 'A'],
-            'Category2': ['X', 'Y', 'Z'],
-            'Numerical': [1, 2, 3]
-        })
-
-        # Initialize and fit the encoder
-        encoder = CategoricalEncoder(categorical_features=['Category1', 'Category2'])
-        encoder.fit(data)
-
-        # Transform the data
-        transformed_data = encoder.transform(data)
-        print(transformed_data)
-
-        # Inverse transform the data
-        original_data = encoder.inverse_transform(transformed_data)
-        print(original_data)
-
+        non_declared_categorical_features (list): Object-type columns detected in numerical slots and excluded.
     """
+
     def __init__(self, categorical_features: list = None):
         super().__init__()
         self.feature_names_out_ = None
@@ -110,6 +39,19 @@ class CategoricalEncoder(DataTransformer):
         self.non_declared_categorical_features = None
 
     def fit(self, x: pd.DataFrame, y=None) -> "CategoricalEncoder":
+        """Fits the OneHotEncoder to the categorical features in the provided DataFrame.
+
+        Identifies numerical and categorical columns, detects and excludes non-declared
+        object-type columns from numerical slots, and fits the internal ``OneHotEncoder``.
+
+        Args:
+            x (pd.DataFrame): The input data containing all features.
+                Only the specified categorical features will be fitted.
+            y: Ignored. Retained for compatibility with scikit-learn API.
+
+        Returns:
+            CategoricalEncoder: The fitted encoder instance (self).
+        """
         self.feature_names_in_ = x.columns.tolist()
         self.categorical_columns = [col for col in self.feature_names_in_
                                     if col in self.categorical_features]
@@ -135,6 +77,22 @@ class CategoricalEncoder(DataTransformer):
         return self
     
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
+        """Transforms the input DataFrame by applying one-hot encoding to categorical features.
+
+        Combines one-hot encoded categorical features with unchanged numerical features.
+        If no categorical features are specified, returns the numerical data unchanged.
+
+        Args:
+            x (pd.DataFrame): The input data to be transformed.
+
+        Returns:
+            pd.DataFrame: The transformed DataFrame with one-hot encoded categorical features
+                and numerical features.
+
+        Raises:
+            KeyError: If the input DataFrame is missing any of the features fitted during ``fit``.
+            TypeError: If ``x`` is not a pandas DataFrame.
+        """
         check_is_fitted(self, "n_features_in_")
 
         if not isinstance(x, pd.DataFrame):
@@ -158,6 +116,21 @@ class CategoricalEncoder(DataTransformer):
             return numerical_data  # Returns input df if no categorical features are specified in config file
 
     def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
+        """Reverts transformed data back to original form by decoding one-hot encoded features.
+
+        Maps one-hot encoded categorical columns back to their original categorical values
+        and concatenates them with the numerical columns. If no categorical features were
+        encoded, returns the input unchanged.
+
+        Args:
+            x (pd.DataFrame): The transformed input data with one-hot encoded columns.
+
+        Returns:
+            pd.DataFrame: The data with categorical features restored to their original values.
+
+        Raises:
+            KeyError: If the one-hot encoded columns are not present in the input data.
+        """
         check_is_fitted(self, "n_features_in_")
 
         # Get the one-hot encoded column names from the encoder
@@ -182,6 +155,18 @@ class CategoricalEncoder(DataTransformer):
             return numerical_data  # Returns input df if no categorical features are specified in config file
     
     def get_feature_names_out(self, input_features=None) -> List[str]:
+        """Returns the names of features after the transformation.
+
+        The output names are the concatenation of numerical column names and one-hot
+        encoded categorical column names (e.g. ``category_A``, ``category_B``).
+
+        Args:
+            input_features: Unused. Retained for scikit-learn API compatibility.
+
+        Returns:
+            List[str]: List of output feature names including both numerical and
+                one-hot encoded features.
+        """
         check_is_fitted(self, "n_features_in_")
         self.feature_names_out_ = self.numerical_columns + list(
             self.one_hot_encoder.get_feature_names_out(self.categorical_columns)
