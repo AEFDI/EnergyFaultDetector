@@ -18,7 +18,7 @@ class Scaler(DataTransformer):
     Attributes:
         scaler_type (str): Type of scaler selected ('standard' or 'minmax').
         scale_categorical_features (bool): Whether to scale features matched in `categorical_features`.
-        categorical_features (List[str]): List of column names or prefixes treated as categorical.
+        categorical_features (List[str]): List of column names treated as categorical (matched by substring, to cover one-hot encoded columns).
         scaler (SklearnScaler): Instantiated sklearn scaler object (e.g., StandardScaler).
         feature_names_in_ (List[str]): Names of features seen during `fit()`.
         feature_names_out_ (List[str]): Names of features output after `transform()` (same as input).
@@ -40,7 +40,8 @@ class Scaler(DataTransformer):
             scale_categorical_features (bool, optional): Whether to include categorical (e.g., one-hot encoded)
                 features in scaling. If `False`, only non-encoded features are scaled.
                 Defaults to `True`.
-            categorical_features (List[str], optional): List of column names or prefixes to treat as categorical.
+            categorical_features (List[str], optional): List of column names to treat as categorical (matched by substring,
+                to cover one-hot encoded columns such as `category_col_A`).
                 Used only when `scale_categorical_features=False` to determine which features to exclude.
                 Defaults to `None` (interpreted as empty list).
             **params: Additional keyword arguments passed to the underlying sklearn scaler constructor.
@@ -58,7 +59,7 @@ class Scaler(DataTransformer):
         self.scaler_type = scaler_type
         self.scale_categorical_features = scale_categorical_features
         self.categorical_features = categorical_features if categorical_features else []
-        self.scaler = self.SCALER_REGISTRY.get(scaler_type)
+        scaler = self.SCALER_REGISTRY.get(scaler_type)
 
         # Attributes to be defined during fitting
         self.feature_names_in_ = None
@@ -68,7 +69,7 @@ class Scaler(DataTransformer):
         # Parameters of nested estimators
         self.params = params
         # Initialize nested estimators
-        self.scaler = self.scaler(**self.params)
+        self.scaler = scaler(**self.params)
 
     def fit(self, x: pd.DataFrame, y: pd.Series = None) -> 'Scaler':
         """Fits the scaler on the input data, optionally excluding categorical features.
@@ -175,6 +176,10 @@ class Scaler(DataTransformer):
         check_is_fitted(self, "n_features_in_")
 
         x_inverse_transformed = x.copy()
+
+        # Check if input features match the features seen during fit
+        if list(x.columns) != self.feature_names_in_:
+            raise ValueError(f"Input features {list(x.columns)} do not match the features seen during fit {self.feature_names_in_}.")
 
         # Apply inverse transform to the appropriate features
         if self.scale_categorical_features:

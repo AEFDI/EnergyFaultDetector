@@ -23,7 +23,7 @@ class ForwardFillImputer(DataTransformer):
     Attributes:
         feature_names_in_ (List[str]): List of input feature names observed during fitting.
         feature_names_out_ (List[str]): List of output feature names (same as input features unless some were dropped).
-        categorical_features (List[str]): List of user-specified categorical feature names or prefixes.
+        categorical_features (List[str]): List of user-specified categorical feature names (matched by exact name).
         numerical_columns (List[str]): List of identified numerical column names after filtering out non-declared categoricals.
         categorical_columns (List[str]): List of identified categorical column names (from `categorical_features`).
         non_declared_categorical_features (List[str]): List of columns detected as object-type (categorical) but not declared as such.
@@ -34,11 +34,14 @@ class ForwardFillImputer(DataTransformer):
 
         Args:
             freq (str): Target resampling frequency for the time series (e.g., "1Min", "5Min", "H"). Passed to `pandas.DataFrame.asfreq()`.
-                Default is "1Min".
-            ffill_limit (int): Maximum number of consecutive NaN values to forward-fill after resampling.
+                The data is regridded onto this frequency before forward filling, which means missing timestamps are
+                introduced as NaN rows. Default is "1Min".
+            ffill_limit (int): Maximum number of consecutive NaN values to forward-fill after resampling. Because the data
+                is resampled to `freq` first, this count acts as a time delta: e.g. `freq="1Min"` with `ffill_limit=30`
+                fills gaps of up to 30 minutes, while `freq="5min"` with `ffill_limit=6` also fills up to 30 minutes.
                 NaNs beyond this limit remain unchanged and the corresponding rows will be dropped later. Default is 15.
-            categorical_features (Optional[List[str]]): List of column names or prefixes to treat as categorical features.
-                Columns matching any of these (as substring) are treated as categorical; others as numerical.
+            categorical_features (Optional[List[str]]): List of column names to treat as categorical features.
+                Columns matching any of these (by exact name) are treated as categorical; others as numerical.
                 Non-declared object-type columns in numerical slots are automatically detected and excluded from processing.
                 Default is None (interpreted as empty list).
         """
@@ -79,8 +82,10 @@ class ForwardFillImputer(DataTransformer):
         self.feature_names_in_ = x.columns.tolist()
         self.n_features_in_ = len(self.feature_names_in_)
 
-        self.numerical_columns = [col for col in self.feature_names_in_ if not any(feature in col for feature in self.categorical_features)] # Uses nested for loop in case categorical cols have been encoded already and contain the original categorical feature name as a substring.
-        self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)] # Uses nested for loop in case categorical cols have been encoded already and contain the original categorical feature name as a substring.
+        self.numerical_columns = [col for col in self.feature_names_in_
+                                  if col not in self.categorical_features]
+        self.categorical_columns = [col for col in self.feature_names_in_
+                                    if col in self.categorical_features]
         # Clean numerical columns from non_declared categorical features
         numerical_data = x.loc[:, self.numerical_columns]
         self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist() 
@@ -88,8 +93,9 @@ class ForwardFillImputer(DataTransformer):
         self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
 
         if self.non_declared_categorical_features:
-            logger.info(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
-                        f"They will be dropped. Consider adding them to the categorical_features list if they should be treated as categorical.")
+            logger.warning(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
+                        f"They will be dropped. Consider adding them to the categorical_features list if they should be"
+                        f" treated as categorical.")
 
         return self
 

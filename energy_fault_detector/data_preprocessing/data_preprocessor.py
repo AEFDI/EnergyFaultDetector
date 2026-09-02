@@ -1,5 +1,6 @@
 """Generic class for building a preprocessing pipeline."""
 
+import copy
 from collections import Counter, defaultdict
 from typing import List, Optional, Dict, Any, Tuple
 
@@ -199,7 +200,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         if protected_features:
             output_features = self.get_feature_names_out()
             available_protected = [f for f in protected_features if f in X.columns]
-            missing_features = [col for col in output_features if not any(available_feature in col for available_feature in available_protected)]
+            missing_features = [f for f in available_protected
+                                if not any(f in col for col in output_features)]
             if missing_features:
                 raise ValueError(
                     f"Protected features were dropped by the preprocessing pipeline: {missing_features}."
@@ -243,7 +245,6 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             "simple_imputer",
             "ffill_imputer",
             "timestamp_transformer",
-            # scaler handled separately (standard_scaler/minmax_scaler) in your code
         }
         counts: List[Tuple[str, int]] = []
         for name in singleton_names:
@@ -294,10 +295,13 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             ValueError: If a step lacks 'name' or references an unknown step.
         """
 
-        self._validate_step_spec_keys(self.steps_spec_)
+        # Work on a copy so the caller's config dict is not mutated by name normalization / step name assignment.
+        steps_spec = copy.deepcopy(self.steps_spec_)
+
+        self._validate_step_spec_keys(steps_spec)
 
         # Filter disabled steps first to simplify ordering.
-        enabled_spec = [s for s in self.steps_spec_ if s.get("enabled", True)]
+        enabled_spec = [s for s in steps_spec if s.get("enabled", True)]
         # Order the steps
         ordered_spec = self._order_steps_spec(enabled_spec)
         self._validate_singletons(enabled_spec)
@@ -392,7 +396,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         ordered.extend(others)
         # Imputation
         ordered.extend(imputer)
-        # Encoding categorical features before scaling and after imputation (encoder would crash if NaN values are present)
+        # Encoding categorical features before scaling and after imputation
         ordered.extend(encoders)
         # Scaling
         ordered.extend(scalers)

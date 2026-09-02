@@ -469,6 +469,7 @@ class TestDataPreprocessorProtectedFeatures(TestCase):
         self.assertIn('high_nan_feature', transformed.columns,
                       "High-NaN protected feature should be kept")
 
+
 class TestComprehensivePipelineFlow(TestCase):
     """Test comprehensive preprocessing pipeline"""
 
@@ -493,11 +494,11 @@ class TestComprehensivePipelineFlow(TestCase):
         }, index=self.time_index)
         
         # Add some NaN values to test imputation
-        self.test_data.loc[50:100, 'temp_sensor_1'] = np.nan
-        self.test_data.loc[200:250, 'pressure_sensor'] = np.nan
-        self.test_data.loc[150:170, 'category_col'] = np.nan
+        self.test_data.iloc[50:100, self.test_data.columns.get_loc('temp_sensor_1')] = np.nan
+        self.test_data.iloc[200:250, self.test_data.columns.get_loc('pressure_sensor')] = np.nan
+        self.test_data.iloc[150:170, self.test_data.columns.get_loc('category_col')] = np.nan
 
-    def _create_config_dict(self):
+    def _create_config_dict(self, protect_conditional_features: bool = True):
         """Create configuration matching updated advanced_config.yaml structure."""
         return {
             'train': {
@@ -521,20 +522,19 @@ class TestComprehensivePipelineFlow(TestCase):
                         'act': 'prelu',
                         'batch_size': 256,
                         'code_size': 9,
-                        'early_stopping': True,
                         'epochs': 10,
                         'last_act': 'linear',
                         'layers': [64, 32],
                         'learning_rate': 0.0001,
                         'loss_name': 'mean_squared_error',
-                        'min_delta': 0.0001,
                         'noise': 0.0,
-                        'patience': 5,
                         'conditional_features': ['operating_condition', 'category_col'],
                         'verbose': 0
                     }
                 },
-                'protect_conditional_features': True
+                'protect_conditional_features': protect_conditional_features,
+                'anomaly_score': {'name': 'rmse'},
+                'threshold_selector': {'name': 'quantile'},
             }
         }
 
@@ -610,9 +610,10 @@ class TestComprehensivePipelineFlow(TestCase):
         transformed_data = preprocessor.transform(self.test_data)
         inverse_data = preprocessor.inverse_transform(transformed_data)
         
-        # Verify inverse transform preserves row count
-        self.assertEqual(inverse_data.shape[0], self.test_data.shape[0],
-                        "Inverse transform should preserve row count")
+        # Verify inverse transform preserves row count of the transformed data
+        # (the ffill_imputer may drop rows that still contain NaNs after filling)
+        self.assertEqual(inverse_data.shape[0], transformed_data.shape[0],
+                        "Inverse transform should preserve the transformed data's row count")
 
     def test_pipeline_fault_detector_integration(self):
         """Test integration with FaultDetector."""
@@ -680,20 +681,19 @@ class TestComprehensivePipelineFlow(TestCase):
 
             # Fit the model
             result = fault_detector.fit(
-                sensor_data=test_data_no_cond,
+                sensor_data=self.test_data,
                 normal_index=normal_index,
                 save_models=False
             )
 
-        # Verify that autoencoder conditions are updated with available feature names
-        self.assertIn('equipment_type_Type_1', fault_detector.data_preprocessor.get_feature_names_out(),
+        self.assertIn('equipment_type_Type1', fault_detector.data_preprocessor.get_feature_names_out(),
                       "Data preprocessor should have 'equipment_type' as a feature")
         self.assertNotIn('equipment_type', fault_detector.autoencoder.conditional_features,
                             "Autoencoder should not have 'equipment_type' as a conditional feature since it's not declared as such.")
 
     def test_declared_condition_not_as_category(self):
         """Test pipeline handling of declared conditional features not being declared as categorical features."""
-        config_dict = self._create_config_dict()
+        config_dict = self._create_config_dict(False)
 
         # Remove 'category_col' from categorical features in the config to simulate it being declared as conditional but not categorical
         config_dict['train']['data_preprocessor']['steps'][2]['params']['categorical_features'] = ['equipment_type']  # Only 'equipment_type' is categorical
@@ -740,5 +740,6 @@ class TestComprehensivePipelineFlow(TestCase):
     
         output_features = fault_detector.data_preprocessor.get_feature_names_out()
         available_protected = [f for f in protected_features if f in self.test_data.columns]
-        missing_features = [col for col in output_features if not any(available_feature in col for available_feature in available_protected)]
+        missing_features = [f for f in available_protected
+                            if not any(f in col for col in output_features)]
         self.assertEqual(len(missing_features), 0, f"Protected features {available_protected} should not be dropped in the pipeline.")
