@@ -22,7 +22,7 @@ def parse_record_id(identifier: str) -> str:
 
     Accepts:
       - Numeric ID (e.g., "15846963")
-      - DOI (e.g., "10.5281/zenodo.15846963")
+      - DOI (e.g., "10.5281/zenodo.10958774")
       - Record URL (e.g., "https://zenodo.org/records/15846963")
 
     Args:
@@ -197,7 +197,7 @@ def prepare_output_dir(out_dir: Path, overwrite: bool) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
 
-def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path = "./downloads",
+def download_zenodo_data(identifier: str = "10.5281/zenodo.10958774", dest: Path = "./downloads",
                          remove_zip: bool = True, overwrite: bool = False, flatten_file_structure: bool = True,
                          expected_file_types: Union[List[str], str] = "*.csv") -> Path:
     """ Download a Zenodo record via API and unzip any .zip files.
@@ -207,7 +207,7 @@ def download_zenodo_data(identifier: str = "10.5281/zenodo.15846963", dest: Path
     that result from extracting ZIP archives.
 
     Args:
-        identifier (str): Zenodo record ID, DOI (e.g., 10.5281/zenodo.15846963), or record URL.
+        identifier (str): Zenodo record ID, DOI (e.g., 10.5281/zenodo.10958774), or record URL.
             Defaults to the CARE2Compare dataset.
         dest (Path): Local output directory to save downloaded files. (default: downloads)
         remove_zip (bool): If True, ZIP archives will be removed after extraction.

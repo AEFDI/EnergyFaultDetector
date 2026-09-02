@@ -76,7 +76,7 @@ Run the full pipeline (train → predict → events → ARCANA) in a single comm
 ```bash
 quick_fault_detector path/to/data.csv
 ```
-For [CARE2Compare](https://doi.org/10.5281/zenodo.14958989) data:
+For [CARE2Compare](https://doi.org/10.5281/zenodo.10958774) data:
 ```bash
 quick_fault_detector path/to/c2c_dataset.csv --c2c_example
 ```
