@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
-from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.fault_detection_model import FaultDetectionModel
 from energy_fault_detector.core.fault_detection_result import FaultDetectionResult, ModelMetadata
