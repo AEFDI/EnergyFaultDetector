@@ -26,8 +26,7 @@ train:
       # 4) Imputation
       - name: ffill_imputer
         params:
-          freq: '1Min' # Frequency used to determine limit to forward fill.
-          ffill_limit: 60 # Limit number of consecutive NaNs tu forward fill.
+          ffill_limit: '60min' # Maximum time gap to forward-fill (pandas Timedelta string).
           categorical_features: [] # include categorical features in the list
 
       # 5) Encode categorical features

@@ -171,11 +171,17 @@ class TestImputer(unittest.TestCase):
         """Test fitting with a column that has all NaN values."""
         imputer = Imputer()
         imputer.fit(self.data_all_nan)
-        
-        # All-NaN column should be handled without errors
+
+        # All-NaN column should be dropped from numerical_columns
         self.assertEqual(imputer.n_features_in_, 3)
-        # The numerical imputer will compute a default value (0.0 for mean)
-        self.assertIsNotNone(imputer.numerical_imputer.statistics_)
+        self.assertNotIn('broken_sensor', imputer.numerical_columns)
+        self.assertListEqual(imputer.numerical_columns, ['temperature', 'humidity'])
+
+        # Transform should work and return only the valid columns
+        result = imputer.transform(self.data_all_nan)
+        self.assertEqual(result.shape[1], 2)
+        self.assertListEqual(list(result.columns), ['temperature', 'humidity'])
+        self.assertFalse(result.isna().any().any())
 
     def test_fit_empty_categorical(self):
         """Test fitting when categorical columns DataFrame is empty."""
@@ -309,16 +315,15 @@ class TestImputer(unittest.TestCase):
         # Should handle empty categorical data gracefully
         self.assertEqual(result.shape, self.data_numerical.shape)
 
-    # TODO: Imputer doesnt work if no numerical data in the input.
-    # def test_transform_with_only_categorical(self):
-    #     """Test transformation with only categorical features."""
-    #     imputer = Imputer(categorical_features=['status', 'region'])
-    #     imputer.fit(self.data_only_categorical)
-    #     result = imputer.transform(self.data_only_categorical)
-        
-    #     # Should handle categorical-only data
-    #     self.assertEqual(result.shape, self.data_only_categorical.shape)
-    #     self.assertFalse(result.isna().any().any())
+    def test_transform_with_only_categorical(self):
+        """Test transformation with only categorical features."""
+        imputer = Imputer(categorical_features=['status', 'region'])
+        imputer.fit(self.data_only_categorical)
+        result = imputer.transform(self.data_only_categorical)
+
+        # Should handle categorical-only data
+        self.assertEqual(result.shape, self.data_only_categorical.shape)
+        self.assertFalse(result.isna().any().any())
 
 if __name__ == '__main__':
     unittest.main()
