@@ -1,6 +1,7 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import logging
+import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
@@ -8,50 +9,54 @@ from energy_fault_detector.core.data_transformer import DataTransformer
 
 logger = logging.getLogger('energy_fault_detector')
 
+
 class ForwardFillImputer(DataTransformer):
 
-    """Impute missing values using forward fill with limit after resampling frequency.
+    """Impute missing values using time-based forward fill with a maximum gap duration.
 
-    Duplicate rows are dropped and any remaining rows with NaN values are removed.
+    Forward-fills NaN values from the last valid observation, but only when the elapsed
+    time between the last valid value and the current row does not exceed ``ffill_limit``.
+    Rows where the gap is too large remain NaN and are subsequently dropped.
 
-    The transformer assumes time-series data with a temporal index (DatetimeIndex, TimedeltaIndex, or PeriodIndex).
-    During `fit`, it categorizes features as numerical or categorical, identifies and logs non-declared categorical features,
-    and prepares internal metadata. During `transform`, it resamples the data to a uniform frequency, forward-fills missing
-    values up to a specified limit, drops duplicate rows, and removes any rows still containing NaN values. This transformer 
-    is useful for time-series datasets where missing values need to be imputed based on previous observations.
+    The transformer assumes time-series data with a temporal index (DatetimeIndex or
+    TimedeltaIndex). During ``fit``, it categorizes features as numerical or categorical,
+    identifies and logs non-declared categorical features, and converts ``ffill_limit``
+    to a :class:`~pandas.Timedelta`. During ``transform``, it forward-fills missing values
+    (invalidating fills that exceed the time threshold), drops duplicate rows, and removes
+    any rows still containing NaN values.
 
     Attributes:
         feature_names_in_ (List[str]): List of input feature names observed during fitting.
         feature_names_out_ (List[str]): List of output feature names (same as input features unless some were dropped).
+        ffill_limit_ (pd.Timedelta): Fitted ``ffill_limit`` converted to a Timedelta.
         categorical_features (List[str]): List of user-specified categorical feature names (matched by exact name).
         numerical_columns (List[str]): List of identified numerical column names after filtering out non-declared categoricals.
-        categorical_columns (List[str]): List of identified categorical column names (from `categorical_features`).
+        categorical_columns (List[str]): List of identified categorical column names (from ``categorical_features``).
         non_declared_categorical_features (List[str]): List of columns detected as object-type (categorical) but not declared as such.
     """
 
-    def __init__(self, freq: str = "1Min", ffill_limit: int = 15, categorical_features: Optional[List[str]] = None):
-        """Initializes the ForwardFillImputer with specified frequency, forward-fill limit, and optional categorical features.
+    def __init__(self, ffill_limit: Union[str, pd.Timedelta] = "15min",
+                 categorical_features: Optional[List[str]] = None):
+        """Initializes the ForwardFillImputer with a forward-fill time limit and optional categorical features.
 
         Args:
-            freq (str): Target resampling frequency for the time series (e.g., "1Min", "5Min", "H"). Passed to `pandas.DataFrame.asfreq()`.
-                The data is regridded onto this frequency before forward filling, which means missing timestamps are
-                introduced as NaN rows. Default is "1Min".
-            ffill_limit (int): Maximum number of consecutive NaN values to forward-fill after resampling. Because the data
-                is resampled to `freq` first, this count acts as a time delta: e.g. `freq="1Min"` with `ffill_limit=30`
-                fills gaps of up to 30 minutes, while `freq="5min"` with `ffill_limit=6` also fills up to 30 minutes.
-                NaNs beyond this limit remain unchanged and the corresponding rows will be dropped later. Default is 15.
+            ffill_limit (str | pd.Timedelta): Maximum time gap to forward-fill, expressed as a
+                pandas-compatible Timedelta string (e.g. ``"15min"``, ``"1h"``) or a
+                :class:`~pandas.Timedelta` instance.  NaNs whose elapsed time from the last valid
+                observation exceeds this limit are left unfilled and the corresponding rows are
+                dropped. Default is ``"15min"``.
             categorical_features (Optional[List[str]]): List of column names to treat as categorical features.
                 Columns matching any of these (by exact name) are treated as categorical; others as numerical.
                 Non-declared object-type columns in numerical slots are automatically detected and excluded from processing.
                 Default is None (interpreted as empty list).
         """
         super().__init__()
-        self.freq = freq
         self.ffill_limit = ffill_limit
 
         # Attributes set during fit.
         self.feature_names_in_: List[str] = []
         self.feature_names_out_: List[str] = []
+        self.ffill_limit_: pd.Timedelta = pd.Timedelta(0)
         self.categorical_features = categorical_features if categorical_features else []
         self.numerical_columns: List[str] = []
         self.categorical_columns: List[str] = []
@@ -60,11 +65,12 @@ class ForwardFillImputer(DataTransformer):
     def fit(self, x: pd.DataFrame, y: Optional[pd.Series] = None) -> "ForwardFillImputer":
         """Fits the imputer to the input data by identifying feature types and storing metadata.
 
-        Populates `numerical_columns`, `categorical_columns`, and `non_declared_categorical_features`
+        Populates ``numerical_columns``, ``categorical_columns``, and ``non_declared_categorical_features``
         based on the input DataFrame's structure and user-provided categorical feature hints.
+        Converts ``ffill_limit`` to a :class:`~pandas.Timedelta` and stores it as ``ffill_limit_``.
 
         Args:
-            x (pd.DataFrame): Input feature DataFrame. Must contain all features used during `transform`.
+            x (pd.DataFrame): Input feature DataFrame. Must contain all features used during ``transform``.
             y (Optional[pd.Series]): Target variable. Ignored; included for compatibility with the scikit-learn API.
 
         Returns:
@@ -72,15 +78,21 @@ class ForwardFillImputer(DataTransformer):
 
         Raises:
             TypeError: If `x` is not a pandas DataFrame.
-            ValueError: If internal consistency checks fail (e.g., invalid column references).
+            ValueError: If `ffill_limit` cannot be converted to a Timedelta.
         """
-        # TODO: at this point there is no handling of all-NaN columns, should be included in fit to drop them and log a warning.
-
         if not isinstance(x, pd.DataFrame):
             raise TypeError("x must be a pandas DataFrame.")
 
         self.feature_names_in_ = x.columns.tolist()
         self.n_features_in_ = len(self.feature_names_in_)
+
+        try:
+            self.ffill_limit_ = pd.Timedelta(self.ffill_limit)
+        except ValueError as e:
+            raise ValueError(
+                f"ffill_limit must be a pandas-compatible Timedelta string or Timedelta "
+                f"(e.g. '15min', '1h'), got: {self.ffill_limit!r}"
+            ) from e
 
         self.numerical_columns = [col for col in self.feature_names_in_
                                   if col not in self.categorical_features]
@@ -97,25 +109,39 @@ class ForwardFillImputer(DataTransformer):
                         f"They will be dropped. Consider adding them to the categorical_features list if they should be"
                         f" treated as categorical.")
 
+        # Drop columns that are entirely NaN — they cannot be forward-filled and would otherwise
+        # cause every row to be dropped by dropna(how="any").
+        all_nan_cols = [col for col in self.numerical_columns + self.categorical_columns
+                        if x[col].isna().all()]
+        if all_nan_cols:
+            logger.warning(f"Columns containing only NaN values found: {all_nan_cols}. "
+                        f"They will be dropped as they cannot be forward-filled.")
+            self.numerical_columns = [col for col in self.numerical_columns if col not in all_nan_cols]
+            self.categorical_columns = [col for col in self.categorical_columns if col not in all_nan_cols]
+
         return self
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
-        """Applies forward-fill imputation and cleaning pipeline to input data.
+        """Applies time-based forward-fill imputation and cleaning pipeline to input data.
 
         The steps executed are:
-        1. Resample the data to `self.freq` using `asfreq()`.
-        2. Forward-fill missing values up to `self.ffill_limit`.
+        1. Forward-fill all NaN values.
+        2. Invalidate fills where the elapsed time from the last valid observation exceeds
+           ``ffill_limit_`` (set those values back to NaN).
         3. Drop duplicate rows.
-        4. Drop any rows still containing NaN values (`dropna(how="any")`).
+        4. Drop any rows still containing NaN values (``dropna(how="any")``).
+
+        Unlike the previous resampling-based approach, the original (possibly irregular)
+        timestamps are preserved — no synthetic rows are introduced.
 
         Args:
-            x (pd.DataFrame): Input feature DataFrame, with the same column names as used in `fit()`.
+            x (pd.DataFrame): Input feature DataFrame, with the same column names as used in ``fit()``.
 
         Returns:
-            pd.DataFrame: Cleaned and imputed DataFrame, containing only the columns from `get_feature_names_out()`.
+            pd.DataFrame: Cleaned and imputed DataFrame, containing only the columns from ``get_feature_names_out()``.
 
         Raises:
-            TypeError: If `x` is not a pandas DataFrame, or if its index is not temporal (DatetimeIndex/TimedeltaIndex/PeriodIndex).
+            TypeError: If `x` is not a pandas DataFrame, or if its index is not temporal (DatetimeIndex/TimedeltaIndex).
             ValueError: If `x` is missing columns seen during `fit()`, or if numerical columns cannot be converted to float.
             ValueError: If the imputer has not been fitted (via `check_is_fitted`).
         """
@@ -134,9 +160,9 @@ class ForwardFillImputer(DataTransformer):
         if missing_columns:
             raise ValueError(f"Input is missing columns seen during fit: {missing_columns}")
 
-        if not isinstance(x.index, (pd.DatetimeIndex, pd.TimedeltaIndex, pd.PeriodIndex)):
+        if not isinstance(x.index, (pd.DatetimeIndex, pd.TimedeltaIndex)):
             raise TypeError(
-                "x index must be a DatetimeIndex, TimedeltaIndex, or PeriodIndex to use asfreq()."
+                "x index must be a DatetimeIndex or TimedeltaIndex for time-based forward fill."
             )
         # Harmonize data types in numerical columns to avoid issues during concatenation after one-hot encoding
         for col in self.numerical_columns:
@@ -146,8 +172,24 @@ class ForwardFillImputer(DataTransformer):
                 except ValueError as e:
                     raise ValueError(f"Column '{col}' cannot be converted to float.") from e
         x_selected = x[self.numerical_columns + self.categorical_columns]
-        df_resampled = x_selected.asfreq(self.freq)
-        df_filled = df_resampled.ffill(limit=self.ffill_limit)
+
+        # --- Time-based forward fill ---
+        idx_series = x.index.to_series()
+        df_filled = x_selected.copy()
+        for col in df_filled.columns:
+            col_series = df_filled[col]
+            nan_mask = col_series.isna()
+            if not nan_mask.any():
+                continue
+            filled = col_series.ffill()
+            # Time elapsed since the last valid observation for each row
+            last_valid = idx_series.where(col_series.notna()).ffill()
+            elapsed = idx_series - last_valid
+            # Invalidate fills where the gap exceeds the threshold
+            invalid = nan_mask & (elapsed > self.ffill_limit_)
+            filled[invalid] = np.nan
+            df_filled[col] = filled
+
         df_cleaned = df_filled.drop_duplicates(keep="first")
         df_final = df_cleaned.dropna(how="any")
 
