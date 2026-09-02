@@ -17,7 +17,7 @@ class Imputer(DataTransformer):
 
     Attributes:
         strategy (str): Imputation strategy for numerical features ('mean' or 'median').
-        categorical_features (List[str]): List of column names or prefixes to treat as categorical.
+        categorical_features (List[str]): List of column names to treat as categorical (matched by exact name).
         params (dict): Additional keyword arguments passed to `SimpleImputer` for numerical imputation.
         numerical_imputer (SimpleImputer): Imputer instance for numerical features.
         categorical_imputer (SimpleImputer): Imputer instance for categorical features (always 'most_frequent').
@@ -36,8 +36,8 @@ class Imputer(DataTransformer):
         Args:
             strategy (str, optional): Imputation strategy for numerical features. Supports 'mean' (default) and 'median'.
                 Categorical features are always imputed using 'most_frequent'.
-            categorical_features (List[str], optional): List of column names or prefixes to treat as categorical.
-                Columns matching any of these (as substring) are treated as categorical; others as numerical.
+            categorical_features (List[str], optional): List of column names to treat as categorical.
+                Columns matching any of these (by exact name) are treated as categorical; others as numerical.
                 Non-declared object-type columns in numerical slots are automatically detected and excluded.
                 Defaults to None (interpreted as empty list).
             **params: Additional keyword arguments passed to `SimpleImputer` for numerical imputation.
@@ -93,8 +93,10 @@ class Imputer(DataTransformer):
         self.input_index_ = x.index
 
         # Split data into numerical (and boolean) and categorical features
-        self.numerical_columns = [col for col in self.feature_names_in_ if not any(feature in col for feature in self.categorical_features)]
-        self.categorical_columns = [col for col in self.feature_names_in_ if any(feature in col for feature in self.categorical_features)]
+        self.numerical_columns = [col for col in self.feature_names_in_
+                                  if col not in self.categorical_features]
+        self.categorical_columns = [col for col in self.feature_names_in_
+                                    if col in self.categorical_features]
         numerical_data = x.loc[:, self.numerical_columns]
         categorical_data = x.loc[:, self.categorical_columns]
 
@@ -103,8 +105,9 @@ class Imputer(DataTransformer):
         self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
         numerical_data = numerical_data.loc[:, self.numerical_columns]
         if self.non_declared_categorical_features:
-            logger.info(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
-                        f"They will be dropped. Consider adding them to the categorical_features list if they should be treated as categorical.")
+            logger.warning(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
+                        f"They will be dropped. Consider adding them to the categorical_features list if they should be"
+                        f" treated as categorical.")
 
         logger.debug(f"Numerical columns: {self.numerical_columns}")
         logger.debug(f"Categorical columns: {self.categorical_columns}")
@@ -179,21 +182,21 @@ class Imputer(DataTransformer):
     def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """Returns input DataFrame with columns reordered to match original feature order.
 
-        This method preserves index from `fit()` but does **not** reverse imputation (since original
+        This method preserves the index of the input `x` and does **not** reverse imputation (since original
         NaN positions are not stored). Included for scikit-learn compatibility.
 
         Args:
             x (pd.DataFrame): Transformed DataFrame (output of `transform()`).
 
         Returns:
-            pd.DataFrame: DataFrame with columns reordered to match `feature_names_in_` and index restored to `input_index_`.
+            pd.DataFrame: DataFrame with columns reordered to match `feature_names_in_`. The index of `x` is preserved.
 
         Raises:
             ValueError: If imputer has not been fitted (via `check_is_fitted`).
         """
         check_is_fitted(self, "n_features_in_")
         
-        return pd.DataFrame(x, columns=self.feature_names_in_, index=self.input_index_)
+        return pd.DataFrame(x, columns=self.feature_names_in_)
     
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """Returns ordered list of output feature names.
