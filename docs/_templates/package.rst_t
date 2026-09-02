@@ -14,13 +14,14 @@
 {%- endmacro %}
 
 {%- if is_namespace %}
-{{- [pkgname, "namespace"] | join(" ") | e | heading }}
+{{- pkgname | replace('energy_fault_detector.', '') | e | heading }}
 {% else %}
-{{- pkgname | e | heading }}
+{{- pkgname | replace('energy_fault_detector.', '') | e | heading }}
 {% endif %}
 
 {%- if modulefirst and not is_namespace %}
-{{ automodule(pkgname, automodule_options) }}
+{{ automodule(pkgname, automodule_options) }}{% if pkgname == 'energy_fault_detector.config' %}
+   :no-index:{% endif %}
 {% endif %}
 
 {%- if subpackages %}
@@ -35,7 +36,7 @@
 {% else %}
 {%- for submodule in submodules %}
 {% if show_headings %}
-{{- submodule | e | heading(2) }}
+{{- submodule | replace('energy_fault_detector.', '') | e | heading(2) }}
 {% endif %}
 {{ automodule(submodule, automodule_options) }}
 {% endfor %}
