@@ -105,7 +105,7 @@ No. The data was anonymized, but it has not undergone full preprocessing such as
 - normalization or scaling.
 
 Additional preprocessing is generally required before modeling.
-Please check the dataset description and dataset README on `Zenodo <https://doi.org/10.5281/zenodo.14958989>`_
+Please check the dataset description and dataset README on `Zenodo <https://doi.org/10.5281/zenodo.10958774>`_
 for details on known data quality issues.
 
 
@@ -256,7 +256,7 @@ Are all feature groups equally trustworthy?
 There are implausible values in some Min, Max, and Std features. For practical work,
 Avg features are often the safest starting point, especially in Wind Farm B.
 
-Please check the dataset description and dataset README on `Zenodo <https://doi.org/10.5281/zenodo.14958989>`_
+Please check the dataset description and dataset README on `Zenodo <https://doi.org/10.5281/zenodo.10958774>`_
 for details on known data quality issues.
 
 
