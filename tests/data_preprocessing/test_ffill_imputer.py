@@ -46,15 +46,13 @@ class TestForwardFillImputer(unittest.TestCase):
     def test_init_defaults(self):
         """Test default initialization."""
         imputer = ForwardFillImputer()
-        self.assertEqual(imputer.freq, "1Min")
-        self.assertEqual(imputer.ffill_limit, 15)
+        self.assertEqual(imputer.ffill_limit, "15min")
         self.assertEqual(imputer.categorical_features, [])
 
     def test_init_custom_params(self):
         """Test initialization with custom parameters."""
-        imputer = ForwardFillImputer(freq="5Min", ffill_limit=10, categorical_features=["status", "region"])
-        self.assertEqual(imputer.freq, "5Min")
-        self.assertEqual(imputer.ffill_limit, 10)
+        imputer = ForwardFillImputer(ffill_limit="10min", categorical_features=["status", "region"])
+        self.assertEqual(imputer.ffill_limit, "10min")
         self.assertEqual(imputer.categorical_features, ["status", "region"])
 
     def test_fit(self):
@@ -101,7 +99,7 @@ class TestForwardFillImputer(unittest.TestCase):
 
     def test_transform_basic(self):
         """Test basic forward fill transformation."""
-        imputer = ForwardFillImputer(ffill_limit=10)
+        imputer = ForwardFillImputer(ffill_limit="10min")
         imputer.fit(self.data_numeric)
         result = imputer.transform(self.data_numeric)
         
@@ -114,7 +112,7 @@ class TestForwardFillImputer(unittest.TestCase):
 
     def test_transform_with_categorical(self):
         """Test transformation with categorical features."""
-        imputer = ForwardFillImputer(categorical_features=['status', 'region'], ffill_limit=10)
+        imputer = ForwardFillImputer(categorical_features=['status', 'region'], ffill_limit="10min")
         imputer.fit(self.data_full)
         result = imputer.transform(self.data_full)
         
@@ -135,11 +133,11 @@ class TestForwardFillImputer(unittest.TestCase):
             'value2': list(range(10, 27))
         }, index=pd.date_range('2024-01-01', periods=17, freq='1Min'))
         
-        imputer = ForwardFillImputer(ffill_limit=5)
+        imputer = ForwardFillImputer(ffill_limit="5min")
         imputer.fit(long_gaps_data)
         result = imputer.transform(long_gaps_data)
         print(result)
-        # The 7th value should still be NaN because 6 consecutive NaNs > ffill_limit=5
+        # The 7th row should be 2.0 because elapsed time (6min) exceeds the 5min limit
         self.assertTrue(result.iloc[6]['value1']==2.0)
 
     def test_transform_drops_duplicates(self):
@@ -164,7 +162,7 @@ class TestForwardFillImputer(unittest.TestCase):
             'value2': [np.nan, 2.0, 3.0, 4.0, 5.0]
         }, index=pd.date_range('2024-01-01', periods=5, freq='1Min'))
         
-        imputer = ForwardFillImputer(ffill_limit=1)
+        imputer = ForwardFillImputer(ffill_limit="1min")
         imputer.fit(some_na_data)
         result = imputer.transform(some_na_data)
         
@@ -224,7 +222,7 @@ class TestForwardFillImputer(unittest.TestCase):
 
     def test_inverse_transform(self):
         """Test inverse transform maintains column order."""
-        imputer = ForwardFillImputer(categorical_features=['status', 'region'], ffill_limit=10)
+        imputer = ForwardFillImputer(categorical_features=['status', 'region'], ffill_limit="10min")
         imputer.fit(self.data_full)
         transformed = imputer.transform(self.data_full)
         inverse = imputer.inverse_transform(transformed)
@@ -259,8 +257,7 @@ class TestForwardFillImputer(unittest.TestCase):
         self.assertEqual(result.shape[0], 0)
 
     def test_all_nan_column_handling(self):
-        """Test handling of columns that are all NaN."""
-        # TODO: at this point there is no handling of all-NaN columns, should be included in fit to drop them and log a warning.
+        """Test that all-NaN columns are dropped during fit."""
         all_nan_data = pd.DataFrame({
             'value1': [1.0, 2.0, 3.0],
             'value2': [np.nan, np.nan, np.nan]
@@ -268,9 +265,16 @@ class TestForwardFillImputer(unittest.TestCase):
         
         imputer = ForwardFillImputer()
         imputer.fit(all_nan_data)
+
+        # All-NaN column should be dropped from numerical_columns
+        self.assertNotIn('value2', imputer.numerical_columns)
+        self.assertIn('value1', imputer.numerical_columns)
+
+        # Transform should keep rows from the valid column, not drop everything
         result = imputer.transform(all_nan_data)
-        
-        self.assertEqual(result.shape[0], 0)
+        self.assertEqual(result.shape[1], 1)
+        self.assertListEqual(list(result.columns), ['value1'])
+        self.assertEqual(result.shape[0], 3)
 
     def test_numerical_conversion_error(self):
         """Test error handling for non-convertible numerical columns."""

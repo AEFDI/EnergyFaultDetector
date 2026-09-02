@@ -51,7 +51,7 @@ class TestDataPreprocessorPipeline(TestCase):
             steps=[
                 {'name': 'column_selector', 'params': {'max_nan_frac_per_col': 0.8}},
                 {'name': 'ffill_imputer',
-                 'params': {'freq': '1Min', 'ffill_limit': 1, 'categorical_features': ['category', 'region']}},
+                 'params': {'ffill_limit': '1min', 'categorical_features': ['category', 'region']}},
                 {'name': 'categorical_encoder',
                  'params': {'categorical_features': ['category', 'region']}},
             ]
@@ -510,7 +510,7 @@ class TestComprehensivePipelineFlow(TestCase):
                     'steps': [
                         {'name': 'column_selector', 'params': {'max_nan_frac_per_col': 0.9}},
                         {'name': 'low_unique_value_filter', 'params': {'min_unique_value_count': 2}},
-                        {'name': 'ffill_imputer', 'params': {'freq': '1Min', 'ffill_limit': 60, 'categorical_features': ['category_col', 'equipment_type']}},
+                        {'name': 'ffill_imputer', 'params': {'ffill_limit': '60min', 'categorical_features': ['category_col', 'equipment_type']}},
                         {'name': 'categorical_encoder', 'params': {'categorical_features': ['category_col', 'equipment_type']}},
                         {'name': 'scaler', 'params': {'scaler_type': 'standard', 'with_mean': True, 'with_std': True, 'scale_categorical_features': False, 'categorical_features': ['category_col', 'equipment_type']}},
                         {'name': 'timestamp_transformer', 'params': {'features': ['minute_of_hour', 'hour_of_day', 'day_of_week']}}
