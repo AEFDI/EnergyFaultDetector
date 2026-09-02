@@ -24,7 +24,7 @@ class FDRSelector(ThresholdSelector):
 
     Example Configuration:
 
-    .. code-block:: text
+    .. code-block:: yaml
 
         train:
           threshold_selector:
