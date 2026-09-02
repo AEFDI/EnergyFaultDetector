@@ -68,7 +68,7 @@ Typical usage:
         download_dataset=False,
     )
 
-    x_train, x_test = dataset.load_event_dataset(event_id=53)
+    x_train, x_test = dataset.load_event_dataset(event_id=53, index_column="time_stamp")
     info = dataset.get_event_info(53)
 
 The returned event metadata can then be used for evaluation, filtering, or reporting.
@@ -122,30 +122,41 @@ Example:
 
 .. code-block:: python
 
+    import pandas as pd
     from energy_fault_detector.evaluation.care2compare import Care2CompareDataset
     from energy_fault_detector.evaluation.care_score import CAREScore
 
     dataset = Care2CompareDataset(path="./CARE_To_Compare", download_dataset=False)
-
-    x_train, train_normal, x_test, test_normal = dataset.load_and_format_event_dataset(event_id=53)
-    info = dataset.get_event_info(53)
-
-    # Example placeholder prediction:
-    # one boolean anomaly prediction per timestamp in the prediction section
-    predicted_anomalies = [False] * len(x_test)
-
     scorer = CAREScore()
 
-    scorer.evaluate_event(
-        event_start=info["event_start"],
-        event_end=info["event_end"],
-        event_label=info["event_label"],
-        predicted_anomalies=predicted_anomalies,
-        normal_index=test_normal,
-        event_id=53,
-    )
+    # Iterate over the events of a chosen wind farm. The data is loaded with
+    # timestamps as the index so they match the event_start / event_end metadata.
+    for x_train, train_normal, x_test, test_normal, event_id in dataset.iter_formatted_datasets(
+        wind_farm="B", index_column="time_stamp",
+    ):
+        info = dataset.get_event_info(event_id)
+
+        # Example placeholder prediction: one boolean anomaly prediction per
+        # timestamp in the prediction section, indexed like x_test.
+        predicted_anomalies = pd.Series(False, index=x_test.index)
+
+        scorer.evaluate_event(
+            event_start=info["event_start"],
+            event_end=info["event_end"],
+            event_label=info["event_label"],
+            predicted_anomalies=predicted_anomalies,
+            normal_index=test_normal,
+            event_id=event_id,
+        )
 
     final_score = scorer.get_final_score()
+
+.. note::
+
+    ``get_final_score`` requires at least one evaluated ``anomaly`` event *and* one
+    evaluated ``normal`` event. A single ``evaluate_event`` call is fine for a quick
+    smoke test, but the final CARE score can only be computed once events of both
+    labels have been added.
 
 CARE score overview
 -------------------
@@ -175,7 +186,9 @@ For Wind Farms B and C, status labels reflect anonymized operator-provided statu
 useful both for training-data filtering and for parts of CARE-style evaluation.
 
 For Wind Farm A, the status labels should mainly be used for training-data filtering. For prediction-time
-CARE evaluation, they should largely be ignored.
+CARE evaluation, they should largely be ignored; pass ``ignore_normal_index=True`` to
+:meth:`~energy_fault_detector.evaluation.care_score.CAREScore.evaluate_event` so that every timestamp is
+evaluated regardless of ``status_type_id``.
 
 This distinction is important when interpreting evaluation results.
 
