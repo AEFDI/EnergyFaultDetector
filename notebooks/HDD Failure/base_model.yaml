@@ -9,7 +9,9 @@ train:
         params:
           max_nan_frac_per_col: 0.2
       - name: simple_imputer
-      - name: standard_scaler
+      - name: scaler
+        params:
+          scaler_type: standard
 
   autoencoder:
     name: default

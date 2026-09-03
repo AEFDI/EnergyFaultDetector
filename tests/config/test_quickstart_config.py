@@ -40,15 +40,7 @@ class TestQuickstartConfig(TestCase):
         step_names = [s["name"] for s in train["data_preprocessor"]["steps"]]
         self.assertIn("column_selector", step_names)
         self.assertIn("simple_imputer", step_names)
-        self.assertTrue(
-            any(n in ("standard_scaler", "minmax_scaler") for n in step_names),
-            "Expected a scaler step in the pipeline."
-        )
-
-        self.assertTrue(
-            any(n in ("standard_scaler", "minmax_scaler") for n in step_names),
-            "Expected a scaler step in the pipeline."
-        )
+        self.assertIn("scaler", step_names)
 
     def test_generate_quickstart_config_validation_split_guard(self) -> None:
         """If validation split not in (0, 1) it should raise ValueError."""

@@ -12,7 +12,9 @@ train:
         params:
           min_unique_value_count: 10
           max_col_zero_frac: 0.99
-      - name: minmax_scaler
+      - name: scaler
+        params:
+          scaler_type: minmax
 
   data_splitter:
     shuffle: true

@@ -64,9 +64,4 @@ class QuantileThresholdSelector(ThresholdSelector):
             x_ = x
 
         self.threshold = float(np.quantile(x_, self.quantile))
-
-        if self.threshold is None:
-            import warnings
-            warnings.warn('Could not find suitable threshold, `threshold` is set to max score.', UserWarning)
-            self.threshold = float(np.sort(x)[-1])
         return self
