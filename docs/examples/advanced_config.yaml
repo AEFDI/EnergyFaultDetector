@@ -58,8 +58,7 @@ train:
       # Alternatively, you can use a forward-fill imputer:
       # - name: ffill_imputer
       #   params:
-      #     freq: '1H'  # frequency of the time series (e.g., '1H' for hourly data)
-      #     ffill_limit: 3  # maximum number of consecutive NaNs to forward-fill
+      #     ffill_limit: '1h'  # maximum time gap to forward-fill as a pandas Timedelta string (e.g., '15min', '1h')
       #     categorical_features:
       #       - categorical_feature1
       #       - categorical_feature2

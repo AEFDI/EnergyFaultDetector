@@ -106,9 +106,7 @@ Allowed step names and aliases:
 +-------------------------+-----------------------------------------------+------------------------------------------------+
 | simple_imputer          | Impute missing values                         | imputer                                        |
 +-------------------------+-----------------------------------------------+------------------------------------------------+
-| standard_scaler         | Standardize features (z-score)                | standardize, standardscaler, standard          |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| minmax_scaler           | Scale to [0, 1]                               | minmax                                         |
+| scaler                  | Standardize (standard) or scale to [0,1] (minmax)| standard_scaler, minmax_scaler (deprecated)  |
 +-------------------------+-----------------------------------------------+------------------------------------------------+
 | duplicate_to_nan        | Replace consecutive duplicate values with NaN | duplicate_value_to_nan, duplicate_values_to_nan|
 +-------------------------+-----------------------------------------------+------------------------------------------------+

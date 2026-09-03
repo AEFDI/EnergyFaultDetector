@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_almost_equal
 from pandas.testing import assert_frame_equal
-from sklearn.utils.validation import check_is_fitted, NotFittedError
+from sklearn.utils.validation import NotFittedError
 
 from energy_fault_detector.config.config import Config
 from energy_fault_detector.data_preprocessing.data_preprocessor import DataPreprocessor
@@ -308,7 +308,7 @@ class TestDataPreprocessorPipeline(TestCase):
                 steps=[
                     {"name": "simple_imputer", "params": {"strategy": "mean"}},
                     {"name": "simple_imputer", "params": {"strategy": "median"}},
-                    {"name": "standard_scaler"},
+                    {"name": "scaler", "params": {"scaler_type": "standard"}},
                 ]
             )
 
@@ -318,10 +318,49 @@ class TestDataPreprocessorPipeline(TestCase):
             _ = DataPreprocessor(
                 steps=[
                     {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
+                    {"name": "scaler", "params": {"scaler_type": "standard"}},
+                    {"name": "scaler", "params": {"scaler_type": "minmax"}},
+                ]
+            )
+
+    def test_legacy_scaler_names_migrated(self) -> None:
+        """Legacy 'standard_scaler'/'minmax_scaler' names should be migrated with a DeprecationWarning."""
+        import warnings as _warnings
+
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            dp = DataPreprocessor(
+                steps=[
+                    {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
                     {"name": "standard_scaler"},
+                ]
+            )
+
+        deprecation_warnings = [w for w in caught if issubclass(w.category, DeprecationWarning)]
+        self.assertTrue(
+            any("standard_scaler" in str(w.message) for w in deprecation_warnings),
+            "Expected a DeprecationWarning mentioning 'standard_scaler'.",
+        )
+        # The migrated pipeline should have a 'scaler' step with a Scaler instance
+        self.assertIn("scaler", dp.named_steps)
+        self.assertEqual(dp.named_steps["scaler"].scaler_type, "standard")
+
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            dp = DataPreprocessor(
+                steps=[
+                    {"name": "column_selector", "params": {"max_nan_frac_per_col": 0.2}},
                     {"name": "minmax_scaler"},
                 ]
             )
+
+        deprecation_warnings = [w for w in caught if issubclass(w.category, DeprecationWarning)]
+        self.assertTrue(
+            any("minmax_scaler" in str(w.message) for w in deprecation_warnings),
+            "Expected a DeprecationWarning mentioning 'minmax_scaler'.",
+        )
+        self.assertIn("scaler", dp.named_steps)
+        self.assertEqual(dp.named_steps["scaler"].scaler_type, "minmax")
 
     def test_inverse_transform_with_encoder_ffill(self):
         """Test that the inverse_transform works correctly with the preprocessor that includes categorical encoder and ffill imputer."""
