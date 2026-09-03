@@ -93,6 +93,13 @@ class FaultDetector(FaultDetectionModel):
         x_prepped = self.data_preprocessor.transform(x_normal)
         x_prepped = x_prepped.astype(self.config.dtype)
 
+        if x_prepped.empty:
+            raise ValueError(
+                "Preprocessed training data is empty after filtering for normal behaviour and applying the "
+                "preprocessing pipeline. Check that 'normal_index' marks enough rows as normal and that the "
+                "preprocessor (e.g. ForwardFillImputer, ColumnSelector) is not dropping all rows."
+            )
+
         return x_prepped, x, y
 
     def fit(self, sensor_data: pd.DataFrame, normal_index: pd.Series = None, save_models: bool = True,
@@ -217,10 +224,11 @@ class FaultDetector(FaultDetectionModel):
         if tune_method not in ['threshold', 'decoder', 'full']:
             raise ValueError(f'Unknown tune method {tune_method}.')
 
-        if tune_method == 'threshold' and self.config.fit_threshold_on_val:
+        fit_on_val = self.config.fit_threshold_on_val
+        if tune_method == 'threshold' and fit_on_val:
             logger.warning('Fine-tuning using only validation data for threshold does not make sense if only the'
                            ' threshold is tuned! Setting fit_threshold_on_val to False.')
-            self.config['train']['threshold_selector']['fit_on_val'] = False
+            fit_on_val = False
 
         if pretrained_model_path is not None:
             self._load_from_path(model_path=pretrained_model_path)
@@ -267,7 +275,7 @@ class FaultDetector(FaultDetectionModel):
             )
 
         # tune/fit threshold
-        self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=self.config.fit_threshold_on_val)
+        self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=fit_on_val)
 
         model_path = None
         if save_models:

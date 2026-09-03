@@ -351,8 +351,8 @@ def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str,
     # 6. Scaler
     scale = p.get("scale", "standardize")
     if scale in ["standardize", "standard", "standardscaler"]:
-        steps.append({"name": "standard_scaler", "step_name": "scaler"})
+        steps.append({"name": "scaler", "step_name": "scaler", "params": {"scaler_type": "standard"}})
     else:
-        steps.append({"name": "minmax_scaler", "step_name": "scaler"})
+        steps.append({"name": "scaler", "step_name": "scaler", "params": {"scaler_type": "minmax"}})
 
     return steps

@@ -1,6 +1,7 @@
 """Generic class for building a preprocessing pipeline."""
 
 import copy
+import warnings
 from collections import Counter, defaultdict
 from typing import List, Optional, Dict, Any, Tuple
 
@@ -300,6 +301,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # Work on a copy so the caller's config dict is not mutated by name normalization / step name assignment.
         steps_spec = copy.deepcopy(self.steps_spec_)
 
+        self._migrate_legacy_scaler_names(steps_spec)
         self._validate_step_spec_keys(steps_spec)
 
         # Filter disabled steps first to simplify ordering.
@@ -447,6 +449,38 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             used.add(candidate)
 
         return specs
+
+    @staticmethod
+    def _migrate_legacy_scaler_names(steps_spec: List[Dict[str, Any]]) -> None:
+        """Migrate legacy 'standard_scaler'/'minmax_scaler' step names to the canonical 'scaler' name.
+
+        Legacy configs used ``standard_scaler`` or ``minmax_scaler`` as step names. This method rewrites
+        them in-place to the canonical ``scaler`` name with the appropriate ``scaler_type`` parameter and
+        emits a ``DeprecationWarning`` showing the correct configuration format.
+
+        Args:
+            steps_spec: List of step spec dicts (mutated in place).
+        """
+        legacy_map = {"standard_scaler": "standard", "minmax_scaler": "minmax"}
+        for spec in steps_spec:
+            name = spec.get("name")
+            if name in legacy_map:
+                scaler_type = legacy_map[name]
+                params = spec.get("params") or {}
+                params["scaler_type"] = scaler_type
+                spec["name"] = "scaler"
+                spec["params"] = params
+                warnings.warn(
+                    f"Step name '{name}' is deprecated and has been automatically migrated to "
+                    f"'scaler' with params {{'scaler_type': '{scaler_type}'}}. "
+                    f"Please update your configuration to use:\n"
+                    f"  - name: scaler\n"
+                    f"    params:\n"
+                    f"      scaler_type: {scaler_type}\n"
+                    f"This automatic migration will be removed in a future version.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
 
     @staticmethod
     def _validate_step_spec_keys(steps_spec: List[Dict[str, Any]]) -> None:

@@ -213,10 +213,10 @@ class TestCategoricalEncoder(unittest.TestCase):
         self.assertFalse(result.isna().any().any())
 
     def test_transform_with_new_categories(self):
-        """Test transformation with unseen category values."""
+        """Test transformation with unseen category values — should not crash, encoded as all-zeros."""
         encoder = CategoricalEncoder(categorical_features=['category'])
         encoder.fit(self.data_clean)
-        
+
         # Create data with unseen category value
         new_data = pd.DataFrame({
             'temperature': [25.0],
@@ -225,9 +225,13 @@ class TestCategoricalEncoder(unittest.TestCase):
             'region': ['North']
         }, index=pd.date_range('2024-01-01', periods=1, freq='1Min'))
 
-        # Should raise error as per OneHotEncoder default behavior (handle_unknown='error')
-        with self.assertRaises(ValueError):
-            encoder.transform(new_data)
+        # With handle_unknown='ignore', unseen categories are encoded as all-zeros (no error)
+        transformed = encoder.transform(new_data)
+        # No new column for 'D' — only fitted categories A, B, C have columns
+        category_cols = [c for c in transformed.columns if c.startswith('category_')]
+        self.assertEqual(sorted(category_cols), ['category_A', 'category_B', 'category_C'])
+        self.assertTrue((transformed[category_cols] == 0).all().all(),
+                        "Unseen category should be encoded as all-zeros.")
 
 if __name__ == '__main__':
     unittest.main()

@@ -34,7 +34,7 @@ class CategoricalEncoder(DataTransformer):
         self.numerical_columns = None
         self.feature_names_in_ = None
         self.categorical_features = categorical_features if categorical_features else []
-        self.one_hot_encoder = OneHotEncoder(sparse_output=False)
+        self.one_hot_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
         self.categorical_columns = None
         self.non_declared_categorical_features = None
 
@@ -106,6 +106,15 @@ class CategoricalEncoder(DataTransformer):
         categorical_data = x[self.categorical_columns]
 
         if not categorical_data.empty:
+            for i, col in enumerate(self.categorical_columns):
+                fitted_cats = set(self.one_hot_encoder.categories_[i])
+                current_cats = set(categorical_data[col].dropna().unique())
+                new_cats = current_cats - fitted_cats
+                if new_cats:
+                    logger.warning(
+                        "Unseen categories found in feature '%s': %s.",
+                        col, sorted(new_cats),
+                    )
             x_categorical_ = self.one_hot_encoder.transform(categorical_data)
             x_numerical_ = numerical_data.values
             x_ = np.concatenate((x_numerical_, x_categorical_), axis=1)

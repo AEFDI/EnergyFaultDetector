@@ -93,9 +93,9 @@ def _build_preprocessor_steps(
     # Final scaler with aliases supported for convenience.
     scaler_key = scaler.lower()
     if scaler_key in ("standard", "standardize", "standard_scaler"):
-        steps.append({"name": "standard_scaler"})
+        steps.append({"name": "scaler", "params": {"scaler_type": "standard"}})
     elif scaler_key in ("minmax", "minmax_scaler", "normalize"):
-        steps.append({"name": "minmax_scaler"})
+        steps.append({"name": "scaler", "params": {"scaler_type": "minmax"}})
     else:
         raise ValueError(
             f"Unknown scaler '{scaler}'. Use 'standard' (aka 'standardize') or 'minmax'."

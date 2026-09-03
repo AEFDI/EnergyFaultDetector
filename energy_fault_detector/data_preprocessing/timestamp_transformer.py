@@ -124,7 +124,9 @@ class TimestampTransformer(DataTransformer):
         train:
           data_preprocessor:
             steps:
-              - name: standard_scaler
+              - name: scaler
+                params:
+                  scaler_type: standard
               - name: timestamp_transformer
                 params:
                   features:
