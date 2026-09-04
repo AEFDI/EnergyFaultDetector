@@ -17,10 +17,15 @@ General label semantics
 What is the difference between ``status_type_id`` and ``event_label``?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``status_type_id`` is a timestamp-level label that describes the recorded operating mode of the turbine.
+``status_type_id`` is a timestamp-level label that describes the **recorded** operating mode of the turbine. 
+The intended use of this label is to help with filtering training data for normal behavior. 
+Please note: The meaning and usefulness of ``status_type_id`` differs slightly between wind farms.
+
 
 ``event_label`` is an event-level label indicating whether the prediction section of an event dataset
-contains an anomalous event.
+contains an anomalous event. The intended use of this label is to define the ground truth for evaluation of anomaly detection.
+For Wind Farm A the event labels were created based on available failure-log information. For Wind Farms B and C, the event labels were created 
+and validated based on operator feedback and service reports.
 
 They serve different purposes:
 
@@ -28,25 +33,14 @@ They serve different purposes:
 - ``event_label`` is the target for event-level anomaly evaluation.
 
 
-Should models predict ``status_type_id`` or ``event_label``?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How do the status labels of Wind Farm A differ from those of Wind Farms B and C?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For Wind Farms B and C, the status labels reflect anonymized operator-recorded turbine states and are
+useful both for training-data filtering and for parts of CARE-style evaluation.
 
-That depends on the goal. For early fault detection, you want to predict the ``event_label``. On the timestamp level,
-this means that you will want to detect anomalies within the provided ``event_start`` and ``event_end`` for events with
-``event_label == 'anomaly'`` and no anomalies if the ``event_label == 'normal'``.
-
-The ``status_type_id`` only indicates whether the wind turbine has an operationally normal state or not. Once a fault is
-known, this state is often already nor normal. Therefore, it is not interesting to detect whether the state is
-anomalous, but it is interesting to find anomalies during expected normal operation before a fault is known or becomes
-critical.
-
-For early fault detection, a practical strategy is often:
-
-- predict anomaly or normality at timestamp level,
-- then derive an event-level decision from those timestamp-level predictions.
-
-This is also consistent with CARE-style evaluation, where pointwise predictions can be aggregated into
-event-wise decisions.
+For Wind Farm A, the status labels were derived differently and do not provide the same interpretation value
+for prediction-time evaluation. The status labels are based on available failure-log information and should mainly be
+used for filtering training data. For prediction-time evaluation, they should largely be ignored.
 
 
 Why can anomalous events contain timestamps with ``status_type_id = 0``?
@@ -60,15 +54,6 @@ This is particularly important for early fault detection, because these timestam
 ones from the operator's perspective.
 
 
-How do the status labels of Wind Farm A differ from those of Wind Farms B and C?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For Wind Farms B and C, the status labels reflect anonymized operator-recorded turbine states.
-
-For Wind Farm A, the status labels were derived differently and do not provide the same interpretation value
-for prediction-time evaluation. The status labels are based on available failure-log information and should mainly be
-used for filtering training data. For prediction-time evaluation, they should largely be ignored.
-
-
 How should ``status_type_id`` be interpreted for Wind Farms B and C?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -78,6 +63,27 @@ information.
 This means a timestamp with ``status_type_id = 0`` reflects that the operator considered the turbine to be in
 normal operation at that time, even if later retrospective analysis identified that timestamp as part of an
 anomaly window.
+
+
+Should models predict ``status_type_id`` or ``event_label``?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+That depends on the goal. For early fault detection, you want to predict the ``event_label``. On the timestamp level,
+this means that you will want to detect anomalies within the provided ``event_start`` and ``event_end`` for events with
+``event_label == 'anomaly'`` and no anomalies if the ``event_label == 'normal'``.
+
+The ``status_type_id`` only indicates whether the wind turbine has an operationally normal state or not. Once a fault is
+known, this state is often already not normal. Therefore, it is not interesting to detect whether the state is
+anomalous, but it is interesting to find anomalies during expected normal operation before a fault is known or becomes
+critical.
+
+For early fault detection, a practical strategy is often:
+
+- predict anomaly or normality at timestamp level,
+- then derive an event-level decision from those timestamp-level predictions.
+
+This is also consistent with CARE-style evaluation, where pointwise predictions can be aggregated into
+event-wise decisions.
 
 
 Training and preprocessing
@@ -169,14 +175,12 @@ useful to reward detection of a timestamp as anomalous when the operator already
 operation.
 
 
-Why can true positives still exist after excluding abnormal-status timestamps?
+Why can detectable anomalies still exist after excluding timestamps with abnormal ``status_type_id``?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Because anomalous events can contain timestamps with normal status labels.
-
-After excluding abnormal-status timestamps, the remaining timestamps may still lie inside the anomalous event
-window. Those timestamps are still treated as anomalous ground truth for Coverage and can therefore produce
-true positives.
+Because anomalous events contain timestamps with normal status labels. These timestamps represent the time window 
+leading up to a fault, where the operator still considered the turbine to be in normal operation. Those timestamps 
+are still treated as anomalous ground truth for Coverage and can therefore produce true positives.
 
 
 How is Reliability computed?

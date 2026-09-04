@@ -199,7 +199,7 @@ Users should be aware of several dataset and benchmark limitations:
 - the dataset is anonymized,
 - the data is not fully preprocessed for modeling,
 - exact benchmark code from the original paper is not guaranteed to match the current package state,
-- overlapping timestamps across different event files may occur due to anonymization,
+- overlapping timestamps across different event files and and no temporal order of events from the same asset may occur due to anonymization,
 - some version-specific data-quality notes apply.
 
 These are discussed in more detail in :doc:`care2compare_faq`.
