@@ -55,9 +55,9 @@ class FaultDetector(FaultDetectionModel):
         else:
             y = pd.Series(np.full(len(x), True), index=x.index)
 
-        if not x.loc[x.index.duplicated()].empty or not y.loc[y.index.duplicated()].empty:
-            raise ValueError('There are duplicated indices in the input dataframe `sensor_data` and/or in the '
-                             '`normal_index`, please check your input data.')
+        x = self._handle_duplicate_index(x)
+        if normal_index is not None:
+            y = self._handle_duplicate_index(y)
 
         # TODO: add list of relevant features to config and protect relevant features (if present) as well.
         # Determine which features to protect based on config flag
@@ -327,8 +327,7 @@ class FaultDetector(FaultDetectionModel):
                 raise ValueError('No models loaded and no model_path provided!')
             logger.debug('No model_path provided; using existing model instances.')
 
-        if not x.loc[x.index.duplicated()].empty:
-            raise ValueError('There are duplicated indices in the input dataframe `sensor_data`.')
+        x = self._handle_duplicate_index(x)
 
         x_prepped = self.data_preprocessor.transform(x).sort_index()
         x_prepped = x_prepped.astype(self.config.dtype)

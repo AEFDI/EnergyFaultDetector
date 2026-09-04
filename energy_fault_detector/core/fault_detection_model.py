@@ -139,6 +139,52 @@ class FaultDetectionModel(ABC):
             FaultDetectionResult object.
         """
 
+    @staticmethod
+    def _handle_duplicate_index(data: Union[pd.DataFrame, pd.Series]) -> Union[pd.DataFrame, pd.Series]:
+        """Drop true duplicate indices and raise on contradicting ones.
+
+        Rows sharing the same index but with identical values across all columns are
+        treated as redundant copies and the first occurrence is kept. Rows sharing the
+        same index but with differing values indicate a data integrity problem and cause
+        a ``ValueError``.
+
+        Args:
+            data: A pandas DataFrame or Series with a potentially duplicated index.
+
+        Returns:
+            The input with true duplicates removed (keep first).
+
+        Raises:
+            ValueError: If contradicting duplicates (same index, different values) are found.
+        """
+        dup_mask = data.index.duplicated(keep=False)
+        if not dup_mask.any():
+            return data
+
+        dup_indices = data.index[dup_mask].unique()
+        contradicting = []
+        for idx in dup_indices:
+            rows = data.loc[idx]
+            if isinstance(rows, pd.DataFrame):
+                if len(rows.drop_duplicates()) > 1:
+                    contradicting.append(idx)
+            else:
+                if rows.nunique() > 1:
+                    contradicting.append(idx)
+
+        if contradicting:
+            raise ValueError(
+                f"Found contradicting duplicate indices (same index, different values): "
+                f"{list(contradicting)[:10]}. Please check your input data for data integrity issues."
+            )
+
+        n_before = len(data)
+        data = data[~data.index.duplicated(keep='first')]
+        n_dropped = n_before - len(data)
+        if n_dropped:
+            logger.info(f"Dropped {n_dropped} duplicate rows (identical index and values).")
+        return data
+
     def train_val_split(self, x: DataType) -> Tuple[DataType, DataType]:
         """Split data in train and validation data.
 

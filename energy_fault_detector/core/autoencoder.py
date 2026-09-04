@@ -496,8 +496,9 @@ class Autoencoder(ABC, SaveLoadMixin):
             warnings.warn("No fitted autoencoder model was found.")
         if not encoder_loaded:
             warnings.warn("No fitted encoder model was found.")
-        if not decoder_loaded:
-            warnings.warn("No fitted decoder model was found.")
+        # Uncommented for now, since many models do not save the decoder.
+        # if not decoder_loaded:
+        #    warnings.warn("No fitted decoder model was found.")
 
         return self
 
