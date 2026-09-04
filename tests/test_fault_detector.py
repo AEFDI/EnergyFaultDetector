@@ -740,3 +740,41 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
             }
         })
         self.assertTrue(config.protect_conditional_features)
+
+
+class TestHandleDuplicateIndex(unittest.TestCase):
+    """Test _handle_duplicate_index on the FaultDetectionModel base class."""
+
+    def test_no_duplicates_unchanged(self):
+        """Data without duplicate indices should be returned unchanged."""
+        df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]}, index=[0, 1, 2])
+        result = FaultDetector._handle_duplicate_index(df)
+        self.assertEqual(len(result), 3)
+        pd.testing.assert_frame_equal(result, df)
+
+    def test_true_duplicates_dropped(self):
+        """Rows with same index and same values should be collapsed to one."""
+        df = pd.DataFrame({'a': [1, 2, 2, 3], 'b': [4, 5, 5, 6]}, index=[0, 1, 1, 2])
+        result = FaultDetector._handle_duplicate_index(df)
+        self.assertEqual(len(result), 3)
+        self.assertEqual(list(result.index), [0, 1, 2])
+
+    def test_contradicting_duplicates_raise(self):
+        """Rows with same index but different values should raise ValueError."""
+        df = pd.DataFrame({'a': [1, 2, 3, 3], 'b': [4, 5, 6, 7]}, index=[0, 1, 2, 2])
+        with self.assertRaises(ValueError) as ctx:
+            FaultDetector._handle_duplicate_index(df)
+        self.assertIn('contradicting', str(ctx.exception))
+
+    def test_series_true_duplicates_dropped(self):
+        """Series with same index and same values should be collapsed."""
+        s = pd.Series([True, True, True], index=[0, 1, 1])
+        result = FaultDetector._handle_duplicate_index(s)
+        self.assertEqual(len(result), 2)
+
+    def test_series_contradicting_raise(self):
+        """Series with same index but different values should raise ValueError."""
+        s = pd.Series([True, True, False], index=[0, 1, 1])
+        with self.assertRaises(ValueError) as ctx:
+            FaultDetector._handle_duplicate_index(s)
+        self.assertIn('contradicting', str(ctx.exception))

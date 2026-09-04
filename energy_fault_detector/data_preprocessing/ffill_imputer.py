@@ -25,6 +25,12 @@ class ForwardFillImputer(DataTransformer):
     (invalidating fills that exceed the time threshold), drops duplicate rows, and removes
     any rows still containing NaN values.
 
+    Dropping duplicate rows after forward-filling is necessary because forward-filling
+    propagates the last valid value into consecutive NaN rows. If the underlying signal did
+    not change between observations, the filled rows become exact duplicates of the source
+    row. Removing these redundant rows avoids introducing identical training samples that
+    carry no additional information and would otherwise bias the reconstruction error.
+
     Attributes:
         feature_names_in_ (List[str]): List of input feature names observed during fitting.
         feature_names_out_ (List[str]): List of output feature names (same as input features unless some were dropped).
@@ -129,7 +135,8 @@ class ForwardFillImputer(DataTransformer):
         1. Forward-fill all NaN values.
         2. Invalidate fills where the elapsed time from the last valid observation exceeds
            ``ffill_limit_`` (set those values back to NaN).
-        3. Drop duplicate rows.
+        3. Drop duplicate rows (exact duplicates created by forward-filling where the
+           underlying signal did not change).
         4. Drop any rows still containing NaN values (``dropna(how="any")``).
 
         Unlike the previous resampling-based approach, the original (possibly irregular)
