@@ -45,22 +45,39 @@ train:
         params:
           min_unique_value_count: 2
           max_col_zero_frac: 0.99
+      # Encode declared categorical features
+      - name: categorical_encoder
+        params:
+          categorical_features:
+            - categorical_feature1
+            - categorical_feature2
+      # Imputer (explicit; will be auto-inserted if omitted)
+      - name: simple_imputer
+        params:
+          strategy: mean
+      # Alternatively, you can use a forward-fill imputer:
+      # - name: ffill_imputer
+      #   params:
+      #     ffill_limit: '1h'  # maximum time gap to forward-fill as a pandas Timedelta string (e.g., '15min', '1h')
+      #     categorical_features:
+      #       - categorical_feature1
+      #       - categorical_feature2
+      # Scaler (choose one; StandardScaler is auto-added by default if omitted)
+      - name: scaler
+        params:
+          scaler_type: 'standard' # Supported types: 'standard', 'minmax'
+          with_mean: true
+          with_std: true
+          scale_categorical_features: True
+          categorical_features:
+            - categorical_feature1
+            - categorical_feature2
       # Transform angles to sin/cos
       - name: angle_transformer
         params:
           angles:
             - angle1
             - angle2
-      # Imputer (explicit; will be auto-inserted if omitted)
-      - name: simple_imputer
-        params:
-          strategy: mean
-      # Scaler (choose one; StandardScaler is auto-added by default if omitted)
-      - name: standard_scaler
-        params:
-          with_mean: true
-          with_std: true
-
   data_splitter:
     # How to split data in train and validation sets for the autoencoder
     type: sklearn

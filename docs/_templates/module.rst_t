@@ -1,5 +1,5 @@
 {%- if show_headings %}
-{{- [basename] | join(' ') | e | heading }}
+{{- [basename | replace('energy_fault_detector.', '')] | join(' ') | e | heading }}
 
 {% endif -%}
 .. automodule:: {{ qualname }}

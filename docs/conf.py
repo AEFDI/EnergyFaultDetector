@@ -53,6 +53,16 @@ suppress_warnings = [
 
 autoclass_content = 'both'
 
+# Exclude sklearn boilerplate methods (metadata routing, set_output) that are
+# not re-implemented in our classes.
+autodoc_default_options = {
+    'exclude-members': (
+        'set_fit_request, set_transform_request, set_inverse_transform_request, '
+        'set_predict_request, set_score_request, set_output, get_metadata_routing, '
+        '__sklearn_is_fitted__'
+    ),
+}
+
 # ======================================================================================
 # No configurable options below this line
 
@@ -279,8 +289,22 @@ def run_apidoc(app):
     ])
 
 
+def _skip_sklearn_dunders(app, what, name, obj, skip, options):
+    """Skip sklearn boilerplate dunder methods that have docstrings.
+
+    ``napoleon_include_special_with_doc = True`` forces inclusion of special
+    methods with docstrings via ``emit_first_result``, overriding
+    ``exclude-members``. This handler runs with higher priority (lower number)
+    so it is called before Napoleon's handler and takes precedence.
+    """
+    if name == '__sklearn_is_fitted__':
+        return True
+    return None
+
+
 def setup(app):
     app.connect("builder-inited", run_apidoc)
+    app.connect("autodoc-skip-member", _skip_sklearn_dunders, priority=100)
 
 
 def linkcode_resolve(domain, info):

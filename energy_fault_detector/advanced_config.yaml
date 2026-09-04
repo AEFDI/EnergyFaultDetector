@@ -1,0 +1,94 @@
+train:
+  data_clipping:
+    lower_percentile: 0.001
+    upper_percentile: 0.999
+
+  data_preprocessor:
+    steps:
+      # 1) Drop columns with too many NaNs and exclude specific features
+      - name: column_selector
+        params:
+          max_nan_frac_per_col: 0.9
+          features_to_exclude: [] # Inlcude features to exclude in the list
+      # 2) Drop columns with low number of unique values
+      - name: low_unique_value_filter
+        params:
+          min_unique_value_count: 2
+      # 3) Transform counter readings to differences
+      - name: counter_diff_transformer
+        params:
+          counters: [] # Include counter features in the list
+          compute_rate: True
+          reset_strategy: 'nan'
+          fill_first: 'nan'
+          keep_original: False
+          max_gap_seconds: 3600
+      # 4) Imputation
+      - name: ffill_imputer
+        params:
+          ffill_limit: '60min' # Maximum time gap to forward-fill (pandas Timedelta string).
+          categorical_features: [] # include categorical features in the list
+
+      # 5) Encode categorical features
+      - name: categorical_encoder
+        params:
+          categorical_features: [] # include categorical features in the list
+            
+      # 6) Scaling (standardize)
+      - name: scaler
+        params:
+          scaler_type: 'standard' # Supported types are 'standard' and 'minmax'
+          with_mean: True
+          with_std: True
+          scale_categorical_features: False
+          categorical_features: [] # include categorical features in the list
+
+      # 7) Add time-based features
+      - name: timestamp_transformer
+        params:
+          features: ['minute_of_hour', 'hour_of_day', 'day_of_week']
+  
+  data_splitter:
+    shuffle: true
+    type: sklearn
+    validation_split: 0.2
+
+  autoencoder:
+    name: ConditionalAutoencoder
+    params:
+      act: prelu
+      batch_size: 256
+      code_size: 9
+      early_stopping: true
+      epochs: 1000
+      last_act: linear
+      layers:
+      - 64
+      - 32
+      learning_rate: 0.0001
+      loss_name: mean_squared_error
+      min_delta: 0.0001
+      noise: 0.0
+      patience: 5
+      conditional_features: [] # Include conditional features in the list
+    verbose: 0
+
+  anomaly_score:
+    name: rmse
+    params:
+      scale: false
+   
+  threshold_selector:
+    fit_on_val: true
+    name: QuantileThresholdSelector
+    params:
+      quantile: 0.98
+  
+  protect_conditional_features: true # Protect conditional features from being dropped during preprocessing
+
+root_cause_analysis:
+  alpha: 0.8
+  init_x_bias: recon
+  num_iter: 200
+  max_sample_threshold: 1000
+  verbose: true

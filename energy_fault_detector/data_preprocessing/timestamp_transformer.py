@@ -107,8 +107,8 @@ class TimestampTransformer(DataTransformer):
 
     Args:
         features (Optional[List[str]]): List of feature names to generate. Supported:
-            ["second_of_minute", "minute_of_hour", "hour_of_day", "day_of_week", "day_of_month", "month_of_year",
-             "is_weekend", "year"]
+            ``second_of_minute``, ``minute_of_hour``, ``hour_of_day``, ``day_of_week``,
+            ``day_of_month``, ``day_of_year``, ``month_of_year``, ``is_weekend``, ``year``.
         timestamp_col (Optional[str]): The column name of the DataFrame containing timestamps.
             If None, the index is assumed to be the timestamp.
         groupby_level (Optional[str]): Optional index level name or position for grouping (e.g., 'device_id' or 0).
@@ -124,7 +124,9 @@ class TimestampTransformer(DataTransformer):
         train:
           data_preprocessor:
             steps:
-              - name: standard_scaler
+              - name: scaler
+                params:
+                  scaler_type: standard
               - name: timestamp_transformer
                 params:
                   features:

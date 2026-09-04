@@ -1,12 +1,13 @@
 """Generic class for building a preprocessing pipeline."""
 
+import copy
+import warnings
 from collections import Counter, defaultdict
 from typing import List, Optional, Dict, Any, Tuple
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.impute import SimpleImputer
+from sklearn.utils.validation import check_is_fitted
 
 from ..core.save_load_mixin import SaveLoadMixin
 from .column_selector import ColumnSelector
@@ -15,34 +16,42 @@ from .angle_transformer import AngleTransformer
 from .duplicate_value_to_nan import DuplicateValuesToNan
 from .counter_diff_transformer import CounterDiffTransformer
 from .timestamp_transformer import TimestampTransformer
+from .categorical_encoder import CategoricalEncoder
+from .scaler import Scaler
+from .imputer import Imputer
+from .ffill_imputer import ForwardFillImputer
 
 
 class DataPreprocessor(Pipeline, SaveLoadMixin):
+    """
+    A configurable data preprocessing pipeline for tabular data.
+    """
+
     STEP_REGISTRY = {
         'duplicate_to_nan': DuplicateValuesToNan,
         'column_selector': ColumnSelector,
         'low_unique_value_filter': LowUniqueValueFilter,
         'angle_transformer': AngleTransformer,
         'counter_diff_transformer': CounterDiffTransformer,
-        'simple_imputer': SimpleImputer,
-        'standard_scaler': StandardScaler,
-        'minmax_scaler': MinMaxScaler,
+        'simple_imputer': Imputer,
+        'scaler': Scaler,
         'timestamp_transformer': TimestampTransformer,
+        'categorical_encoder': CategoricalEncoder,
+        'ffill_imputer': ForwardFillImputer,
     }
 
     NAME_ALIASES: Dict[str, str] = {
         "angle_transform": "angle_transformer",
         "counter_diff": "counter_diff_transformer",
         "counter_diff_transform": "counter_diff_transformer",
-        "standardize": "standard_scaler",
-        "standard": "standard_scaler",
-        "standardscaler": "standard_scaler",
-        "minmax": "minmax_scaler",
+        "scaler": "scaler",
         "imputer": "simple_imputer",
         "duplicate_value_to_nan": "duplicate_to_nan",
         "duplicate_values_to_nan": "duplicate_to_nan",
         "timestamp_features": "timestamp_transformer",
         "timestamp_transform": "timestamp_transformer",
+        "categorical_encoder": "categorical_encoder",
+        "ffill_imputer": "ffill_imputer",
     }
 
     def __init__(self, steps: Optional[List[Dict[str, Any]]] = None) -> None:
@@ -66,9 +75,10 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
               1) NaN introducing steps first (DuplicateValuesToNan, CounterDiffTransformer),
               2) ColumnSelector (if present),
               3) Other steps
-              4) SimpleImputer placed before scaler (always present; mean strategy by default),
-              5) Scaler always last (StandardScaler by default).
-              6) TimestampTransformer (if present).
+              4) Imputer placed before scaler (always present; mean strategy by default),
+              5) CategoricalEncoder (if present),
+              6) Scaler always last (StandardScaler by default).
+              7) TimestampTransformer (if present).
 
         Configuration example:
 
@@ -110,16 +120,17 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # Ensure pandas output for supported transformers.
         self.set_output(transform="pandas")
 
-    def inverse_transform(self, x: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
-        """Inverse-transform scaler and angles (other transforms are not reversed).
+    def inverse_transform(self, X: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
+        """Inverse-transform scaler, timestamp transformer, categorical encoder and angle transformer (other transforms are not reversed).
 
         Args:
-            x: The transformed data.
+            X: The transformed data.
 
         Returns:
             DataFrame with inverse scaling and angle back-transformation.
         """
-        x_ = x.copy()  # avoid modifying the original DataFrame
+        check_is_fitted(self)
+        x_ = X.copy()  # avoid modifying the original DataFrame
 
         # Drop time features
         timestamp_key, _ = self._find_step_by_type((TimestampTransformer,))
@@ -127,9 +138,14 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             x_ = self.named_steps[timestamp_key].inverse_transform(x_.copy())
 
         # Find scaler by type and reverse scaling
-        scaler_key, _ = self._find_step_by_type((StandardScaler, MinMaxScaler))
+        scaler_key, _ = self._find_step_by_type((Scaler,))
         x_ = self.named_steps[scaler_key].inverse_transform(x_)
         x_ = pd.DataFrame(data=x_, columns=self.named_steps[scaler_key].get_feature_names_out())
+
+        # Try to reverse categorical encoding
+        encoder_key, _ = self._find_step_by_type((CategoricalEncoder,))
+        if encoder_key is not None:
+            x_ = self.named_steps[encoder_key].inverse_transform(x_)
 
         # Try to reverse angle transformation
         angle_key, _ = self._find_step_by_type((AngleTransformer,))
@@ -137,8 +153,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             x_ = self.named_steps[angle_key].inverse_transform(x_)
 
         # Keep original index
-        if isinstance(x, pd.DataFrame):
-            x_.index = x.index
+        if isinstance(X, pd.DataFrame):
+            x_.index = X.index
 
         return x_
 
@@ -152,8 +168,9 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Returns:
             DataFrame with the same index as input.
         """
+        check_is_fitted(self)
         x_ = super().transform(X=x.copy())
-        return pd.DataFrame(data=x_, columns=self.get_feature_names_out(), index=x.index)
+        return x_ # x_ is already a dataframe. Converting to a dataframe here and adding the input index is not working in case rows are dropped during preprocessing (e.g. in ForwardFillImputer). The index of the returned dataframe should be the index of the transformed dataframe, not the input dataframe.
 
     # pylint: disable=arguments-renamed
     def fit(self, X: pd.DataFrame, y=None, **fit_params):
@@ -179,18 +196,18 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         # Call parent fit
         result = super().fit(X=X, y=y, **fit_params)
 
-        # Validate that protected features are in the output
+        # Validate that protected features survive the pipeline. ColumnSelector and LowUniqueValueFilter
+        # receive protected_features via fit_params and skip dropping them, but other steps (e.g. imputers
+        # dropping all-NaN columns) do not. This check enforces that protected features are still present
+        # in the output and raises if they were dropped (tested in test_data_preprocessor.py).
         if protected_features:
             output_features = self.get_feature_names_out()
-            missing_features = [f for f in protected_features if f not in output_features]
+            available_protected = [f for f in protected_features if f in X.columns]
+            missing_features = [f for f in available_protected
+                                if not any(f in col for col in output_features)]
             if missing_features:
                 raise ValueError(
-                    f"Protected features were dropped by the preprocessing pipeline: {missing_features}. "
-                    f"This may be caused by AngleTransformer or CounterDiffTransformer modifying these features. "
-                    f"Please ensure protected features (e.g., conditional features for autoencoders) are not "
-                    f"transformed by these steps or consider the transformed version of these features (e.g. "
-                    f"<feature_name>_sin, <feature_name>_cos, <feature_name>_rate, <feature_name>_diff) as "
-                    f"conditional features."
+                    f"Protected features were dropped by the preprocessing pipeline: {missing_features}."
                 )
 
         return result
@@ -229,8 +246,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             "column_selector",
             "low_unique_value_filter",
             "simple_imputer",
+            "ffill_imputer",
             "timestamp_transformer",
-            # scaler handled separately (standard_scaler/minmax_scaler) in your code
         }
         counts: List[Tuple[str, int]] = []
         for name in singleton_names:
@@ -249,7 +266,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         Steps:
             - Column selection: A ColumnSelector object filters out columns/features with too many NaN values.
             - Low unique value filter: Remove columns/features with <= 2 unique values.
-            - Imputation with sklearn's SimpleImputer
+            - Simple imputation
             - Scaling: Apply either sklearn's StandardScaler or MinMaxScaler.
 
         Returns:
@@ -259,8 +276,8 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         steps = [
             ("column_selector", ColumnSelector(max_nan_frac_per_col=0.05)),
             ("low_unique_value_filter", LowUniqueValueFilter(min_unique_value_count=2, max_col_zero_frac=1.0)),
-            ("simple_imputer", SimpleImputer(strategy="mean").set_output(transform="pandas")),
-            ("standard_scaler", StandardScaler(with_mean=True, with_std=True)),
+            ("simple_imputer", Imputer(strategy="mean").set_output(transform="pandas")),
+            ("scaler", Scaler(with_mean=True, with_std=True)),
         ]
 
         return steps
@@ -281,10 +298,14 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             ValueError: If a step lacks 'name' or references an unknown step.
         """
 
-        self._validate_step_spec_keys(self.steps_spec_)
+        # Work on a copy so the caller's config dict is not mutated by name normalization / step name assignment.
+        steps_spec = copy.deepcopy(self.steps_spec_)
+
+        self._migrate_legacy_scaler_names(steps_spec)
+        self._validate_step_spec_keys(steps_spec)
 
         # Filter disabled steps first to simplify ordering.
-        enabled_spec = [s for s in self.steps_spec_ if s.get("enabled", True)]
+        enabled_spec = [s for s in steps_spec if s.get("enabled", True)]
         # Order the steps
         ordered_spec = self._order_steps_spec(enabled_spec)
         self._validate_singletons(enabled_spec)
@@ -314,7 +335,7 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
           - NaN introducing steps first (DuplicateValuesToNan and CounterDiffTransformer)
           - ColumnSelector (if present).
           - Other steps
-          - Any imputer placed at the end, before scaler. If no imputer was defined, the SimpleImputer with imputation
+          - Any imputer placed at the end, before scaler. If no imputer was defined, the a simple imputer with imputation
             strategy 'mean' is added.
           - Scaler last (if present). If no scaler is added, the StandardScaler with default values is added.
           - TimestampTransformer (if present).
@@ -334,26 +355,33 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         low_unique_value_filter = [s for s in steps_spec if s.get("name") == "low_unique_value_filter"]
         duplicates = [s for s in steps_spec if s.get("name") == "duplicate_to_nan"]
         counter = [s for s in steps_spec if s.get("name") == "counter_diff_transformer"]
-        imputer = [s for s in steps_spec if s.get("name") == "simple_imputer"]
-        scaler_names = {"standard_scaler", "minmax_scaler"}
-        scalers = [s for s in steps_spec if s.get("name") in scaler_names]
+        imputer = [s for s in steps_spec if s.get("name") in {"simple_imputer", "ffill_imputer"}]
+        scalers = [s for s in steps_spec if s.get("name") == "scaler"]
+        encoders = [s for s in steps_spec if s.get("name") == "categorical_encoder"]
         if len(scalers) > 1:
             raise ValueError(f"Only one scaler can be used, two found in the steps specification: {scalers}")
+        if len(imputer) > 1:
+            raise ValueError(f"Only one imputer can be used, two found in the steps specification: {imputer}")
         timestamp_step = [s for s in steps_spec if s.get("name") == "timestamp_transformer"]
 
         others = [
             s for s in steps_spec
             if s.get("name") not in {
                 "column_selector", "duplicate_to_nan", "counter_diff_transformer", "simple_imputer",
-                "low_unique_value_filter", "timestamp_transformer",
-            } | scaler_names
+                "categorical_encoder", "low_unique_value_filter", "timestamp_transformer", "scaler",
+                "ffill_imputer"
+            }
         ]
 
         # Add default scaler if empty
         if not scalers:
-            scalers = [{'name': 'standard_scaler',
+            scalers = [{'name': 'scaler',
                         'step_name': 'scaler',
-                        'params': {'with_mean': True, 'with_std': True}}]
+                        'params': {
+                            'scaler_type': 'standard',
+                            'scale_categorical_features': True,
+                            'with_mean': True,
+                            'with_std': True}}]
         # Add default imputer if empty
         if not imputer:
             imputer = [{'name': 'simple_imputer',
@@ -370,8 +398,11 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
         ordered.extend(low_unique_value_filter)
         # other transformations
         ordered.extend(others)
-        # Imputation and scaling
+        # Imputation
         ordered.extend(imputer)
+        # Encoding categorical features before scaling and after imputation
+        ordered.extend(encoders)
+        # Scaling
         ordered.extend(scalers)
         # No scaling needed for the time features
         ordered.extend(timestamp_step)
@@ -418,6 +449,38 @@ class DataPreprocessor(Pipeline, SaveLoadMixin):
             used.add(candidate)
 
         return specs
+
+    @staticmethod
+    def _migrate_legacy_scaler_names(steps_spec: List[Dict[str, Any]]) -> None:
+        """Migrate legacy 'standard_scaler'/'minmax_scaler' step names to the canonical 'scaler' name.
+
+        Legacy configs used ``standard_scaler`` or ``minmax_scaler`` as step names. This method rewrites
+        them in-place to the canonical ``scaler`` name with the appropriate ``scaler_type`` parameter and
+        emits a ``DeprecationWarning`` showing the correct configuration format.
+
+        Args:
+            steps_spec: List of step spec dicts (mutated in place).
+        """
+        legacy_map = {"standard_scaler": "standard", "minmax_scaler": "minmax"}
+        for spec in steps_spec:
+            name = spec.get("name")
+            if name in legacy_map:
+                scaler_type = legacy_map[name]
+                params = spec.get("params") or {}
+                params["scaler_type"] = scaler_type
+                spec["name"] = "scaler"
+                spec["params"] = params
+                warnings.warn(
+                    f"Step name '{name}' is deprecated and has been automatically migrated to "
+                    f"'scaler' with params {{'scaler_type': '{scaler_type}'}}. "
+                    f"Please update your configuration to use:\n"
+                    f"  - name: scaler\n"
+                    f"    params:\n"
+                    f"      scaler_type: {scaler_type}\n"
+                    f"This automatic migration will be removed in a future version.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
 
     @staticmethod
     def _validate_step_spec_keys(steps_spec: List[Dict[str, Any]]) -> None:

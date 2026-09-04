@@ -59,7 +59,7 @@ def plot_reconstruction(data: pd.DataFrame, reconstruction: pd.DataFrame, featur
 
     Notes:
         - Can result in a very large plot, if the dataset contains many columns/features. Use the
-         `features_to_plot` parameter to specify which columns to plot.
+          ``features_to_plot`` parameter to specify which columns to plot.
         - For MultiIndex data (e.g. multiple devices), pass data for a single
           group/device, i.e. ``df.loc[device_id]`` to select one device before plotting.
 
