@@ -8,6 +8,7 @@ from energy_fault_detector.core.data_transformer import DataTransformer
 
 logger = logging.getLogger('energy_fault_detector')
 
+
 class CategoricalEncoder(DataTransformer):
     """Transformer for encoding categorical features using one-hot encoding.
 

@@ -1,4 +1,4 @@
-from typing import Optional, List, Union, Callable
+from typing import List
 import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 from sklearn.impute import SimpleImputer
@@ -7,6 +7,7 @@ from energy_fault_detector.core.data_transformer import DataTransformer
 import logging
 
 logger = logging.getLogger('energy_fault_detector')
+
 
 class Imputer(DataTransformer):
     """Wrapper around scikit-learn's SimpleImputer to handle numerical and categorical features separately.
@@ -62,7 +63,6 @@ class Imputer(DataTransformer):
             raise ValueError(f"Unsupported strategy: {self.strategy}. Supported strategies are 'mean' and 'median'.")
 
         # Attributes to be defined during fitting
-
         self.feature_names_in_: List[str] = []
         self.feature_names_out_ = None
         self.input_index_ = None
@@ -102,12 +102,14 @@ class Imputer(DataTransformer):
 
         # Clean numerical columns from non_declared categorical features
         self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
-        self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
+        self.numerical_columns = [col for col in self.numerical_columns
+                                  if col not in self.non_declared_categorical_features]
         numerical_data = numerical_data.loc[:, self.numerical_columns]
         if self.non_declared_categorical_features:
-            logger.warning(f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
-                        f"They will be dropped. Consider adding them to the categorical_features list if they should be"
-                        f" treated as categorical.")
+            logger.warning(
+                f"Non-declared categorical features found in data: {self.non_declared_categorical_features}. "
+                f"They will be dropped. Consider adding them to the categorical_features list if they should be"
+                f" treated as categorical.")
 
         # Drop columns that are entirely NaN — they cannot be imputed and would cause
         # SimpleImputer to silently skip them, leading to a column-count mismatch on transform.
@@ -115,19 +117,11 @@ class Imputer(DataTransformer):
                         if x[col].isna().all()]
         if all_nan_cols:
             logger.warning(f"Columns containing only NaN values found: {all_nan_cols}. "
-                        f"They will be dropped as they cannot be imputed.")
+                           f"They will be dropped as they cannot be imputed.")
             self.numerical_columns = [col for col in self.numerical_columns if col not in all_nan_cols]
             self.categorical_columns = [col for col in self.categorical_columns if col not in all_nan_cols]
             numerical_data = numerical_data.loc[:, self.numerical_columns]
             categorical_data = categorical_data.loc[:, self.categorical_columns]
-
-        logger.debug(f"Numerical columns: {self.numerical_columns}")
-        logger.debug(f"Categorical columns: {self.categorical_columns}")
-
-        # Clean numerical columns from non_declared categorical features
-        self.non_declared_categorical_features = numerical_data.select_dtypes(include='object').columns.tolist()
-        self.numerical_columns = [col for col in self.numerical_columns if col not in self.non_declared_categorical_features]
-        numerical_data = numerical_data[self.numerical_columns]
 
         logger.debug(f"Numerical columns: {self.numerical_columns}")
         logger.debug(f"Categorical columns: {self.categorical_columns}")
@@ -139,7 +133,7 @@ class Imputer(DataTransformer):
             self.categorical_imputer.fit(categorical_data)
 
         return self
-    
+
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """Applies imputation to input DataFrame, handling numerical and categorical columns separately.
 
@@ -202,7 +196,7 @@ class Imputer(DataTransformer):
         transformed_data = transformed_data[self.feature_names_out_]  # Ensure original column order
 
         return transformed_data
-    
+
     def inverse_transform(self, x: pd.DataFrame) -> pd.DataFrame:
         """Returns input DataFrame with columns reordered to match original feature order.
 
@@ -221,7 +215,7 @@ class Imputer(DataTransformer):
         check_is_fitted(self, "n_features_in_")
 
         return pd.DataFrame(x, columns=self.feature_names_in_)
-    
+
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """Returns ordered list of output feature names.
 
