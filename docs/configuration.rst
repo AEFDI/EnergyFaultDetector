@@ -91,25 +91,25 @@ with the following keys:
 
 Allowed step names and aliases:
 
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| Step name               | Purpose                                       | Aliases                                        |
-+=========================+===============================================+================================================+
-| column_selector         | Drop columns with too many NaNs               | \-                                             |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| low_unique_value_filter | Drop columns with low variance/many zeros     | \-                                             |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| angle_transformer       | Convert angles to sin/cos pairs               | angle_transform                                |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| counter_diff_transformer| Convert counters to differences/rates         | counter_diff, counter_diff_transform           |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| timestamp_transformer   | Extract time features (hour, day, etc.)       | timestamp_transform,timestamp_features         |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| simple_imputer          | Impute missing values                         | imputer                                        |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| scaler                  | Standardize (standard) or scale to [0,1] (minmax)| standard_scaler, minmax_scaler (deprecated)  |
-+-------------------------+-----------------------------------------------+------------------------------------------------+
-| duplicate_to_nan        | Replace consecutive duplicate values with NaN | duplicate_value_to_nan, duplicate_values_to_nan|
-+-------------------------+-----------------------------------------------+------------------------------------------------+
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| Step name                | Purpose                                           | Aliases                                         |
++==========================+===================================================+=================================================+
+| column_selector          | Drop columns with too many NaNs                   | \-                                              |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| low_unique_value_filter  | Drop columns with low variance/many zeros         | \-                                              |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| angle_transformer        | Convert angles to sin/cos pairs                   | angle_transform                                 |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| counter_diff_transformer | Convert counters to differences/rates             | counter_diff, counter_diff_transform            |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| timestamp_transformer    | Extract time features (hour, day, etc.)           | timestamp_transform, timestamp_features         |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| simple_imputer           | Impute missing values                             | imputer                                         |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| scaler                   | Standardize (standard) or scale to [0,1] (minmax) | standard_scaler, minmax_scaler (deprecated)     |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
+| duplicate_to_nan         | Replace consecutive duplicate values with NaN     | duplicate_value_to_nan, duplicate_values_to_nan |
++--------------------------+---------------------------------------------------+-------------------------------------------------+
 
 For detailed documentation of the data preprocessor pipeline, refer to the
 :py:obj:`DataPreprocessor <energy_fault_detector.data_preprocessing.data_preprocessor.DataPreprocessor>` docs.

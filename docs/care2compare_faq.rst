@@ -176,7 +176,7 @@ operation.
 
 
 Why can detectable anomalies still exist after excluding timestamps with abnormal ``status_type_id``?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Because anomalous events contain timestamps with normal status labels. These timestamps represent the time window 
 leading up to a fault, where the operator still considered the turbine to be in normal operation. Those timestamps 
