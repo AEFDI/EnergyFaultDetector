@@ -1,0 +1,342 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CARE2Compare guide &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CARE2Compare FAQ" href="care2compare_faq.html" />
+    <link rel="prev" title="ARCANA: Root cause analysis" href="arcana.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CARE2Compare guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#background">Background</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dataset-loading">Dataset loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#formatted-loading">Formatted loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training-data-filtering">Training-data filtering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-workflow">Example workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#care-score-overview">CARE score overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wind-farm-specific-interpretation">Wind-farm-specific interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#known-practical-limitations">Known practical limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_faq.html">CARE2Compare FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-one-models">Sequence-to-one models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-sequence-models">Sequence-to-sequence models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CARE2Compare guide</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/care2compare_guide.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="care2compare-guide">
+<h1>CARE2Compare guide<a class="headerlink" href="#care2compare-guide" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This page documents how CARE2Compare support is exposed in EnergyFaultDetector.
+For interpretation and recurring dataset questions, see <a class="reference internal" href="care2compare_faq.html"><span class="doc">CARE2Compare FAQ</span></a>.</p>
+</div>
+<p>EnergyFaultDetector provides support for:</p>
+<ul class="simple">
+<li><p>loading CARE2Compare event datasets,</p></li>
+<li><p>accessing event metadata,</p></li>
+<li><p>formatting normal-operation masks based on <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code>,</p></li>
+<li><p>evaluating predictions with the CARE score.</p></li>
+</ul>
+<p>Relevant classes include:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html#energy_fault_detector.evaluation.care2compare.Care2CompareDataset" title="energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care2compare.Care2CompareDataset</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore" title="energy_fault_detector.evaluation.care_score.CAREScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care_score.CAREScore</span></code></a></p></li>
+</ul>
+<section id="background">
+<h2>Background<a class="headerlink" href="#background" title="Link to this heading"></a></h2>
+<p>The CARE2Compare dataset and CARE score are introduced in:</p>
+<p><a class="reference external" href="https://doi.org/10.3390/data9120138">CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in Wind Turbine Data</a></p>
+<p>In the package, CARE2Compare support is intended to help with two tasks:</p>
+<ol class="arabic simple">
+<li><p>loading event-based benchmark datasets,</p></li>
+<li><p>evaluating anomaly predictions in a way that is aligned with the CARE benchmark.</p></li>
+</ol>
+</section>
+<section id="conceptual-overview">
+<h2>Conceptual overview<a class="headerlink" href="#conceptual-overview" title="Link to this heading"></a></h2>
+<p>The dataset contains two related but distinct kinds of labels:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">status_type_id</span></code>:
+timestamp-level operating-status information,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">event_label</span></code>:
+event-level label indicating whether the prediction section contains an anomalous event.</p></li>
+</ul>
+<p>These labels should not be treated as interchangeable.</p>
+<p>In particular, anomalous events may still contain timestamps with <code class="docutils literal notranslate"><span class="pre">status_type_id</span> <span class="pre">=</span> <span class="pre">0</span></code>.
+This is expected for CARE2Compare and reflects the difference between:</p>
+<ul class="simple">
+<li><p>the operator’s recorded turbine status at a timestamp, and</p></li>
+<li><p>the retrospectively defined anomaly window used for early fault detection.</p></li>
+</ul>
+<p>For details, see <a class="reference internal" href="care2compare_faq.html"><span class="doc">CARE2Compare FAQ</span></a>.</p>
+</section>
+<section id="dataset-loading">
+<h2>Dataset loading<a class="headerlink" href="#dataset-loading" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html#energy_fault_detector.evaluation.care2compare.Care2CompareDataset" title="energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care2compare.Care2CompareDataset</span></code></a> helper can be used to
+load local CARE2Compare data or download the dataset automatically, depending on package configuration.</p>
+<p>Typical usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.evaluation.care2compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">Care2CompareDataset</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Care2CompareDataset</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="s2">"./CARE_To_Compare"</span><span class="p">,</span>
+    <span class="n">download_dataset</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">load_event_dataset</span><span class="p">(</span><span class="n">event_id</span><span class="o">=</span><span class="mi">53</span><span class="p">,</span> <span class="n">index_column</span><span class="o">=</span><span class="s2">"time_stamp"</span><span class="p">)</span>
+<span class="n">info</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_event_info</span><span class="p">(</span><span class="mi">53</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The returned event metadata can then be used for evaluation, filtering, or reporting.</p>
+</section>
+<section id="formatted-loading">
+<h2>Formatted loading<a class="headerlink" href="#formatted-loading" title="Link to this heading"></a></h2>
+<p>If you want a convenience split into values and normal-operation masks, use the formatted loader.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x_train</span><span class="p">,</span> <span class="n">train_normal</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">test_normal</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">load_and_format_event_dataset</span><span class="p">(</span><span class="n">event_id</span><span class="o">=</span><span class="mi">53</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the package, the normal masks are derived from:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>status_type_id == 0
+</pre></div>
+</div>
+<p>This is mainly useful when training normal-behavior models or when applying pointwise evaluation logic.</p>
+</section>
+<section id="training-data-filtering">
+<h2>Training-data filtering<a class="headerlink" href="#training-data-filtering" title="Link to this heading"></a></h2>
+<p>For normal-behavior modeling, it is generally recommended to filter out timestamps that are clearly not
+representative of normal operation.</p>
+<p>In practice, this often means using <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> to exclude abnormal operating modes from the
+training data.</p>
+<p>However, CARE2Compare should not be understood as fully pre-cleaned data. Depending on the model and
+wind farm, additional preprocessing may still be needed, such as:</p>
+<ul class="simple">
+<li><p>missing-value handling,</p></li>
+<li><p>invalid-measurement filtering,</p></li>
+<li><p>feature selection,</p></li>
+<li><p>angle transformation,</p></li>
+<li><p>scaling.</p></li>
+</ul>
+</section>
+<section id="example-workflow">
+<h2>Example workflow<a class="headerlink" href="#example-workflow" title="Link to this heading"></a></h2>
+<p>A typical workflow looks like this:</p>
+<ol class="arabic simple">
+<li><p>load an event dataset,</p></li>
+<li><p>separate training and prediction sections,</p></li>
+<li><p>derive or load model predictions for prediction timestamps,</p></li>
+<li><p>evaluate those predictions with <a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore" title="energy_fault_detector.evaluation.care_score.CAREScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care_score.CAREScore</span></code></a>.</p></li>
+</ol>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.evaluation.care2compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">Care2CompareDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">energy_fault_detector.evaluation.care_score</span><span class="w"> </span><span class="kn">import</span> <span class="n">CAREScore</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Care2CompareDataset</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"./CARE_To_Compare"</span><span class="p">,</span> <span class="n">download_dataset</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">scorer</span> <span class="o">=</span> <span class="n">CAREScore</span><span class="p">()</span>
+
+<span class="c1"># Iterate over the events of a chosen wind farm. The data is loaded with</span>
+<span class="c1"># timestamps as the index so they match the event_start / event_end metadata.</span>
+<span class="k">for</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">train_normal</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">test_normal</span><span class="p">,</span> <span class="n">event_id</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iter_formatted_datasets</span><span class="p">(</span>
+    <span class="n">wind_farm</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span> <span class="n">index_column</span><span class="o">=</span><span class="s2">"time_stamp"</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_event_info</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span>
+
+    <span class="c1"># Example placeholder prediction: one boolean anomaly prediction per</span>
+    <span class="c1"># timestamp in the prediction section, indexed like x_test.</span>
+    <span class="n">predicted_anomalies</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x_test</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">scorer</span><span class="o">.</span><span class="n">evaluate_event</span><span class="p">(</span>
+        <span class="n">event_start</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"event_start"</span><span class="p">],</span>
+        <span class="n">event_end</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"event_end"</span><span class="p">],</span>
+        <span class="n">event_label</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"event_label"</span><span class="p">],</span>
+        <span class="n">predicted_anomalies</span><span class="o">=</span><span class="n">predicted_anomalies</span><span class="p">,</span>
+        <span class="n">normal_index</span><span class="o">=</span><span class="n">test_normal</span><span class="p">,</span>
+        <span class="n">event_id</span><span class="o">=</span><span class="n">event_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">final_score</span> <span class="o">=</span> <span class="n">scorer</span><span class="o">.</span><span class="n">get_final_score</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_final_score</span></code> requires at least one evaluated <code class="docutils literal notranslate"><span class="pre">anomaly</span></code> event <em>and</em> one
+evaluated <code class="docutils literal notranslate"><span class="pre">normal</span></code> event. A single <code class="docutils literal notranslate"><span class="pre">evaluate_event</span></code> call is fine for a quick
+smoke test, but the final CARE score can only be computed once events of both
+labels have been added.</p>
+</div>
+</section>
+<section id="care-score-overview">
+<h2>CARE score overview<a class="headerlink" href="#care-score-overview" title="Link to this heading"></a></h2>
+<p>The CARE score combines four aspects of fault detection quality:</p>
+<ul class="simple">
+<li><p><strong>Coverage</strong></p></li>
+<li><p><strong>Accuracy</strong></p></li>
+<li><p><strong>Reliability</strong></p></li>
+<li><p><strong>Earliness</strong></p></li>
+</ul>
+<p>At a high level:</p>
+<ul class="simple">
+<li><p>Coverage and Earliness are computed on anomalous events,</p></li>
+<li><p>Accuracy is computed on normal events,</p></li>
+<li><p>Reliability is an event-wise score based on event decisions.</p></li>
+</ul>
+<p>The package implementation follows the CARE logic provided in the publication and subsequent
+package support. For detailed interpretation notes, see <a class="reference internal" href="care2compare_faq.html"><span class="doc">CARE2Compare FAQ</span></a>.</p>
+</section>
+<section id="wind-farm-specific-interpretation">
+<h2>Wind-farm-specific interpretation<a class="headerlink" href="#wind-farm-specific-interpretation" title="Link to this heading"></a></h2>
+<p>The meaning and usefulness of <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> differs slightly between wind farms.</p>
+<p>For Wind Farms B and C, status labels reflect anonymized operator-provided status information and are
+useful both for training-data filtering and for parts of CARE-style evaluation.</p>
+<p>For Wind Farm A, the status labels should mainly be used for training-data filtering. For prediction-time
+CARE evaluation, they should largely be ignored; pass <code class="docutils literal notranslate"><span class="pre">ignore_normal_index=True</span></code> to
+<a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore.evaluate_event" title="energy_fault_detector.evaluation.care_score.CAREScore.evaluate_event"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_event()</span></code></a> so that every timestamp is
+evaluated regardless of <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code>.</p>
+<p>This distinction is important when interpreting evaluation results.</p>
+</section>
+<section id="known-practical-limitations">
+<h2>Known practical limitations<a class="headerlink" href="#known-practical-limitations" title="Link to this heading"></a></h2>
+<p>Users should be aware of several dataset and benchmark limitations:</p>
+<ul class="simple">
+<li><p>the dataset is anonymized,</p></li>
+<li><p>the data is not fully preprocessed for modeling,</p></li>
+<li><p>exact benchmark code from the original paper is not guaranteed to match the current package state,</p></li>
+<li><p>overlapping timestamps across different event files and and no temporal order of events from the same asset may occur due to anonymization,</p></li>
+<li><p>some version-specific data-quality notes apply.</p></li>
+</ul>
+<p>These are discussed in more detail in <a class="reference internal" href="care2compare_faq.html"><span class="doc">CARE2Compare FAQ</span></a>.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="care2compare_faq.html"><span class="doc">CARE2Compare FAQ</span></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html#energy_fault_detector.evaluation.care2compare.Care2CompareDataset" title="energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care2compare.Care2CompareDataset</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore" title="energy_fault_detector.evaluation.care_score.CAREScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care_score.CAREScore</span></code></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="arcana.html" class="btn btn-neutral float-left" title="ARCANA: Root cause analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="care2compare_faq.html" class="btn btn-neutral float-right" title="CARE2Compare FAQ" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

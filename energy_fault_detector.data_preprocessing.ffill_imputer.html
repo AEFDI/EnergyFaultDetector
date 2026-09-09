@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_preprocessing.ffill_imputer &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="data_preprocessing.imputer" href="energy_fault_detector.data_preprocessing.imputer.html" />
+    <link rel="prev" title="data_preprocessing.duplicate_value_to_nan" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_guide.html">CARE2Compare guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_faq.html">CARE2Compare FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-one-models">Sequence-to-one models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-sequence-models">Sequence-to-sequence models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">anomaly_scores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html">autoencoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">core</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">data_preprocessing</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html">data_preprocessing.angle_transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.categorical_encoder.html">data_preprocessing.categorical_encoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html">data_preprocessing.column_selector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.counter_diff_transformer.html">data_preprocessing.counter_diff_transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">data_preprocessing.data_clipper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">data_preprocessing.data_preprocessor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">data_preprocessing.duplicate_value_to_nan</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">data_preprocessing.ffill_imputer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.imputer.html">data_preprocessing.imputer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html">data_preprocessing.low_unique_value_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.scaler.html">data_preprocessing.scaler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.timestamp_transformer.html">data_preprocessing.timestamp_transformer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.data_preprocessing.html">data_preprocessing</a></li>
+      <li class="breadcrumb-item active">data_preprocessing.ffill_imputer</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.data_preprocessing.ffill_imputer">
+<span id="data-preprocessing-ffill-imputer"></span><h1>data_preprocessing.ffill_imputer<a class="headerlink" href="#module-energy_fault_detector.data_preprocessing.ffill_imputer" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ForwardFillImputer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ffill_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'15min'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categorical_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/ffill_imputer.py#L13-L230"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer" title="energy_fault_detector.core.data_transformer.DataTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></p>
+<p>Impute missing values using time-based forward fill with a maximum gap duration.</p>
+<p>Forward-fills NaN values from the last valid observation, but only when the elapsed
+time between the last valid value and the current row does not exceed <code class="docutils literal notranslate"><span class="pre">ffill_limit</span></code>.
+Rows where the gap is too large remain NaN and are subsequently dropped.</p>
+<p>The transformer assumes time-series data with a temporal index (DatetimeIndex or
+TimedeltaIndex). During <code class="docutils literal notranslate"><span class="pre">fit</span></code>, it categorizes features as numerical or categorical,
+identifies and logs non-declared categorical features, and converts <code class="docutils literal notranslate"><span class="pre">ffill_limit</span></code>
+to a <code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>. During <code class="docutils literal notranslate"><span class="pre">transform</span></code>, it forward-fills missing values
+(invalidating fills that exceed the time threshold), drops duplicate rows, and removes
+any rows still containing NaN values.</p>
+<p>Dropping duplicate rows after forward-filling is necessary because forward-filling
+propagates the last valid value into consecutive NaN rows. If the underlying signal did
+not change between observations, the filled rows become exact duplicates of the source
+row. Removing these redundant rows avoids introducing identical training samples that
+carry no additional information and would otherwise bias the reconstruction error.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.feature_names_in_">
+<span class="sig-name descname"><span class="pre">feature_names_in_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.feature_names_in_" title="Link to this definition"></a></dt>
+<dd><p>List of input feature names observed during fitting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.feature_names_out_">
+<span class="sig-name descname"><span class="pre">feature_names_out_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.feature_names_out_" title="Link to this definition"></a></dt>
+<dd><p>List of output feature names (same as input features unless some were dropped).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.ffill_limit_">
+<span class="sig-name descname"><span class="pre">ffill_limit_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.ffill_limit_" title="Link to this definition"></a></dt>
+<dd><p>Fitted <code class="docutils literal notranslate"><span class="pre">ffill_limit</span></code> converted to a Timedelta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.Timedelta</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.categorical_features">
+<span class="sig-name descname"><span class="pre">categorical_features</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.categorical_features" title="Link to this definition"></a></dt>
+<dd><p>List of user-specified categorical feature names (matched by exact name).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.numerical_columns">
+<span class="sig-name descname"><span class="pre">numerical_columns</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.numerical_columns" title="Link to this definition"></a></dt>
+<dd><p>List of identified numerical column names after filtering out non-declared categoricals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.categorical_columns">
+<span class="sig-name descname"><span class="pre">categorical_columns</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.categorical_columns" title="Link to this definition"></a></dt>
+<dd><p>List of identified categorical column names (from <code class="docutils literal notranslate"><span class="pre">categorical_features</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.non_declared_categorical_features">
+<span class="sig-name descname"><span class="pre">non_declared_categorical_features</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.non_declared_categorical_features" title="Link to this definition"></a></dt>
+<dd><p>List of columns detected as object-type (categorical) but not declared as such.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initializes the ForwardFillImputer with a forward-fill time limit and optional categorical features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ffill_limit</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code>]</span>) – Maximum time gap to forward-fill, expressed as a
+pandas-compatible Timedelta string (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;15min&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;1h&quot;</span></code>) or a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code> instance.  NaNs whose elapsed time from the last valid
+observation exceeds this limit are left unfilled and the corresponding rows are
+dropped. Default is <code class="docutils literal notranslate"><span class="pre">&quot;15min&quot;</span></code>.</p></li>
+<li><p><strong>categorical_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of column names to treat as categorical features.
+Columns matching any of these (by exact name) are treated as categorical; others as numerical.
+Non-declared object-type columns in numerical slots are automatically detected and excluded from processing.
+Default is None (interpreted as empty list).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/ffill_imputer.py#L71-L128"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.fit" title="Link to this definition"></a></dt>
+<dd><p>Fits the imputer to the input data by identifying feature types and storing metadata.</p>
+<p>Populates <code class="docutils literal notranslate"><span class="pre">numerical_columns</span></code>, <code class="docutils literal notranslate"><span class="pre">categorical_columns</span></code>, and <code class="docutils literal notranslate"><span class="pre">non_declared_categorical_features</span></code>
+based on the input DataFrame’s structure and user-provided categorical feature hints.
+Converts <code class="docutils literal notranslate"><span class="pre">ffill_limit</span></code> to a <code class="xref py py-class docutils literal notranslate"><span class="pre">Timedelta</span></code> and stores it as <code class="docutils literal notranslate"><span class="pre">ffill_limit_</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Input feature DataFrame. Must contain all features used during <code class="docutils literal notranslate"><span class="pre">transform</span></code>.</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – Target variable. Ignored; included for compatibility with the scikit-learn API.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fitted transformer instance (self), for method chaining.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer" title="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardFillImputer</span></code></a></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If <cite>x</cite> is not a pandas DataFrame.</p></li>
+<li><p><strong>ValueError</strong> – If <cite>ffill_limit</cite> cannot be converted to a Timedelta.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.get_feature_names_out">
+<span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/ffill_imputer.py#L227-L230"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.get_feature_names_out" title="Link to this definition"></a></dt>
+<dd><p>Return output feature names for downstream transformers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/ffill_imputer.py#L207-L225"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Returns the input DataFrame with columns reordered to match the original input feature order.</p>
+<p>This method is included for compatibility with the <cite>DataTransformer</cite>/scikit-learn API.
+Since forward-fill imputation is not invertible (lost NaNs and duplicates cannot be recovered),
+only column reordering is performed—no actual value inversion occurs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Transformed DataFrame with columns matching <cite>feature_names_out_</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame with columns reordered to match <cite>feature_names_in_</cite> (original order).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If <cite>x</cite> is not a pandas DataFrame.</p></li>
+<li><p><strong>ValueError</strong> – If the transformer has not been fitted (via <cite>check_is_fitted</cite>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/ffill_imputer.py#L130-L205"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.ffill_imputer.ForwardFillImputer.transform" title="Link to this definition"></a></dt>
+<dd><p>Applies time-based forward-fill imputation and cleaning pipeline to input data.</p>
+<p>The steps executed are:</p>
+<ol class="arabic simple">
+<li><p>Forward-fill all NaN values.</p></li>
+<li><p>Invalidate fills where the elapsed time from the last valid observation exceeds
+<code class="docutils literal notranslate"><span class="pre">ffill_limit_</span></code> (set those values back to NaN).</p></li>
+<li><p>Drop duplicate rows (exact duplicates created by forward-filling where the
+underlying signal did not change).</p></li>
+<li><p>Drop any rows still containing NaN values (<code class="docutils literal notranslate"><span class="pre">dropna(how=&quot;any&quot;)</span></code>).</p></li>
+</ol>
+<p>Unlike the previous resampling-based approach, the original (possibly irregular)
+timestamps are preserved — no synthetic rows are introduced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Input feature DataFrame, with the same column names as used in <code class="docutils literal notranslate"><span class="pre">fit()</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Cleaned and imputed DataFrame, containing only the columns from <code class="docutils literal notranslate"><span class="pre">get_feature_names_out()</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – If <cite>x</cite> is not a pandas DataFrame, or if its index is not temporal (DatetimeIndex/TimedeltaIndex).</p></li>
+<li><p><strong>ValueError</strong> – If <cite>x</cite> is missing columns seen during <cite>fit()</cite>, or if numerical columns cannot be converted to float.</p></li>
+<li><p><strong>ValueError</strong> – If the imputer has not been fitted (via <cite>check_is_fitted</cite>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html" class="btn btn-neutral float-left" title="data_preprocessing.duplicate_value_to_nan" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.data_preprocessing.imputer.html" class="btn btn-neutral float-right" title="data_preprocessing.imputer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

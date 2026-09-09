@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CARE2Compare FAQ &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Model overview" href="models_overview.html" />
+    <link rel="prev" title="CARE2Compare guide" href="care2compare_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_guide.html">CARE2Compare guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CARE2Compare FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-label-semantics">General label semantics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-the-difference-between-status-type-id-and-event-label">What is the difference between <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> and <code class="docutils literal notranslate"><span class="pre">event_label</span></code>?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-do-the-status-labels-of-wind-farm-a-differ-from-those-of-wind-farms-b-and-c">How do the status labels of Wind Farm A differ from those of Wind Farms B and C?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-can-anomalous-events-contain-timestamps-with-status-type-id-0">Why can anomalous events contain timestamps with <code class="docutils literal notranslate"><span class="pre">status_type_id</span> <span class="pre">=</span> <span class="pre">0</span></code>?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-should-status-type-id-be-interpreted-for-wind-farms-b-and-c">How should <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> be interpreted for Wind Farms B and C?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#should-models-predict-status-type-id-or-event-label">Should models predict <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> or <code class="docutils literal notranslate"><span class="pre">event_label</span></code>?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#training-and-preprocessing">Training and preprocessing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#should-abnormal-timestamps-be-removed-from-the-training-data">Should abnormal timestamps be removed from the training data?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#has-the-dataset-already-been-preprocessed">Has the dataset already been preprocessed?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-preprocessing-is-typically-needed">What preprocessing is typically needed?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#does-using-the-dataset-require-domain-knowledge">Does using the dataset require domain knowledge?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation">Evaluation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#which-timestamps-are-used-for-pointwise-evaluation">Which timestamps are used for pointwise evaluation?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-is-the-ground-truth-for-coverage-interpreted">How is the ground truth for Coverage interpreted?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-can-detectable-anomalies-still-exist-after-excluding-timestamps-with-abnormal-status-type-id">Why can detectable anomalies still exist after excluding timestamps with abnormal <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code>?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-is-reliability-computed">How is Reliability computed?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-the-default-criticality-threshold">What is the default criticality threshold?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#why-is-reliability-not-averaged-like-the-other-care-components">Why is Reliability not averaged like the other CARE components?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#model-training-strategy">Model training strategy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#should-i-train-one-model-per-turbine-or-one-model-per-wind-farm">Should I train one model per turbine or one model per wind farm?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#features-and-interpretation">Features and interpretation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#can-the-feature-names-be-mapped-to-more-detailed-physical-sensor-identities">Can the feature names be mapped to more detailed physical sensor identities?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#are-all-feature-groups-equally-trustworthy">Are all feature groups equally trustworthy?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#root-cause-analysis-and-arcana">Root-cause analysis and ARCANA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#was-arcana-used-to-create-the-root-cause-labels">Was ARCANA used to create the root-cause labels?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#benchmark-reproducibility">Benchmark reproducibility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#is-the-exact-original-benchmark-code-available">Is the exact original benchmark code available?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-benchmark-scores-vary-when-reproduced">Can benchmark scores vary when reproduced?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#timestamps-and-anonymization">Timestamps and anonymization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#can-different-event-files-still-contain-overlapping-timestamps">Can different event files still contain overlapping timestamps?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-i-reconstruct-the-true-chronological-order-of-all-events-for-one-asset">Can I reconstruct the true chronological order of all events for one asset?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-one-models">Sequence-to-one models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-sequence-models">Sequence-to-sequence models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CARE2Compare FAQ</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/care2compare_faq.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="care2compare-faq">
+<h1>CARE2Compare FAQ<a class="headerlink" href="#care2compare-faq" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This page summarizes recurring interpretation questions and caveats around the
+CARE2Compare dataset and the CARE score as supported in EnergyFaultDetector.
+For official release notes and dataset updates, also consult the Zenodo record
+and the companion publication:</p>
+<p>CARE to Compare: A Real-World Benchmark Dataset for Early Fault Detection in Wind Turbine Data.
+Data. 2024; 9(12):138. <a class="reference external" href="https://doi.org/10.3390/data9120138">https://doi.org/10.3390/data9120138</a></p>
+</div>
+<section id="general-label-semantics">
+<h2>General label semantics<a class="headerlink" href="#general-label-semantics" title="Link to this heading"></a></h2>
+<section id="what-is-the-difference-between-status-type-id-and-event-label">
+<h3>What is the difference between <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> and <code class="docutils literal notranslate"><span class="pre">event_label</span></code>?<a class="headerlink" href="#what-is-the-difference-between-status-type-id-and-event-label" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> is a timestamp-level label that describes the <strong>recorded</strong> operating mode of the turbine.
+The intended use of this label is to help with filtering training data for normal behavior.
+Please note: The meaning and usefulness of <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> differs slightly between wind farms.</p>
+<p><code class="docutils literal notranslate"><span class="pre">event_label</span></code> is an event-level label indicating whether the prediction section of an event dataset
+contains an anomalous event. The intended use of this label is to define the ground truth for evaluation of anomaly detection.
+For Wind Farm A the event labels were created based on available failure-log information. For Wind Farms B and C, the event labels were created
+and validated based on operator feedback and service reports.</p>
+<p>They serve different purposes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> helps interpret turbine operation and filter data,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">event_label</span></code> is the target for event-level anomaly evaluation.</p></li>
+</ul>
+</section>
+<section id="how-do-the-status-labels-of-wind-farm-a-differ-from-those-of-wind-farms-b-and-c">
+<h3>How do the status labels of Wind Farm A differ from those of Wind Farms B and C?<a class="headerlink" href="#how-do-the-status-labels-of-wind-farm-a-differ-from-those-of-wind-farms-b-and-c" title="Link to this heading"></a></h3>
+<p>For Wind Farms B and C, the status labels reflect anonymized operator-recorded turbine states and are
+useful both for training-data filtering and for parts of CARE-style evaluation.</p>
+<p>For Wind Farm A, the status labels were derived differently and do not provide the same interpretation value
+for prediction-time evaluation. The status labels are based on available failure-log information and should mainly be
+used for filtering training data. For prediction-time evaluation, they should largely be ignored.</p>
+</section>
+<section id="why-can-anomalous-events-contain-timestamps-with-status-type-id-0">
+<h3>Why can anomalous events contain timestamps with <code class="docutils literal notranslate"><span class="pre">status_type_id</span> <span class="pre">=</span> <span class="pre">0</span></code>?<a class="headerlink" href="#why-can-anomalous-events-contain-timestamps-with-status-type-id-0" title="Link to this heading"></a></h3>
+<p>The anomaly window between <code class="docutils literal notranslate"><span class="pre">event_start</span></code> and <code class="docutils literal notranslate"><span class="pre">event_end</span></code> represents an estimated anomaly time frame
+leading up to a fault. During that time, the operator may still have considered the turbine to be in normal
+operation. Therefore, timestamps with <code class="docutils literal notranslate"><span class="pre">status_type_id</span> <span class="pre">=</span> <span class="pre">0</span></code> can appear inside anomalous events.</p>
+<p>This is particularly important for early fault detection, because these timestamps are often the most relevant
+ones from the operator’s perspective.</p>
+</section>
+<section id="how-should-status-type-id-be-interpreted-for-wind-farms-b-and-c">
+<h3>How should <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> be interpreted for Wind Farms B and C?<a class="headerlink" href="#how-should-status-type-id-be-interpreted-for-wind-farms-b-and-c" title="Link to this heading"></a></h3>
+<p>For Wind Farms B and C, <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> is an anonymized version of operator-provided SCADA status
+information.</p>
+<p>This means a timestamp with <code class="docutils literal notranslate"><span class="pre">status_type_id</span> <span class="pre">=</span> <span class="pre">0</span></code> reflects that the operator considered the turbine to be in
+normal operation at that time, even if later retrospective analysis identified that timestamp as part of an
+anomaly window.</p>
+</section>
+<section id="should-models-predict-status-type-id-or-event-label">
+<h3>Should models predict <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> or <code class="docutils literal notranslate"><span class="pre">event_label</span></code>?<a class="headerlink" href="#should-models-predict-status-type-id-or-event-label" title="Link to this heading"></a></h3>
+<p>That depends on the goal. For early fault detection, you want to predict the <code class="docutils literal notranslate"><span class="pre">event_label</span></code>. On the timestamp level,
+this means that you will want to detect anomalies within the provided <code class="docutils literal notranslate"><span class="pre">event_start</span></code> and <code class="docutils literal notranslate"><span class="pre">event_end</span></code> for events with
+<code class="docutils literal notranslate"><span class="pre">event_label</span> <span class="pre">==</span> <span class="pre">'anomaly'</span></code> and no anomalies if the <code class="docutils literal notranslate"><span class="pre">event_label</span> <span class="pre">==</span> <span class="pre">'normal'</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> only indicates whether the wind turbine has an operationally normal state or not. Once a fault is
+known, this state is often already not normal. Therefore, it is not interesting to detect whether the state is
+anomalous, but it is interesting to find anomalies during expected normal operation before a fault is known or becomes
+critical.</p>
+<p>For early fault detection, a practical strategy is often:</p>
+<ul class="simple">
+<li><p>predict anomaly or normality at timestamp level,</p></li>
+<li><p>then derive an event-level decision from those timestamp-level predictions.</p></li>
+</ul>
+<p>This is also consistent with CARE-style evaluation, where pointwise predictions can be aggregated into
+event-wise decisions.</p>
+</section>
+</section>
+<section id="training-and-preprocessing">
+<h2>Training and preprocessing<a class="headerlink" href="#training-and-preprocessing" title="Link to this heading"></a></h2>
+<section id="should-abnormal-timestamps-be-removed-from-the-training-data">
+<h3>Should abnormal timestamps be removed from the training data?<a class="headerlink" href="#should-abnormal-timestamps-be-removed-from-the-training-data" title="Link to this heading"></a></h3>
+<p>Usually yes, if you are training a normal-behavior model.</p>
+<p>The dataset provides <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code> so users can filter training data. In practice, filtering by status is
+an intended use of the dataset.</p>
+<p>Depending on the model and the goal, it can also be reasonable to apply additional cleaning such as power-curve-based
+filtering.</p>
+</section>
+<section id="has-the-dataset-already-been-preprocessed">
+<h3>Has the dataset already been preprocessed?<a class="headerlink" href="#has-the-dataset-already-been-preprocessed" title="Link to this heading"></a></h3>
+<p>No. The data was anonymized, but it has not undergone full preprocessing such as:</p>
+<ul class="simple">
+<li><p>missing-value removal,</p></li>
+<li><p>invalid-measurement filtering,</p></li>
+<li><p>normalization or scaling.</p></li>
+</ul>
+<p>Additional preprocessing is generally required before modeling.
+Please check the dataset description and dataset README on <a class="reference external" href="https://doi.org/10.5281/zenodo.10958774">Zenodo</a>
+for details on known data quality issues.</p>
+</section>
+<section id="what-preprocessing-is-typically-needed">
+<h3>What preprocessing is typically needed?<a class="headerlink" href="#what-preprocessing-is-typically-needed" title="Link to this heading"></a></h3>
+<p>This depends on the wind farm and the model, but common steps include:</p>
+<ul class="simple">
+<li><p>feature selection,</p></li>
+<li><p>NaN imputation,</p></li>
+<li><p>angle transformation,</p></li>
+<li><p>filtering invalid measurements,</p></li>
+<li><p>scaling.</p></li>
+</ul>
+<p>An example is found in the notebook <a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/notebooks/CARE%20to%20Compare/CARE%20to%20Compare.ipynb">CARE to Compare.ipynb</a></p>
+</section>
+<section id="does-using-the-dataset-require-domain-knowledge">
+<h3>Does using the dataset require domain knowledge?<a class="headerlink" href="#does-using-the-dataset-require-domain-knowledge" title="Link to this heading"></a></h3>
+<p>For purely statistical anomaly detection experiments, general data analysis methods may be sufficient up to a
+point. However, domain knowledge becomes increasingly important for:</p>
+<ul class="simple">
+<li><p>feature selection,</p></li>
+<li><p>validating detected anomalies,</p></li>
+<li><p>interpreting event behavior,</p></li>
+<li><p>root-cause-oriented analysis.</p></li>
+</ul>
+</section>
+</section>
+<section id="evaluation">
+<h2>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading"></a></h2>
+<section id="which-timestamps-are-used-for-pointwise-evaluation">
+<h3>Which timestamps are used for pointwise evaluation?<a class="headerlink" href="#which-timestamps-are-used-for-pointwise-evaluation" title="Link to this heading"></a></h3>
+<p>For CARE-style pointwise measures, timestamps with normal status are the important ones.</p>
+<p>We consider a timestamp to be correctly detected as anomalous, if the timestamp is part of an event with
+<code class="docutils literal notranslate"><span class="pre">event_label</span> <span class="pre">==</span> <span class="pre">'anomaly'</span></code>. It is correctly detected as normal behaviour if the timestamp is part of an event with
+<code class="docutils literal notranslate"><span class="pre">event_label</span> <span class="pre">==</span> <span class="pre">'normal'</span></code>.</p>
+<p>Timestamps with abnormal status labels are excluded from pointwise evaluation, because it is not
+useful to reward detection of a timestamp as anomalous when the operator already knew it was not in normal
+operation. Note that we only apply this rule to wind farm B and C. For WF A, the status information can only be used
+for filtering training data and not for evaluation.</p>
+</section>
+<section id="how-is-the-ground-truth-for-coverage-interpreted">
+<h3>How is the ground truth for Coverage interpreted?<a class="headerlink" href="#how-is-the-ground-truth-for-coverage-interpreted" title="Link to this heading"></a></h3>
+<p>Coverage is a pointwise F-score computed on anomalous events.</p>
+<p>The ground truth is as follows:</p>
+<ul class="simple">
+<li><p>timestamps with anomalous status are anomalous,</p></li>
+<li><p>timestamps between <code class="docutils literal notranslate"><span class="pre">event_start</span></code> and <code class="docutils literal notranslate"><span class="pre">event_end</span></code> of anomalous events are also considered anomalous,</p></li>
+<li><p>all other timestamps are considered normal.</p></li>
+</ul>
+<p>For wind farm B and C the first type of true anomalies are ignored, because it is not
+useful to reward detection of a timestamp as anomalous when the operator already knew it was not in normal
+operation.</p>
+</section>
+<section id="why-can-detectable-anomalies-still-exist-after-excluding-timestamps-with-abnormal-status-type-id">
+<h3>Why can detectable anomalies still exist after excluding timestamps with abnormal <code class="docutils literal notranslate"><span class="pre">status_type_id</span></code>?<a class="headerlink" href="#why-can-detectable-anomalies-still-exist-after-excluding-timestamps-with-abnormal-status-type-id" title="Link to this heading"></a></h3>
+<p>Because anomalous events contain timestamps with normal status labels. These timestamps represent the time window
+leading up to a fault, where the operator still considered the turbine to be in normal operation. Those timestamps
+are still treated as anomalous ground truth for Coverage and can therefore produce true positives.</p>
+</section>
+<section id="how-is-reliability-computed">
+<h3>How is Reliability computed?<a class="headerlink" href="#how-is-reliability-computed" title="Link to this heading"></a></h3>
+<p>Reliability is an event-wise F-score. The model used should provide a decision for a complete event. This decision can
+then be compared with the <code class="docutils literal notranslate"><span class="pre">event_label</span></code>.</p>
+<p>As an example, in the paper we used a criticality measure, which is accumulated over timestamp-level predictions:</p>
+<ul class="simple">
+<li><p>criticality increases when an anomaly is detected on a timestamp with normal status,</p></li>
+<li><p>criticality decreases when no anomaly is detected on a timestamp with normal status,</p></li>
+<li><p>criticality does not change on timestamps with abnormal status.</p></li>
+</ul>
+<p>If the criticality reaches the threshold, the whole event is treated as predicted anomalous; otherwise it is
+treated as predicted normal. Those event-level predictions are then compared with <code class="docutils literal notranslate"><span class="pre">event_label</span></code> values.</p>
+</section>
+<section id="what-is-the-default-criticality-threshold">
+<h3>What is the default criticality threshold?<a class="headerlink" href="#what-is-the-default-criticality-threshold" title="Link to this heading"></a></h3>
+<p>The default threshold used in the CARE description and package discussions is <code class="docutils literal notranslate"><span class="pre">72</span></code>.
+You should of course tune this threshold for your dataset.</p>
+</section>
+<section id="why-is-reliability-not-averaged-like-the-other-care-components">
+<h3>Why is Reliability not averaged like the other CARE components?<a class="headerlink" href="#why-is-reliability-not-averaged-like-the-other-care-components" title="Link to this heading"></a></h3>
+<p>Because Reliability is already computed as an event-wise score across events.</p>
+<p>By contrast, Coverage, Accuracy, Earliness are first computed per event and then averaged over the relevant events.</p>
+</section>
+</section>
+<section id="model-training-strategy">
+<h2>Model training strategy<a class="headerlink" href="#model-training-strategy" title="Link to this heading"></a></h2>
+<section id="should-i-train-one-model-per-turbine-or-one-model-per-wind-farm">
+<h3>Should I train one model per turbine or one model per wind farm?<a class="headerlink" href="#should-i-train-one-model-per-turbine-or-one-model-per-wind-farm" title="Link to this heading"></a></h3>
+<p>There is no universally correct answer.</p>
+<p>Possible strategies include:</p>
+<ul class="simple">
+<li><p>one model per turbine,</p></li>
+<li><p>one model per wind farm,</p></li>
+<li><p>hybrid strategies combining local and shared information.</p></li>
+</ul>
+<p>For early fault detection, a practical strategy is often:</p>
+<ul class="simple">
+<li><p>predict anomaly or normality at timestamp level,</p></li>
+<li><p>then derive an event-level decision from those timestamp-level predictions.</p></li>
+</ul>
+<p>This is also consistent with CARE-style evaluation, where pointwise predictions can be aggregated into
+event-wise decisions.</p>
+<p>In the dataset paper, individual autoencoder models per turbine were used.</p>
+</section>
+</section>
+<section id="features-and-interpretation">
+<h2>Features and interpretation<a class="headerlink" href="#features-and-interpretation" title="Link to this heading"></a></h2>
+<section id="can-the-feature-names-be-mapped-to-more-detailed-physical-sensor-identities">
+<h3>Can the feature names be mapped to more detailed physical sensor identities?<a class="headerlink" href="#can-the-feature-names-be-mapped-to-more-detailed-physical-sensor-identities" title="Link to this heading"></a></h3>
+<p>Because of anonymization agreements with data providers, no additional sensor metadata beyond the published
+dataset description may be available.</p>
+<p>The feature descriptions are the most detailed available for this dataset. If you load the data using the
+<a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html#energy_fault_detector.evaluation.care2compare.Care2CompareDataset" title="energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care2compare.Care2CompareDataset</span></code></a>, the feature names are based on these
+descriptions (instead of the enumerated feature names of the csv files).</p>
+</section>
+<section id="are-all-feature-groups-equally-trustworthy">
+<h3>Are all feature groups equally trustworthy?<a class="headerlink" href="#are-all-feature-groups-equally-trustworthy" title="Link to this heading"></a></h3>
+<p>There are implausible values in some Min, Max, and Std features. For practical work,
+Avg features are often the safest starting point, especially in Wind Farm B.</p>
+<p>Please check the dataset description and dataset README on <a class="reference external" href="https://doi.org/10.5281/zenodo.10958774">Zenodo</a>
+for details on known data quality issues.</p>
+</section>
+</section>
+<section id="root-cause-analysis-and-arcana">
+<h2>Root-cause analysis and ARCANA<a class="headerlink" href="#root-cause-analysis-and-arcana" title="Link to this heading"></a></h2>
+<section id="was-arcana-used-to-create-the-root-cause-labels">
+<h3>Was ARCANA used to create the root-cause labels?<a class="headerlink" href="#was-arcana-used-to-create-the-root-cause-labels" title="Link to this heading"></a></h3>
+<p>No. The root-cause information included in the dataset is based on operator feedback and service reports,
+not on ARCANA-generated labels.</p>
+</section>
+</section>
+<section id="benchmark-reproducibility">
+<h2>Benchmark reproducibility<a class="headerlink" href="#benchmark-reproducibility" title="Link to this heading"></a></h2>
+<section id="is-the-exact-original-benchmark-code-available">
+<h3>Is the exact original benchmark code available?<a class="headerlink" href="#is-the-exact-original-benchmark-code-available" title="Link to this heading"></a></h3>
+<p>Not exactly.</p>
+<p>The EnergyFaultDetector repository provides open-source implementations related to the CARE workflow,
+including CARE score support and example notebooks. However, the exact original code used for the paper is
+not available.</p>
+</section>
+<section id="can-benchmark-scores-vary-when-reproduced">
+<h3>Can benchmark scores vary when reproduced?<a class="headerlink" href="#can-benchmark-scores-vary-when-reproduced" title="Link to this heading"></a></h3>
+<p>Yes. Even when following the provided examples and configurations, results can vary due to factors such as random
+initialization of the models and later package updates.</p>
+</section>
+</section>
+<section id="timestamps-and-anonymization">
+<h2>Timestamps and anonymization<a class="headerlink" href="#timestamps-and-anonymization" title="Link to this heading"></a></h2>
+<section id="can-different-event-files-still-contain-overlapping-timestamps">
+<h3>Can different event files still contain overlapping timestamps?<a class="headerlink" href="#can-different-event-files-still-contain-overlapping-timestamps" title="Link to this heading"></a></h3>
+<p>Yes. Overlaps across different event CSV files are an expected side effect of the anonymization procedure. Event
+files may therefore share timestamp ranges even when they represent different events.</p>
+</section>
+<section id="can-i-reconstruct-the-true-chronological-order-of-all-events-for-one-asset">
+<h3>Can I reconstruct the true chronological order of all events for one asset?<a class="headerlink" href="#can-i-reconstruct-the-true-chronological-order-of-all-events-for-one-asset" title="Link to this heading"></a></h3>
+<p>Generally no. Because timestamps were anonymized per file, the true chronological order across event files is
+not preserved.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="care2compare_guide.html"><span class="doc">CARE2Compare guide</span></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care2compare.html#energy_fault_detector.evaluation.care2compare.Care2CompareDataset" title="energy_fault_detector.evaluation.care2compare.Care2CompareDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care2compare.Care2CompareDataset</span></code></a></p></li>
+<li><p><a class="reference internal" href="energy_fault_detector.evaluation.care_score.html#energy_fault_detector.evaluation.care_score.CAREScore" title="energy_fault_detector.evaluation.care_score.CAREScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">energy_fault_detector.evaluation.care_score.CAREScore</span></code></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="care2compare_guide.html" class="btn btn-neutral float-left" title="CARE2Compare guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="models_overview.html" class="btn btn-neutral float-right" title="Model overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

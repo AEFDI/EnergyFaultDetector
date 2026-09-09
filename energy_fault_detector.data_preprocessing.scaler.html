@@ -1,0 +1,396 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data_preprocessing.scaler &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="data_preprocessing.timestamp_transformer" href="energy_fault_detector.data_preprocessing.timestamp_transformer.html" />
+    <link rel="prev" title="data_preprocessing.low_unique_value_filter" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_guide.html">CARE2Compare guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_faq.html">CARE2Compare FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-one-models">Sequence-to-one models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-sequence-models">Sequence-to-sequence models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.html">anomaly_scores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html">autoencoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">core</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">data_preprocessing</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.angle_transformer.html">data_preprocessing.angle_transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.categorical_encoder.html">data_preprocessing.categorical_encoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.column_selector.html">data_preprocessing.column_selector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.counter_diff_transformer.html">data_preprocessing.counter_diff_transformer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_clipper.html">data_preprocessing.data_clipper</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.data_preprocessor.html">data_preprocessing.data_preprocessor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.duplicate_value_to_nan.html">data_preprocessing.duplicate_value_to_nan</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.ffill_imputer.html">data_preprocessing.ffill_imputer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.imputer.html">data_preprocessing.imputer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html">data_preprocessing.low_unique_value_filter</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">data_preprocessing.scaler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.data_preprocessing.timestamp_transformer.html">data_preprocessing.timestamp_transformer</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.data_preprocessing.html">data_preprocessing</a></li>
+      <li class="breadcrumb-item active">data_preprocessing.scaler</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.data_preprocessing.scaler">
+<span id="data-preprocessing-scaler"></span><h1>data_preprocessing.scaler<a class="headerlink" href="#module-energy_fault_detector.data_preprocessing.scaler" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Scaler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaler_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_categorical_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categorical_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/scaler.py#L11-L208"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.DataTransformer" title="energy_fault_detector.core.data_transformer.DataTransformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTransformer</span></code></a></p>
+<p>Preprocessing step for scaling numerical (and optionally categorical) features.</p>
+<p>Supports ‘standard’ (StandardScaler) and ‘minmax’ (MinMaxScaler) scalers.
+Automatically enforces float conversion for all columns and optionally excludes
+encoded categorical features from scaling depending on <cite>scale_categorical_features</cite>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.scaler_type">
+<span class="sig-name descname"><span class="pre">scaler_type</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.scaler_type" title="Link to this definition"></a></dt>
+<dd><p>Type of scaler selected (‘standard’ or ‘minmax’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.scale_categorical_features">
+<span class="sig-name descname"><span class="pre">scale_categorical_features</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.scale_categorical_features" title="Link to this definition"></a></dt>
+<dd><p>Whether to scale features matched in <cite>categorical_features</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.categorical_features">
+<span class="sig-name descname"><span class="pre">categorical_features</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.categorical_features" title="Link to this definition"></a></dt>
+<dd><p>List of column names treated as categorical (matched by substring, to cover one-hot encoded columns).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.scaler">
+<span class="sig-name descname"><span class="pre">scaler</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.scaler" title="Link to this definition"></a></dt>
+<dd><p>Instantiated sklearn scaler object (e.g., StandardScaler).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>SklearnScaler</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.feature_names_in_">
+<span class="sig-name descname"><span class="pre">feature_names_in_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.feature_names_in_" title="Link to this definition"></a></dt>
+<dd><p>Names of features seen during <cite>fit()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.feature_names_out_">
+<span class="sig-name descname"><span class="pre">feature_names_out_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.feature_names_out_" title="Link to this definition"></a></dt>
+<dd><p>Names of features output after <cite>transform()</cite> (same as input).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.columns_dropped_">
+<span class="sig-name descname"><span class="pre">columns_dropped_</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.columns_dropped_" title="Link to this definition"></a></dt>
+<dd><p>Placeholder (unused in current implementation; preserved for API).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.params" title="Link to this definition"></a></dt>
+<dd><p>Keyword arguments passed to the underlying sklearn scaler constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initializes the Scaler with specified strategy and feature selection logic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scaler_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Type of scaler to use. Supported: <cite>‘standard’</cite> (default), <cite>‘minmax’</cite>.</p></li>
+<li><p><strong>scale_categorical_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to include categorical (e.g., one-hot encoded)
+features in scaling. If <cite>False</cite>, only non-encoded features are scaled.
+Defaults to <cite>True</cite>.</p></li>
+<li><p><strong>categorical_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – List of column names to treat as categorical (matched by substring,
+to cover one-hot encoded columns such as <cite>category_col_A</cite>).
+Used only when <cite>scale_categorical_features=False</cite> to determine which features to exclude.
+Defaults to <cite>None</cite> (interpreted as empty list).</p></li>
+<li><p><strong>**params</strong> – Additional keyword arguments passed to the underlying sklearn scaler constructor.
+Example: <cite>{‘with_mean’: False, ‘with_std’: True}</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>scaler_type</cite> is not supported (must be <cite>‘standard’</cite> or <cite>‘minmax’</cite>).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.SCALER_REGISTRY">
+<span class="sig-name descname"><span class="pre">SCALER_REGISTRY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'minmax':</span> <span class="pre">&lt;class</span> <span class="pre">'sklearn.preprocessing._data.MinMaxScaler'&gt;,</span> <span class="pre">'standard':</span> <span class="pre">&lt;class</span> <span class="pre">'sklearn.preprocessing._data.StandardScaler'&gt;}</span></span><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.SCALER_REGISTRY" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/scaler.py#L74-L116"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.fit" title="Link to this definition"></a></dt>
+<dd><p>Fits the scaler on the input data, optionally excluding categorical features.</p>
+<p>Enforces float dtype for all columns. Scales either all columns or only
+non-encoded numerical features, depending on <cite>scale_categorical_features</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Input feature DataFrame.</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span>) – Target variable. Ignored; included for scikit-learn API compatibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fitted transformer instance (self), for method chaining.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.data_preprocessing.scaler.Scaler" title="energy_fault_detector.data_preprocessing.scaler.Scaler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scaler</span></code></a></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If any column cannot be converted to float.</p></li>
+<li><p><strong>ValueError</strong> – If column dtypes are inconsistent across features.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.get_feature_names_out">
+<span class="sig-name descname"><span class="pre">get_feature_names_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/scaler.py#L193-L208"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.get_feature_names_out" title="Link to this definition"></a></dt>
+<dd><p>Returns the list of output feature names (same as input feature names).</p>
+<p>Preserves original column order and names seen during <cite>fit()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_features</strong> – Ignored; included for scikit-learn API compatibility.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Ordered list of output feature names.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If scaler has not been fitted (via <cite>check_is_fitted</cite>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.inverse_transform">
+<span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/scaler.py#L160-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.inverse_transform" title="Link to this definition"></a></dt>
+<dd><p>Applies the inverse scaling transformation to revert scaled data.</p>
+<p>Requires that the scaler was fitted and that input column structure matches <cite>fit()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Scaled input DataFrame, with same columns and order as <cite>fit()</cite> output.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Inversely transformed (descaled) DataFrame, with same shape/index as input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If scaler has not been fitted (via <cite>check_is_fitted</cite>).</p></li>
+<li><p><strong>ValueError</strong> – If input feature names/order do not match those seen during <cite>fit()</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.data_preprocessing.scaler.Scaler.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/data_preprocessing/scaler.py#L118-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.data_preprocessing.scaler.Scaler.transform" title="Link to this definition"></a></dt>
+<dd><p>Applies the learned scaling transformation to input data.</p>
+<p>Enforces float dtypes and validates feature alignment with <cite>fit()</cite>.
+Scales either all columns or only numerical (non-encoded) columns,
+depending on <cite>scale_categorical_features</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Input feature DataFrame, with column order and names matching those seen in <cite>fit()</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scaled DataFrame, same shape and index as input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If input feature names/order do not match those seen during <cite>fit()</cite>.</p></li>
+<li><p><strong>ValueError</strong> – If any column cannot be converted to float.</p></li>
+<li><p><strong>ValueError</strong> – If scaler has not been fitted (via <cite>check_is_fitted</cite>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.data_preprocessing.low_unique_value_filter.html" class="btn btn-neutral float-left" title="data_preprocessing.low_unique_value_filter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.data_preprocessing.timestamp_transformer.html" class="btn btn-neutral float-right" title="data_preprocessing.timestamp_transformer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
