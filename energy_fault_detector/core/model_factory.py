@@ -32,18 +32,18 @@ class ModelFactory:
         from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
         from energy_fault_detector.autoencoders.seq2one_autoencoder import SequenceAutoencoder
 
-        train_dict = self.config["train"]
+        train = self.config.train
 
         # Data preprocessor
         self._models["data_preprocessor"] = DataPreprocessor(steps=self.config.data_preprocessor_steps)
 
         # autoencoder
-        ae_params = train_dict.get("autoencoder")
-        ae_class = registry.get("autoencoder", ae_params["name"])
-        ae_kwargs = dict(ae_params.get("params", {}))
+        ae_config = train.autoencoder
+        ae_class = registry.get("autoencoder", ae_config.name)
+        ae_kwargs = dict(ae_config.params)
 
         # Add verbose from config (train.autoencoder.verbose), defaulting to 1
-        ae_verbose = ae_params.get("verbose", 1)
+        ae_verbose = ae_config.verbose if ae_config.verbose is not None else 1
         ae_kwargs.setdefault("verbose", ae_verbose)
 
         # If this is a sequence AE, build the SequenceDatasetBuilder from config
@@ -68,14 +68,14 @@ class ModelFactory:
         self._models["autoencoder"] = ae_class(**ae_kwargs)
 
         # anomaly_score
-        score_params = train_dict.get("anomaly_score")
-        score_class = registry.get("anomaly_score", score_params["name"])
-        self._models["anomaly_score"] = score_class(**score_params.get("params", {}))
+        score_config = train.anomaly_score
+        score_class = registry.get("anomaly_score", score_config.name)
+        self._models["anomaly_score"] = score_class(**(score_config.params or {}))
 
         # threshold_selector
-        thresh_params = train_dict.get("threshold_selector")
-        thresh_class = registry.get("threshold_selector", thresh_params["name"])
-        self._models["threshold_selector"] = thresh_class(**thresh_params.get("params", {}))
+        thresh_config = train.threshold_selector
+        thresh_class = registry.get("threshold_selector", thresh_config.name)
+        self._models["threshold_selector"] = thresh_class(**(thresh_config.params or {}))
 
     @property
     def data_preprocessor(self) -> DataPreprocessor:

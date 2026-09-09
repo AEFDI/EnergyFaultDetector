@@ -120,7 +120,7 @@ class TestConfig(unittest.TestCase):
             'pad_value': 0.0,
         }
         self.assertDictEqual(
-            conf['train']['autoencoder']['params']['sequence_builder'], expected
+            conf.train.autoencoder.params['sequence_builder'], expected
         )
 
     def test_bidirectional_sequence_builder_conf(self):
@@ -133,15 +133,15 @@ class TestConfig(unittest.TestCase):
             'pad_value': 0.0,
         }
         self.assertEqual(
-            conf['train']['autoencoder']['name'],
+            conf.train.autoencoder.name,
             'BidirectionalLSTMSeq2OneAutoencoder'
         )
         self.assertEqual(
-            conf['train']['autoencoder']['params']['merge_mode'],
+            conf.train.autoencoder.params['merge_mode'],
             'sum'
         )
         self.assertDictEqual(
-            conf['train']['autoencoder']['params']['sequence_builder'],
+            conf.train.autoencoder.params['sequence_builder'],
             expected
         )
 
@@ -155,5 +155,5 @@ class TestConfig(unittest.TestCase):
             'pad_value': 0.0,
         }
         self.assertDictEqual(
-            conf['train']['autoencoder']['params']['sequence_builder'], expected
+            conf.train.autoencoder.params['sequence_builder'], expected
         )
