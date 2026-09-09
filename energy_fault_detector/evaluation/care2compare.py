@@ -7,6 +7,7 @@ from typing import Iterator, Tuple, List, Union, Dict
 import pandas as pd
 
 from energy_fault_detector.config import Config
+from energy_fault_detector.config.config import DataPreprocessorConfig
 from energy_fault_detector.utils.data_downloads import download_zenodo_data
 
 logger = logging.getLogger('energy_fault_detector')
@@ -291,15 +292,21 @@ class Care2CompareDataset:
         angle_columns = get_columns(angles)
         to_exclude_columns = get_columns(to_exclude)
 
-        # old:
-        dp = config['train'].setdefault('data_preprocessor', {})
+        train = config['train']
+        dp = train.data_preprocessor
+        if dp is None:
+            dp = DataPreprocessorConfig(steps=[])
+            train.data_preprocessor = dp
+
         params = dp.get('params')
         steps = dp.get('steps')
         if params:
             params['angles'] = merge_unique(params.get('angles', []), angle_columns)
             params['features_to_exclude'] = merge_unique(params.get('features_to_exclude', []), to_exclude_columns)
-        # new
         else:
+            if steps is None:
+                dp.steps = []
+                steps = dp.steps
             angle_step = find_step(['angle_transformer', 'angle_transform'])
             if angle_step is None:
                 steps.append({'name': 'angle_transformer', 'params': {'angles': angle_columns}})
@@ -313,8 +320,6 @@ class Care2CompareDataset:
                 colsel_params = colsel_step.setdefault('params', {})
                 colsel_params['features_to_exclude'] = merge_unique(
                     colsel_params.get('features_to_exclude', []), to_exclude_columns)
-
-        config.update_config(config.config_dict)
 
     def _get_column_map(self, wind_farm: str) -> Dict[str, str]:
         """Maps anonymized columns to human-readable format using feature descriptions"""
