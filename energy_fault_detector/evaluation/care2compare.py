@@ -292,14 +292,14 @@ class Care2CompareDataset:
         angle_columns = get_columns(angles)
         to_exclude_columns = get_columns(to_exclude)
 
-        train = config['train']
+        train = config.train
         dp = train.data_preprocessor
         if dp is None:
             dp = DataPreprocessorConfig(steps=[])
             train.data_preprocessor = dp
 
-        params = dp.get('params')
-        steps = dp.get('steps')
+        params = dp.params
+        steps = dp.steps
         if params:
             params['angles'] = merge_unique(params.get('angles', []), angle_columns)
             params['features_to_exclude'] = merge_unique(params.get('features_to_exclude', []), to_exclude_columns)

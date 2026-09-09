@@ -616,7 +616,7 @@ class TestFaultDetectorConditionalFeatureResolution(unittest.TestCase):
         from energy_fault_detector.autoencoders import MultilayerAutoencoder
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
-        ae_params = self.conf['train']['autoencoder'].get('params', {})
+        ae_params = self.conf.train.autoencoder.params
 
         sensor_data_no_cond = self.sensor_data.drop(columns=['feature_a', 'feature_b'])
         fd._resolve_conditional_features(sensor_data_no_cond)
@@ -694,7 +694,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
         self.conf = Config(self.config_path)
         # Set protect_conditional_features to False
-        self.conf['train'].protect_conditional_features = False
+        self.conf.train.protect_conditional_features = False
         self.test_dir = tempfile.mkdtemp()
 
         np.random.seed(42)
@@ -718,7 +718,8 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         self.conf.config_dict['train']['protect_conditional_features'] = False
         self.conf.config_dict['train']['data_preprocessor']['steps'].append({'name': 'low_unique_value_filter', 'params': {'min_unique_value_count': 2}})
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
-        self.assertFalse(fd.config.protect_conditional_features)
+        self.assertFalse(fd.config.train.protect_conditional_features)
+
         result = fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
 
         # feature_a was constant, should have been dropped, triggering fallback
@@ -733,7 +734,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
 
     def test_protect_true_keeps_constant_conditional(self):
         """When protect=True (default), constant conditional features are kept."""
-        self.conf['train'].protect_conditional_features = True
+        self.conf.train.protect_conditional_features = True
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
         fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
@@ -783,7 +784,7 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
     def test_default_is_false(self):
         """Default value should be False when not specified."""
         config = Config(os.path.join(PROJECT_ROOT, 'tests/test_data/test_config.yaml'))
-        self.assertFalse(config.protect_conditional_features)
+        self.assertFalse(config.train.protect_conditional_features)
 
     def test_explicit_false(self):
         """Explicit False in config should be respected."""
@@ -796,7 +797,7 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
                 'threshold_selector': {'name': 'quantile', 'params': {'quantile': 0.95}},
             }
         })
-        self.assertFalse(config.protect_conditional_features)
+        self.assertFalse(config.train.protect_conditional_features)
 
     def test_explicit_true(self):
         """Explicit True in config should be respected."""
@@ -809,7 +810,7 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
                 'threshold_selector': {'name': 'quantile', 'params': {'quantile': 0.95}},
             }
         })
-        self.assertTrue(config.protect_conditional_features)
+        self.assertTrue(config.train.protect_conditional_features)
 
 
 class TestHandleDuplicateIndex(unittest.TestCase):
