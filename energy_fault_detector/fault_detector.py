@@ -61,13 +61,13 @@ class FaultDetector(FaultDetectionModel):
 
         # TODO: add list of relevant features to config and protect relevant features (if present) as well.
         # Determine which features to protect based on config flag
-        protect = self.config.protect_conditional_features if self.config else True
+        protect = self.config.train.protect_conditional_features if self.config and self.config.train else True
         protected_features = (
             self.autoencoder.conditional_features or []
         ) if protect else []
 
         # Data clipping (outlier clipping)
-        if self.config.data_clipping:
+        if self.config.train is not None and self.config.train.data_clipping is not None:
             logger.debug('Clip data before scaling.')
             clipper_params = self.config.data_clipping_params.copy()
             if protected_features:
@@ -152,7 +152,7 @@ class FaultDetector(FaultDetectionModel):
                 logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
                                f"{sorted(missing)}. Using: {available or 'none'}")
 
-            if not self.config.protect_conditional_features:
+            if not self.config.train.protect_conditional_features:
                 # Uses nested for loop in case categorical cols have been encoded already and contain the original
                 # conditional feature name as a substring.
                 surviving = [declared_condition for declared_condition in available
@@ -174,7 +174,8 @@ class FaultDetector(FaultDetectionModel):
                 val_recon_error = self.autoencoder.get_reconstruction_error(x_val)
 
         if not fit_autoencoder_only:
-            self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=self.config.fit_threshold_on_val)
+            fit_on_val = self.config.train.threshold_selector.fit_on_val
+            self._fit_threshold(x=x, y=y, x_val=x_val, fit_on_validation=fit_on_val)
 
         if save_models:
             model_path, model_date = self.save(overwrite=overwrite_models)
@@ -231,7 +232,7 @@ class FaultDetector(FaultDetectionModel):
         if tune_method not in ['threshold', 'decoder', 'full']:
             raise ValueError(f'Unknown tune method {tune_method}.')
 
-        fit_on_val = self.config.fit_threshold_on_val
+        fit_on_val = self.config.train.threshold_selector.fit_on_val
         if tune_method == 'threshold' and fit_on_val:
             logger.warning('Fine-tuning using only validation data for threshold does not make sense if only the'
                            ' threshold is tuned! Setting fit_threshold_on_val to False.')
@@ -526,7 +527,7 @@ class FaultDetector(FaultDetectionModel):
         elif isinstance(self.autoencoder, ConditionalAE):
             logger.warning("All conditional features are unavailable. "
                            "Falling back from ConditionalAE to MultilayerAutoencoder.")
-            ae_params = dict(self.config['train']['autoencoder'].get('params', {}))
+            ae_params = dict(self.config.train.autoencoder.params)
             ae_params.pop('conditional_features', None)
             self.autoencoder = MultilayerAutoencoder(**ae_params)
 

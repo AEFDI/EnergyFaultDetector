@@ -72,12 +72,12 @@ def update_preprocessor_config(config: Config, features_to_exclude: Union[List[s
         Config: Updated config object.
     """
 
-    dp = config['train']['data_preprocessor']
+    dp = config.train.data_preprocessor
 
     if features_to_exclude is not None:
-        if dp.get('params'):
+        if dp.params:
             # old data preprocessing configuration style
-            dp['params']['features_to_exclude'] = features_to_exclude
+            dp.params['features_to_exclude'] = features_to_exclude
         else:
             # new configuration style
             if dp.steps is None:
@@ -92,9 +92,9 @@ def update_preprocessor_config(config: Config, features_to_exclude: Union[List[s
             if not column_selector_found:
                 steps.append({'name': 'column_selector', 'params': {'features_to_exclude': features_to_exclude}})
     if angles is not None:
-        if dp.get('params'):
+        if dp.params:
             # old data preprocessing configuration style
-            dp['params']['angles'] = angles
+            dp.params['angles'] = angles
         else:
             # new configuration style
             if dp.steps is None:
@@ -121,7 +121,7 @@ def update_autoencoder_config(config: Config, autoencoder_params: dict) -> Confi
     Returns:
         Config: Updated config object.
     """
-    config['train']['autoencoder']['params'].update(autoencoder_params)
+    config.train.autoencoder.params.update(autoencoder_params)
     return config
 
 
@@ -143,5 +143,5 @@ def update_threshold_config(config: Config, quantile: float) -> Config:
         logger.warning(f'Quantile for reconstruction error threshold was specified as {quantile} which smaller than 0.'
                        f'To avoid an exception quantile will be set to the default value 0.95')
         quantile = 0.95
-    config['train']['threshold_selector']['params']['quantile'] = quantile
+    config.train.threshold_selector.params['quantile'] = quantile
     return config
