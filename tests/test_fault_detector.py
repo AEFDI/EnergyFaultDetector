@@ -625,7 +625,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
         self.conf = Config(self.config_path)
         # Set protect_conditional_features to False
-        self.conf.config_dict['train']['protect_conditional_features'] = False
+        self.conf['train'].protect_conditional_features = False
         self.test_dir = tempfile.mkdtemp()
 
         np.random.seed(42)
@@ -663,7 +663,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
 
     def test_protect_true_keeps_constant_conditional(self):
         """When protect=True (default), constant conditional features are kept."""
-        self.conf.config_dict['train']['protect_conditional_features'] = True
+        self.conf['train'].protect_conditional_features = True
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
         fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)

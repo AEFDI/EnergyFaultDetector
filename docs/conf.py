@@ -264,7 +264,6 @@ def run_apidoc(app):
         # internal utilities
         str(pkg_dir / "utils" / "index_utils.py"),
         # config internals
-        str(pkg_dir / "config" / "base_config.py"),
         str(pkg_dir / "config" / "config.py"),
         str(pkg_dir / "config" / "quickstart_config.py"),
         # Class specific files (documented directly under the top module)
