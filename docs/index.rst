@@ -35,10 +35,10 @@ Installation
     :maxdepth: 1
 
     arcana
-    models_overview
-    sequence_models
     care2compare_guide
     care2compare_faq
+    models_overview
+    sequence_models
 
 .. toctree::
     :caption: Advanced usage

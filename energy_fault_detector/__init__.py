@@ -1,4 +1,8 @@
-"""The energy-fault-detector package"""
+"""Autoencoder-based anomaly and fault detection for renewable energy assets and power grids.
+
+The package learns a normal-behaviour model from operational data and flags deviations as
+anomalies, and includes the ARCANA method for root-cause analysis of detected anomalies.
+"""
 
 from .__about__ import __version__
 from energy_fault_detector.core._logs import setup_logging

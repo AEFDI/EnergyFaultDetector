@@ -133,17 +133,21 @@ class FaultDetector(FaultDetectionModel):
             sensor_data=sensor_data, normal_index=normal_index, fit_preprocessor=fit_preprocessor
         )
 
-        # Resolve declared conditions against preprocessed data
+        # Capture conditions available in the raw data before the preprocessor may expand
+        # categorical conditions into one-hot encoded column names (e.g. 'state' -> 'state_A').
+        declared_conditions = list(self.autoencoder.conditional_features or [])
+
+        # Resolve declared conditions against preprocessed data (may expand categorical names)
         self._resolve_conditional_features(x_prepped)
 
         # Check conditionals: available conditions in original data and surviving conditions during preprocessing.
         if self.autoencoder.is_conditional:
-            configured = self.autoencoder.conditional_features or []
             # Uses nested for loop in case categorical cols have been encoded already and contain the original
             # conditional feature name as a substring.
-            available = [declared_condition for declared_condition in configured
+            available = [declared_condition for declared_condition in declared_conditions
                          if any(declared_condition in col for col in sensor_data.columns)]
-            missing = [declared_condition for declared_condition in configured if declared_condition not in available]
+            missing = [declared_condition for declared_condition in declared_conditions
+                       if declared_condition not in available]
             if missing:
                 logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
                                f"{sorted(missing)}. Using: {available or 'none'}")

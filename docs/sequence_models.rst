@@ -133,8 +133,8 @@ Training and prediction are identical to the dense autoencoder case:
    print(results.reconstruction.shape)
 
 
-Seq2One models (sequence-to-one)
-================================
+Sequence-to-one models
+======================
 
 Seq2One models take a window of length ``sequence_length`` and reconstruct the
 **last timestep** of that window:
@@ -210,8 +210,8 @@ The ``merge_mode`` controls how forward and backward encoder outputs are merged.
 recommended setting is ``"sum"``.
 
 
-Seq2Seq models (sequence-to-sequence)
-=====================================
+Sequence-to-sequence models
+===========================
 
 Seq2Seq autoencoders reconstruct the **entire input window**:
 
