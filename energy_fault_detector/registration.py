@@ -18,7 +18,7 @@ class Registry:
 
         Args:
             module_path (str): Path to the module containing the class.
-            class_type (str): type of the class (anomaly_score, autoencoder, threshold_selector or data_preprocessor)
+            class_type (str): type of the class (anomaly_score, autoencoder, threshold_selector)
             class_names (List[str], optional): a list of names which may be used to refer to this class. Default is None
         """
 

@@ -1,4 +1,4 @@
-"""Evaluation classes and methods, including the CARE-Score and Care2CompareDataset."""
+"""Benchmark metrics and dataset loaders for evaluating fault-detection models."""
 
 from .care_score import CAREScore
 from .care2compare import Care2CompareDataset

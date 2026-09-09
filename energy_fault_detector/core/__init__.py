@@ -1,5 +1,8 @@
-"""This module contains class templates for most of the anomaly detection classes, such as
-anomaly scores, threshold selectors and data classes."""
+"""Abstract base classes and shared infrastructure for the fault-detection pipeline.
+
+Concrete implementations of these contracts live in their own subpackages
+(autoencoders, anomaly_scores, threshold_selectors, data_preprocessing).
+"""
 
 from .anomaly_score import AnomalyScore
 from .data_transformer import DataTransformer

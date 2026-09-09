@@ -1,1 +1,1 @@
-"""Helper utilities for post-processing, data downloading, index handling, and visualization."""
+"""Helper utilities shared across the package."""
