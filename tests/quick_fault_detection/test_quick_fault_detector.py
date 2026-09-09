@@ -148,7 +148,7 @@ class TestQuickFaultDetectorIntegration(unittest.TestCase):
         call_kwargs = MockFaultDetector.call_args
         config = call_kwargs[1]["config"] if "config" in call_kwargs[1] else call_kwargs[0][0]
         # Check that column_selector step has sensor_0 excluded
-        steps = config["train"]["data_preprocessor"]["steps"]
+        steps = config.train.data_preprocessor.steps
         col_selector = next(s for s in steps if s["name"] == "column_selector")
         self.assertIn("sensor_0", col_selector["params"]["features_to_exclude"])
 

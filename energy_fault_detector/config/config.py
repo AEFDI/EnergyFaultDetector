@@ -3,12 +3,10 @@
 The configuration is defined by a set of Pydantic models (section models plus a
 top-level :class:`ConfigModel`) that validate the YAML/dict input.  The public
 :class:`Config` class is a thin wrapper around :class:`ConfigModel` that adds
-file I/O, serialization, and backward-compat dict-style access.
-
-``Config`` is **not** itself a Pydantic model – it holds a validated
-``ConfigModel`` instance via ``self._model``.  Section models inherit
-:class:`_SubscriptableModel` so that ``config['train']['autoencoder']`` keeps
-working during the migration from dict-based to typed access.
+file I/O and serialization.  Model fields (``train``, ``predict``,
+``root_cause_analysis``, ``dtype``) are accessible via normal attribute access
+on the :class:`Config` wrapper (delegated to the underlying model through
+``__getattr__``).
 """
 
 import logging
@@ -38,47 +36,6 @@ def _format_timedelta(value: np.timedelta64) -> str:
     """
     total_seconds = int(value.astype('timedelta64[s]').astype(int))
     return f"{total_seconds}s"
-
-
-class _SubscriptableModel(BaseModel):
-    """Pydantic ``BaseModel`` with dict-style access for backward compatibility.
-
-    Allows ``config['train']`` instead of ``config.train`` during the migration
-    from dict-based config to typed Pydantic models.  All section models and the
-    top-level :class:`ConfigModel` inherit from this class.
-
-    ``__getitem__`` delegates to :func:`getattr`; ``__contains__`` checks whether
-    *key* is a declared field that is "present":
-
-    * **required** fields (no default) are always present, even when their value
-      is ``None`` (e.g. ``train.data_preprocessor`` which is required but
-      nullable);
-    * **optional** fields (have a default) are present only when their value is
-      not ``None`` (e.g. ``data_clipping``).
-
-    ``get(key, default)`` mirrors ``dict.get``: returns the value when the key is
-    present, otherwise *default*.
-    """
-
-    def __getitem__(self, key: str) -> Any:
-        return getattr(self, key)
-
-    def __contains__(self, key: str) -> bool:
-        field = type(self).model_fields.get(key)
-        if field is None:
-            return False
-        if field.is_required():
-            return True
-        return getattr(self, key) is not None
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Return the field value if present, otherwise *default*.
-
-        Mirrors ``dict.get`` semantics using :meth:`__contains__`.
-        """
-        if key in self:
-            return getattr(self, key)
-        return default
 
 
 def _dump_value(value: Any) -> Any:
@@ -130,7 +87,7 @@ def _model_to_config_dict(model: BaseModel) -> Dict[str, Any]:
 # either, so this is strict parity.
 
 
-class AnomalyScoreConfig(_SubscriptableModel):
+class AnomalyScoreConfig(BaseModel):
     """``train.anomaly_score`` section."""
 
     model_config = ConfigDict(extra='allow')
@@ -138,7 +95,7 @@ class AnomalyScoreConfig(_SubscriptableModel):
     params: Optional[Dict[str, Any]] = None
 
 
-class AutoencoderConfig(_SubscriptableModel):
+class AutoencoderConfig(BaseModel):
     """``train.autoencoder`` section.
 
     ``params`` accepts a dict or a list (the Cerberus schema allowed both) and is
@@ -152,7 +109,7 @@ class AutoencoderConfig(_SubscriptableModel):
     verbose: Optional[int] = None
 
 
-class DataPreprocessorConfig(_SubscriptableModel):
+class DataPreprocessorConfig(BaseModel):
     """``train.data_preprocessor`` section (``extra='forbid'``)."""
 
     model_config = ConfigDict(extra='forbid')
@@ -160,7 +117,7 @@ class DataPreprocessorConfig(_SubscriptableModel):
     steps: Optional[List[Dict[str, Any]]] = None
 
 
-class ThresholdSelectorConfig(_SubscriptableModel):
+class ThresholdSelectorConfig(BaseModel):
     """``train.threshold_selector`` section."""
 
     model_config = ConfigDict(extra='allow')
@@ -169,7 +126,7 @@ class ThresholdSelectorConfig(_SubscriptableModel):
     params: Optional[Dict[str, Any]] = None
 
 
-class DataClippingConfig(_SubscriptableModel):
+class DataClippingConfig(BaseModel):
     """``train.data_clipping`` section."""
 
     model_config = ConfigDict(extra='allow')
@@ -179,7 +136,7 @@ class DataClippingConfig(_SubscriptableModel):
     features_to_clip: Optional[List[str]] = None
 
 
-class DataSplitterConfig(_SubscriptableModel):
+class DataSplitterConfig(BaseModel):
     """``train.data_splitter`` section.
 
     Reproduces the Cerberus ``dependencies`` rules: block-size fields require a
@@ -215,7 +172,7 @@ class DataSplitterConfig(_SubscriptableModel):
         return self
 
 
-class TrainConfig(_SubscriptableModel):
+class TrainConfig(BaseModel):
     """``train`` section."""
 
     model_config = ConfigDict(extra='allow')
@@ -228,7 +185,7 @@ class TrainConfig(_SubscriptableModel):
     protect_conditional_features: bool = False
 
 
-class RootCauseAnalysisConfig(_SubscriptableModel):
+class RootCauseAnalysisConfig(BaseModel):
     """``root_cause_analysis`` section."""
 
     model_config = ConfigDict(extra='allow')
@@ -240,14 +197,14 @@ class RootCauseAnalysisConfig(_SubscriptableModel):
     max_sample_threshold: Optional[int] = None
 
 
-class CriticalityConfig(_SubscriptableModel):
+class CriticalityConfig(BaseModel):
     """``predict.criticality`` section."""
 
     model_config = ConfigDict(extra='allow')
     max_criticality: Optional[int] = None
 
 
-class PredictConfig(_SubscriptableModel):
+class PredictConfig(BaseModel):
     """``predict`` section."""
 
     model_config = ConfigDict(extra='allow')
@@ -341,7 +298,7 @@ def _validate_sequence_fit_on_val(model: 'ConfigModel') -> None:
 # --- Top-level model ---------------------------------------------------------
 
 
-class ConfigModel(_SubscriptableModel):
+class ConfigModel(BaseModel):
     """Top-level Pydantic model for the anomaly-detection pipeline configuration.
 
     The top-level uses ``extra='ignore'`` (unknown top-level keys are dropped and
@@ -371,10 +328,9 @@ class Config:
     """Configuration for the anomaly-detection pipeline.
 
     Loads and validates a YAML configuration file (or an inline dict) using
-    Pydantic models.  The top-level sections are exposed as typed attributes
-    (``config.train``, ``config.predict``, …); dict-style access
-    (``config['train']``) is supported for backward compatibility via
-    :class:`_SubscriptableModel`.
+    Pydantic models.  Top-level model fields (``train``, ``predict``,
+    ``root_cause_analysis``, ``dtype``) are accessible via attribute access on
+    the wrapper (e.g. ``config.train`` returns a :class:`TrainConfig` model).
 
     Example:
 
@@ -404,6 +360,24 @@ class Config:
         if config_filename is not None or config_dict is not None:
             self._configuration_file = str(config_filename) if config_filename else None
             self.read_config(config_dict=config_dict)
+
+    # --- attribute delegation -------------------------------------------------
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate attribute access to the underlying :class:`ConfigModel`.
+
+        ``__getattr__`` is only called when the attribute is not found through
+        normal lookup, so properties/methods defined on :class:`Config` take
+        precedence.  Only model fields (``train``, ``predict``, etc.) are
+        delegated.
+        """
+        model = self.__dict__.get('_model')
+        if model is not None and name in type(model).model_fields:
+            return getattr(model, name)
+        raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
+
+    def __repr__(self) -> str:
+        return self.config_dict.__repr__()
 
     # --- factory classmethods -------------------------------------------------
 
@@ -486,17 +460,6 @@ class Config:
         if not self.config_dict:
             raise InvalidConfigFile(f'The configuration file is empty for {type(self).__name__}.')
 
-    # --- dict-style access ----------------------------------------------------
-
-    def __getitem__(self, key: str) -> Any:
-        return self._model[key]
-
-    def __contains__(self, key: str) -> bool:
-        return key in self._model
-
-    def __repr__(self) -> str:
-        return self.config_dict.__repr__()
-
     # --- serialization --------------------------------------------------------
 
     @property
@@ -506,7 +469,7 @@ class Config:
         The dict is rebuilt from the underlying Pydantic model on every call, so
         it always reflects the current model state.  Leaf dicts (``params``,
         ``steps``) are the same mutable objects stored on the model, so
-        in-place mutations (``config['train']['autoencoder']['params'].update(...)``)
+        in-place mutations (``config.train.autoencoder.params.update(...)``)
         persist.
         """
         return _model_to_config_dict(self._model)
@@ -557,7 +520,7 @@ class Config:
         self._load_and_validate(merged)
         self._configuration_file = None
 
-    # --- convenience properties -----------------------------------------------
+    # --- properties with real logic -------------------------------------------
 
     @property
     def data_preprocessor_steps(self) -> List[Dict[str, Any]]:
@@ -594,63 +557,25 @@ class Config:
         return steps or []
 
     @property
-    def root_cause_analysis(self) -> bool:
-        """Whether the ``root_cause_analysis`` section is configured."""
-        return self._model.root_cause_analysis is not None
-
-    @property
     def arcana_params(self) -> Dict[str, Any]:
-        """Get the ARCANA parameters as a plain dict."""
+        """Get the ARCANA parameters as a plain dict (for ``**`` unpacking)."""
         if self._model.root_cause_analysis is None:
             return {}
         return _model_to_config_dict(self._model.root_cause_analysis)
 
     @property
     def data_split_params(self) -> Dict[str, Any]:
-        """DataSplitter or train_test_split parameters."""
+        """DataSplitter or train_test_split parameters as a plain dict."""
         if self._model.train is None or self._model.train.data_splitter is None:
             return {}
         return _model_to_config_dict(self._model.train.data_splitter)
 
     @property
-    def data_clipping(self) -> bool:
-        """Whether to clip training data."""
-        return (self._model.train is not None
-                and self._model.train.data_clipping is not None)
-
-    @property
     def data_clipping_params(self) -> Dict[str, Any]:
-        """Data clipping parameters."""
+        """Data clipping parameters as a plain dict."""
         if self._model.train is None or self._model.train.data_clipping is None:
             return {}
         return _model_to_config_dict(self._model.train.data_clipping)
-
-    @property
-    def max_criticality(self) -> Optional[int]:
-        """Max criticality value (default 144 when not configured)."""
-        if self._model.predict is None or self._model.predict.criticality is None:
-            return 144
-        mc = self._model.predict.criticality.max_criticality
-        return mc if mc is not None else 144
-
-    @property
-    def fit_threshold_on_val(self) -> bool:
-        """Whether to fit threshold on validation data only."""
-        if self._model.train is None or self._model.train.threshold_selector is None:
-            return False
-        return self._model.train.threshold_selector.fit_on_val
-
-    @property
-    def protect_conditional_features(self) -> bool:
-        """Whether to protect conditional features from being dropped by preprocessing."""
-        if self._model.train is None:
-            return False
-        return self._model.train.protect_conditional_features
-
-    @property
-    def dtype(self) -> str:
-        """Configured numeric dtype (``'float32'`` or ``'float64'``)."""
-        return self._model.dtype
 
 
 def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str, Any]]:
