@@ -59,7 +59,7 @@ def train_or_get_model(event_id: int, dataset: PreDistDataset, manufacturer: int
         # Add the code size to the AE configuration, based on the bottleneck ratio
         # code_size is part of the model configuration, so we overwrite the parameter of the underlying dictionary.
         bottleneck = calculate_bottleneck(train_data, local_conf, bottleneck_ratio)
-        local_conf['train']['autoencoder']['params']['code_size'] = bottleneck
+        local_conf.train.autoencoder.params['code_size'] = bottleneck
 
         # For the conditional autoencoders, add time features
         if ts_features:
@@ -118,7 +118,7 @@ def calculate_bottleneck(df: pd.DataFrame, config: Config, ratio: float) -> int:
     """
 
     # Get the conditional features from the config
-    ae_params = config['train']['autoencoder']['params']
+    ae_params = config.train.autoencoder.params
     cond_features = ae_params.get('conditional_features', [])
 
     # Exclude conditions (not compressed)
@@ -126,17 +126,11 @@ def calculate_bottleneck(df: pd.DataFrame, config: Config, ratio: float) -> int:
 
     # Check for feature exclusions in config
     excluded = []
-    dp_config = config['train'].get('data_preprocessor', {})
-    if dp_config.get('params'):
-        # params-based data prep config
-        excluded = dp_config.get('params').get('features_to_exclude', [])
-    else:
-        # steps-based data prep config
-        steps = config['train']['data_preprocessor'].get('steps', [])
-        for step in steps:
-            if step['name'] == 'column_selector':
-                excluded = step['params'].get('features_to_exclude', [])
-                break
+    steps = config.train.data_preprocessor.steps or []
+    for step in steps:
+        if step['name'] == 'column_selector':
+            excluded = step.get('params', {}).get('features_to_exclude', [])
+            break
 
     # Remove the excluded features from the input dimension
     input_dim -= len([e for e in excluded if e in df.columns])
