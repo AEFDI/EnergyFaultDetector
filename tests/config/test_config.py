@@ -36,7 +36,8 @@ class TestConfig(unittest.TestCase):
                                    'params': {'target_false_discovery_rate': 0.8},
                                    'fit_on_val': False},
             'data_splitter': {'type': 'BlockDataSplitter',
-                              'train_block_size': 7, 'val_block_size': 3},
+                              'train_block_size': 7, 'val_block_size': 3,
+                              'validation_split': 0.1, 'shuffle': False},
             'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99},
             'protect_conditional_features': False,
         })
@@ -96,7 +97,9 @@ class TestConfig(unittest.TestCase):
         self.assertDictEqual(conf.config_dict['train']['data_splitter'], {
             'type': 'DataSplitter',
             'train_block_size': 7,
-            'val_block_size': 3
+            'val_block_size': 3,
+            'validation_split': 0.1,
+            'shuffle': False
         })
 
     def test_bad_early_stopping_no_valconfig(self):
@@ -145,5 +148,18 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(conf.train.anomaly_score.name, 'rmse')
         self.assertEqual(conf.train.threshold_selector.name, 'quantile')
         self.assertIsNotNone(conf.train.data_preprocessor)
-        self.assertEqual(conf.train.data_splitter.type, 'BlockDataSplitter')
+        self.assertEqual(conf.train.data_splitter.type, 'sklearn')
+        self.assertEqual(conf.train.data_splitter.validation_split, 0.1)
+        self.assertFalse(conf.train.data_splitter.shuffle)
         self.assertFalse(conf.train.protect_conditional_features)
+
+    def test_empty_config_defaults(self):
+        """Config() with no arguments should produce a ready-to-use configuration."""
+        conf = Config()
+        self.assertEqual(conf.train.autoencoder.name, 'default')
+        self.assertEqual(conf.train.anomaly_score.name, 'rmse')
+        self.assertEqual(conf.train.threshold_selector.name, 'quantile')
+        self.assertEqual(conf.train.data_splitter.type, 'sklearn')
+        self.assertEqual(conf.train.data_splitter.validation_split, 0.1)
+        self.assertFalse(conf.train.data_splitter.shuffle)
+        self.assertEqual(conf.dtype, 'float32')
