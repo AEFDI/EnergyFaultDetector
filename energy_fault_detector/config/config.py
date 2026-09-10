@@ -3,12 +3,13 @@
 The :class:`Config` class is a Pydantic ``BaseModel`` that validates YAML/dict
 input.  Top-level sections (``train``, ``root_cause_analysis``, ``dtype``) are
 typed fields accessible via normal attribute access
-(``config.train.autoencoder.params``).  File I/O methods (``from_yaml``,
-``write_config``, …) are provided as methods on the model itself.
+(``config.train.autoencoder.params``).  File I/O (``Config('file.yaml')``,
+``write_config``) is built into the constructor and model methods.
 
 All sections have sensible defaults — ``Config()`` with no arguments produces a
 ready-to-use configuration (MultilayerAutoencoder, RMSE anomaly score, quantile
-threshold selector, default preprocessing pipeline, block data splitter).
+threshold selector, default preprocessing pipeline, sklearn data splitter with
+10% validation split).
 """
 
 import logging
@@ -24,6 +25,15 @@ logger = logging.getLogger('energy_fault_detector')
 
 class InvalidConfigFile(Exception):
     """Raise when the configuration file is not valid."""
+
+
+def _format_validation_error(exc: ValidationError) -> InvalidConfigFile:
+    """Convert a Pydantic ``ValidationError`` into an :class:`InvalidConfigFile`."""
+    lines = []
+    for err in exc.errors():
+        loc = '.'.join(str(p) for p in err['loc'])
+        lines.append(f"{loc}: {err['msg']}")
+    return InvalidConfigFile('Configuration is not valid: ' + '; '.join(lines))
 
 
 def _dump_value(value: Any) -> Any:
@@ -178,34 +188,21 @@ class DataSplitterConfig(BaseModel):
     """``train.data_splitter`` section.
 
     ``type`` selects block-style vs sklearn-style splitting.  The remaining
-    fields are type-specific options that are validated against ``type``.
+    fields are type-specific options; irrelevant ones are ignored by the
+    splitter implementation.
+
+    Defaults: ``sklearn`` with ``validation_split=0.1`` and ``shuffle=False``,
+    i.e. the last 10% of the data (in original order) is used as a validation
+    set.  This enables early stopping and ``fit_on_val`` out of the box.
     """
 
     model_config = ConfigDict(extra='allow', validate_assignment=True)
     type: Literal['DataSplitter', 'BlockDataSplitter', 'blocks', 'sklearn',
-                  'train_test_split', 'train_val_split'] = 'BlockDataSplitter'
+                  'train_test_split', 'train_val_split'] = 'sklearn'
     train_block_size: Optional[int] = None
     val_block_size: Optional[int] = None
-    validation_split: Optional[float] = None
-    shuffle: Optional[bool] = None
-
-    @model_validator(mode='after')
-    def _check_dependencies(self) -> 'DataSplitterConfig':
-        block_types = {'DataSplitter', 'BlockDataSplitter', 'blocks'}
-        split_types = {'sklearn', 'train_test_split', 'train_val_split'}
-
-        if self.train_block_size is not None and self.type not in block_types:
-            raise ValueError(
-                "train_block_size depends on type in ['DataSplitter', 'BlockDataSplitter', 'blocks']")
-        if self.val_block_size is not None and self.type not in block_types:
-            raise ValueError(
-                "val_block_size depends on type in ['DataSplitter', 'BlockDataSplitter', 'blocks']")
-        if self.validation_split is not None and self.type not in split_types:
-            raise ValueError(
-                "validation_split depends on type in ['sklearn', 'train_test_split', 'train_val_split']")
-        if self.shuffle is not None and self.type not in {'sklearn', 'train_test_split'}:
-            raise ValueError("shuffle depends on type in ['sklearn', 'train_test_split']")
-        return self
+    validation_split: Optional[float] = 0.1
+    shuffle: Optional[bool] = False
 
 
 class TrainConfig(BaseModel):
@@ -265,13 +262,16 @@ def _validate_early_stopping(model: 'Config') -> None:
     early_stopping = params.get('early_stopping', False)
 
     splitter = model.train.data_splitter
-    validation_split = splitter.validation_split or 0.0
-    val_block_size = splitter.val_block_size or 0
+    block_types = {'DataSplitter', 'BlockDataSplitter', 'blocks'}
 
-    if not isinstance(validation_split, float):
-        validation_split = 0.0
-
-    validation = 0 < validation_split < 1 or val_block_size > 0
+    if splitter.type in block_types:
+        val_block_size = splitter.val_block_size or 0
+        validation = val_block_size > 0
+    else:
+        validation_split = splitter.validation_split or 0.0
+        if not isinstance(validation_split, float):
+            validation_split = 0.0
+        validation = 0 < validation_split < 1
 
     if early_stopping and not validation:
         msg = ('Configuration is not valid: If early_stopping is enabled either validation_split or '
@@ -411,19 +411,20 @@ class Config(BaseModel):
 
             from energy_fault_detector.config import Config
 
+            # defaults
+            config = Config()
+
             # from YAML file
-            config = Config.from_yaml('config.yaml')
+            config = Config('config.yaml')
 
             # from dict
-            config = Config.from_dict({'train': {...}})
-
-            # legacy constructor (still supported)
-            config = Config('config.yaml')
-            config = Config(config_dict={'train': {...}})
+            config = Config({'train': {...}})
 
     Args:
-        config_filename: Path to a YAML configuration file.
-        config_dict: Inline configuration dictionary.
+        config_filename: Path to a YAML configuration file, or an inline
+            configuration dictionary.
+        config_dict: Inline configuration dictionary (alternative to passing
+            a dict as the first positional argument).
     """
 
     model_config = ConfigDict(extra='ignore', validate_default=True, validate_assignment=True)
@@ -445,9 +446,24 @@ class Config(BaseModel):
         if isinstance(config_filename, dict):
             config_dict = config_filename
             config_filename = None
-        if config_filename is not None or config_dict is not None:
-            self._configuration_file = str(config_filename) if config_filename else None
-            self.read_config(config_dict=config_dict)
+
+        if config_filename is not None:
+            with open(config_filename, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+            if data is None:
+                raise InvalidConfigFile('The configuration file is empty!')
+            self._log_unknown_keys(data)
+            try:
+                super().__init__(**data)
+            except ValidationError as exc:
+                raise _format_validation_error(exc) from exc
+            object.__setattr__(self, '_configuration_file', str(config_filename))
+        elif config_dict is not None:
+            self._log_unknown_keys(config_dict)
+            try:
+                super().__init__(**config_dict)
+            except ValidationError as exc:
+                raise _format_validation_error(exc) from exc
         else:
             super().__init__(**kwargs)
 
@@ -458,84 +474,6 @@ class Config(BaseModel):
             for key in list(data.keys()):
                 if key not in known_keys:
                     logger.info('Key `%s` is an unknown field and will be ignored.', key)
-
-    @classmethod
-    def _validate(cls, data: Any) -> 'Config':
-        try:
-            return cls.model_validate(data)
-        except ValidationError as exc:
-            lines = []
-            for err in exc.errors():
-                loc = '.'.join(str(p) for p in err['loc'])
-                lines.append(f"{loc}: {err['msg']}")
-            raise InvalidConfigFile('Configuration is not valid: ' + '; '.join(lines)) from exc
-
-    # --- factory classmethods -------------------------------------------------
-
-    @classmethod
-    def from_yaml(cls, path: str | Path) -> 'Config':
-        """Load configuration from a YAML file.
-
-        Args:
-            path: Path to the YAML configuration file.
-
-        Returns:
-            Validated configuration instance.
-
-        Raises:
-            InvalidConfigFile: If the file is empty or fails validation.
-        """
-        return cls(config_filename=path)
-
-    @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> 'Config':
-        """Create a configuration from an inline dictionary.
-
-        Args:
-            config_dict: Configuration dictionary.
-
-        Returns:
-            Validated configuration instance.
-
-        Raises:
-            InvalidConfigFile: If the dictionary is None or fails validation.
-        """
-        if config_dict is None:
-            raise InvalidConfigFile('The configuration file is empty!')
-        return cls(config_dict=config_dict)
-
-    # --- loading / validation -------------------------------------------------
-
-    def read_config(self, config_dict: Dict[str, Any] = None, part: str = None) -> None:
-        """Read and validate the configuration from file or dict.
-
-        Args:
-            config_dict: Inline configuration dictionary.  If ``None``, reads
-                from :attr:`_configuration_file`.
-            part: If given, extract only this top-level section (legacy compat).
-        """
-        if config_dict is not None:
-            data = config_dict
-        elif self._configuration_file is not None:
-            with open(self._configuration_file, 'r', encoding='utf-8') as f:
-                data = yaml.safe_load(f)
-        else:
-            raise InvalidConfigFile('The configuration file is empty!')
-
-        if data is None:
-            raise InvalidConfigFile('The configuration file is empty!')
-
-        if part is not None and isinstance(data, dict) and part in data:
-            data = data[part]
-
-        self._log_unknown_keys(data)
-        validated = self._validate(data)
-        if not _model_to_config_dict(validated):
-            raise InvalidConfigFile(f'The configuration file is empty for {type(self).__name__}.')
-        for field_name in type(self).model_fields:
-            object.__setattr__(self, field_name, getattr(validated, field_name))
-        object.__setattr__(self, '__pydantic_extra__', getattr(validated, '__pydantic_extra__', None))
-        object.__setattr__(self, '__pydantic_fields_set__', set(validated.__pydantic_fields_set__))
 
     def __repr__(self) -> str:
         return self.config_dict.__repr__()
