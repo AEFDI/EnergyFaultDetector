@@ -122,7 +122,3 @@ root_cause_analysis:
   init_x_bias: recon
   num_iter: 1000
   verbose: true
-
-predict:
-  criticality:
-    max_criticality: 144

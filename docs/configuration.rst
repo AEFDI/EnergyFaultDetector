@@ -54,23 +54,21 @@ You can look up the names for the available model classes in the class registry:
 Configuration updates
 ^^^^^^^^^^^^^^^^^^^^^
 
-To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
-configuration dictionary via the :py:obj:`Config.update_config <energy_fault_detector.config.config.Config.update_config>` method:
+To update the configuration 'on the fly' (for example for hyperparameter optimization), modify the
+attributes directly and create a new :class:`~energy_fault_detector.FaultDetector`:
 
 .. code-block:: python
 
   from energy_fault_detector.config import Config
-  from copy import deepcopy
+  from energy_fault_detector import FaultDetector
 
   config = Config('configs/base_config.yaml')
 
   # update some parameters:
-  new_config_dict = deepcopy(config.config_dict)
-  new_config_dict['train']['anomaly_score']['name'] = 'mahalanobis'
-  config = Config(new_config_dict)
+  config.train.anomaly_score.name = 'mahalanobis'
 
-  # or create a new configuration object and model
-  new_model = FaultDetector(Config(config_dict=new_config_dict))
+  # create a new model with the updated config
+  new_model = FaultDetector(config)
 
 Detailed configuration
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -182,12 +180,6 @@ Other training configuration sections
   - ``fit_on_val``: fit the threshold on validation only.
   - ``params``: selector-specific parameters (e.g., ``quantile`` for the quantile selector).
     See the :py:obj:`threshold_selectors <energy_fault_detector.threshold_selectors>` docs for more info on the settings.
-
-Prediction options
-^^^^^^^^^^^^^^^^^^
-Under ``predict``, you can set:
-
-- ``criticality.max_criticality``: cap the calculated criticality (anomaly counter) to this value.
 
 
 Root cause analysis (ARCANA)

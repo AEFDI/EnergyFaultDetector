@@ -197,7 +197,6 @@ The config typically has:
   - ``data_splitter``: how training/validation sets are split,
   - optional ``data_clipping``: outlier clipping on training data only.
 - an optional ``root_cause_analysis`` section for ARCANA.
-- an optional ``predict`` section (e.g. criticality settings).
 
 For most users, the easiest way to create a valid configuration is via :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
 
