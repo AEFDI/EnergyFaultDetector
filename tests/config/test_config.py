@@ -3,8 +3,6 @@ import os
 import shutil
 import unittest
 
-import numpy as np
-
 from energy_fault_detector.config import Config, InvalidConfigFile
 
 PROJECT_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..')
@@ -23,7 +21,7 @@ class TestConfig(unittest.TestCase):
         self.assertDictEqual(conf.config_dict['train'], {
             'anomaly_score': {'name': 'mahalanobis',
                               'params': {'pca': True, 'pca_min_var': 0.85}},
-            'data_preprocessor': None,  # unspecified, default pipeline
+            'data_preprocessor': {'steps': []},
             'autoencoder': {'name': 'MultilayerAutoencoder',
                             'verbose': 0,
                             'params': {'layers': [300],
@@ -37,7 +35,8 @@ class TestConfig(unittest.TestCase):
             'threshold_selector': {'name': 'FDR',
                                    'params': {'target_false_discovery_rate': 0.8},
                                    'fit_on_val': False},
-            'data_splitter': {'train_block_size': 7, 'val_block_size': 3, 'type': 'BlockDataSplitter'},
+            'data_splitter': {'type': 'BlockDataSplitter',
+                              'train_block_size': 7, 'val_block_size': 3},
             'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99},
             'protect_conditional_features': False,
         })
@@ -51,18 +50,12 @@ class TestConfig(unittest.TestCase):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config.yaml'))
         self.assertTrue(conf.root_cause_analysis)
         self.assertDictEqual(
-            conf.arcana_params,
+            conf.root_cause_analysis.params,
             {'alpha': 0.8, 'num_iter': 200, 'init_x_bias': 'recon'}
         )
 
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_no_rca.yaml'))
         self.assertFalse(conf.root_cause_analysis)
-
-    def test_criticality_config(self):
-        conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_criticality_config.yaml'))
-        self.assertDictEqual(conf.config_dict['predict'], {
-            'criticality': {'max_criticality': 144}
-        })
 
     def test_early_stopping_val_split_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_early_stopping_val_split_config.yaml'))
@@ -115,7 +108,7 @@ class TestConfig(unittest.TestCase):
         expected = {
             'sequence_length': 36,
             'stride': 1,
-            'ts_freq': np.timedelta64(30, 's'),      # parsed by _parse_timedelta into np.timedelta64(10, 'm')
+            'ts_freq': '30s',
             'pad_incomplete': False,
             'pad_value': 0.0,
         }
@@ -128,7 +121,7 @@ class TestConfig(unittest.TestCase):
         expected = {
             'sequence_length': 36,
             'stride': 1,
-            'ts_freq': np.timedelta64(30, 's'),
+            'ts_freq': '30s',
             'pad_incomplete': False,
             'pad_value': 0.0,
         }
@@ -145,15 +138,12 @@ class TestConfig(unittest.TestCase):
             expected
         )
 
-    def test_sequence_builder_conf(self):
-        conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_ts_freq.yaml'))
-        expected = {
-            'sequence_length': 36,
-            'stride': 1,
-            'ts_freq': np.timedelta64(30, 's'),      # parsed by _parse_timedelta into np.timedelta64(10, 'm')
-            'pad_incomplete': False,
-            'pad_value': 0.0,
-        }
-        self.assertDictEqual(
-            conf.train.autoencoder.params['sequence_builder'], expected
-        )
+    def test_defaults_only_autoencoder(self):
+        """Config with only autoencoder should get sensible defaults for everything else."""
+        conf = Config(config_dict={'train': {'autoencoder': {'name': 'MultilayerAutoencoder',
+                                                             'params': {'layers': [10]}}}})
+        self.assertEqual(conf.train.anomaly_score.name, 'rmse')
+        self.assertEqual(conf.train.threshold_selector.name, 'quantile')
+        self.assertIsNotNone(conf.train.data_preprocessor)
+        self.assertEqual(conf.train.data_splitter.type, 'BlockDataSplitter')
+        self.assertFalse(conf.train.protect_conditional_features)

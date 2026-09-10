@@ -67,14 +67,19 @@ class FaultDetector(FaultDetectionModel):
         ) if protect else []
 
         # Data clipping (outlier clipping)
-        if self.config.train is not None and self.config.train.data_clipping is not None:
+        if self.config.train.data_clipping is not None:
             logger.debug('Clip data before scaling.')
-            clipper_params = self.config.data_clipping_params.copy()
+            clip = self.config.train.data_clipping
+            features_to_exclude = clip.features_to_exclude or []
             if protected_features:
-                existing_exclusions = clipper_params.get('features_to_exclude', [])
-                clipper_params['features_to_exclude'] = list(set(existing_exclusions + protected_features))
+                features_to_exclude = list(set(features_to_exclude + protected_features))
                 logger.debug(f'Excluding conditional features from clipping: {protected_features}')
-            data_clipper = DataClipper(**clipper_params)
+            data_clipper = DataClipper(
+                lower_percentile=clip.lower_percentile,
+                upper_percentile=clip.upper_percentile,
+                features_to_exclude=features_to_exclude or None,
+                features_to_clip=clip.features_to_clip,
+            )
             data_clipper.fit(x=x)
             x = data_clipper.transform(x)
 
@@ -433,7 +438,8 @@ class FaultDetector(FaultDetectionModel):
             # backwards compatibility, old models did not save config, just use default parameters
             rca = Arcana(model=self.autoencoder)
         else:
-            rca = Arcana(model=self.autoencoder, **self.config.arcana_params)
+            rca = Arcana(model=self.autoencoder,
+                         **(self.config.root_cause_analysis.params or {}))
 
         df_arcana_bias, arcana_losses, tracked_bias = rca.find_arcana_bias(x=x_prepped,
                                                                            track_losses=track_losses,
