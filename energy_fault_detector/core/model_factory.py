@@ -1,6 +1,8 @@
 
 from typing import Union, Dict, TYPE_CHECKING
 
+import numpy as np
+
 from energy_fault_detector.registration import registry
 from energy_fault_detector.config import Config
 from energy_fault_detector.data_preprocessing import DataPreprocessor
@@ -13,6 +15,19 @@ if TYPE_CHECKING:
     from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 
 ModelType = Union["Autoencoder", AnomalyScore, ThresholdSelector, DataPreprocessor]
+
+_TS_FREQ_UNIT_MAP = {"min": "m", "sec": "s", "hr": "h", "hour": "h"}
+
+
+def _parse_ts_freq(ts_freq: str) -> np.timedelta64:
+    """Parse a compact frequency string like ``'30s'`` or ``'10m'`` to ``np.timedelta64``."""
+    digits = "".join(ch for ch in ts_freq if ch.isdigit())
+    unit = "".join(ch for ch in ts_freq if not ch.isdigit())
+    unit = _TS_FREQ_UNIT_MAP.get(unit, unit)
+    if not digits or not unit:
+        raise ValueError(
+            f"Unexpected value for `ts_freq`: {ts_freq!r}. Expected format like '10m', '1h'.")
+    return np.timedelta64(int(digits), unit)
 
 
 class ModelFactory:
@@ -35,7 +50,7 @@ class ModelFactory:
         train = self.config.train
 
         # Data preprocessor
-        self._models["data_preprocessor"] = DataPreprocessor(steps=self.config.data_preprocessor_steps)
+        self._models["data_preprocessor"] = DataPreprocessor(steps=train.data_preprocessor.steps)
 
         # autoencoder
         ae_config = train.autoencoder
@@ -54,7 +69,9 @@ class ModelFactory:
                     f"sequence_builder config is required for sequence autoencoder {ae_class.__name__}"
                 )
 
-            ts_freq = builder_conf["ts_freq"]  # already np.timedelta64 thanks to _parse_timedelta
+            ts_freq = builder_conf["ts_freq"]
+            if isinstance(ts_freq, str):
+                ts_freq = _parse_ts_freq(ts_freq)
             sequence_builder = SequenceDatasetBuilder(
                 sequence_length=builder_conf["sequence_length"],
                 ts_freq=ts_freq,
@@ -70,12 +87,12 @@ class ModelFactory:
         # anomaly_score
         score_config = train.anomaly_score
         score_class = registry.get("anomaly_score", score_config.name)
-        self._models["anomaly_score"] = score_class(**(score_config.params or {}))
+        self._models["anomaly_score"] = score_class(**score_config.params)
 
         # threshold_selector
         thresh_config = train.threshold_selector
         thresh_class = registry.get("threshold_selector", thresh_config.name)
-        self._models["threshold_selector"] = thresh_class(**(thresh_config.params or {}))
+        self._models["threshold_selector"] = thresh_class(**thresh_config.params)
 
     @property
     def data_preprocessor(self) -> DataPreprocessor:
