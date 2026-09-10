@@ -103,7 +103,6 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
 class TestFaultDetector(unittest.TestCase):
     def setUp(self) -> None:
         self.conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config.yaml'))
-        self.conf.read_config()
 
         self.sensor_data = pd.DataFrame(data=[[1., 2., 3.],
                                               [4., 5., 6.],
@@ -158,15 +157,14 @@ class TestFaultDetector(unittest.TestCase):
                          os.path.join(fault_detector.model_directory, str(asset_id), dt, 'config.yaml'))
 
     @patch("energy_fault_detector.core.fault_detection_model.FaultDetectionModel._load_pickled_model")
-    @patch("energy_fault_detector.config.Config.read_config")
-    def test_load_models(self, mock_load_pickled_model, mock_read_config):
+    @patch("energy_fault_detector.core.fault_detection_model.Config")
+    def test_load_models(self, mock_load_pickled_model, mock_config):
         mock_load_pickled_model.side_effect = [
             mock_data_preprocessor,
             mock_autoencoder,
             mock_threshold,
             mock_score,
         ]
-        mock_read_config = MagicMock()
 
         fault_detector = FaultDetector.load("path_to_saved_models")
 

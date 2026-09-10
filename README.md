@@ -49,15 +49,14 @@ pip install energy-fault-detector[dev]
 ```python
 import pandas as pd
 from energy_fault_detector import FaultDetector, Config
-from energy_fault_detector.config import generate_quickstart_config
 
 ### 1. Load your data
 df = pd.read_csv("my_data.csv", parse_dates=["timestamp"], index_col="timestamp")
 sensor_data = df[["power", "wind_speed", "pitch"]]
 normal_index = df["status"] == "normal"  # optional boolean mask
 
-### 2. Generate a default configuration
-config = generate_quickstart_config()
+### 2. Create a default configuration
+config = Config()  # MultilayerAutoencoder, RMSE score, quantile threshold, default preprocessing
 
 ### 3. Train a normal-behaviour model
 fault_detector = FaultDetector(config=config, model_directory="my_model")
@@ -68,6 +67,9 @@ results = fault_detector.predict(sensor_data=sensor_data)
 
 print(results.predicted_anomalies.sum(), "anomalies detected")
 ```
+
+To generate a config YAML with custom preprocessing (angle columns, scaler, etc.), see
+[`generate_quickstart_config`](https://aefdi.github.io/EnergyFaultDetector/configuration.html).
 
 More examples: [Usage examples](https://aefdi.github.io/EnergyFaultDetector/usage_examples.html).
 
