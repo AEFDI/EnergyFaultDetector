@@ -195,8 +195,8 @@ class TestFaultDetector(unittest.TestCase):
         self.assertEqual(fault_detector.model_directory, str(self.test_model_dir))
         self.assertEqual(fault_detector.config, self.conf)
 
-    def test_save_models(self):
-        self.conf.write_config = MagicMock()
+    @patch.object(Config, 'write_config')
+    def test_save_models(self, mock_write_config):
         fault_detector = self._create_fault_detector(self.conf)
 
         asset_id = 1
@@ -209,8 +209,8 @@ class TestFaultDetector(unittest.TestCase):
             self.assertEqual(model_object.save.call_args[0][0],
                              os.path.join(fault_detector.model_directory, str(asset_id), dt, name))
 
-        fault_detector.config.write_config.assert_called_once()
-        self.assertEqual(fault_detector.config.write_config.call_args[0][0],
+        mock_write_config.assert_called_once()
+        self.assertEqual(mock_write_config.call_args[0][0],
                          os.path.join(fault_detector.model_directory, str(asset_id), dt, 'config.yaml'))
 
     @patch("energy_fault_detector.core.fault_detection_model.FaultDetectionModel._load_pickled_model")
@@ -233,8 +233,8 @@ class TestFaultDetector(unittest.TestCase):
             self.assertEqual(call_args[1]['model_type'], name)
             self.assertEqual(call_args[1]['model_directory'], os.path.join('path_to_saved_models', name))
 
-    def test_train(self):
-        self.conf.write_config = MagicMock()
+    @patch.object(Config, 'write_config')
+    def test_train(self, mock_write_config):
         fault_detector = self._create_fault_detector(self.conf)
 
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
@@ -258,7 +258,7 @@ class TestFaultDetector(unittest.TestCase):
         mock_threshold.fit.assert_called_once()
         # saved models:
         mock_score.save.assert_called_once()
-        self.conf.write_config.assert_called_once()
+        mock_write_config.assert_called_once()
 
         model_dir = os.path.join(fault_detector.model_directory, fault_detector.save_timestamps[0])
         model_date = results.model_date
@@ -278,7 +278,7 @@ class TestFaultDetector(unittest.TestCase):
                                save_models=False)
 
         mock_score.save.assert_not_called()
-        self.assertEqual(self.conf.write_config.call_count, 1)
+        self.assertEqual(mock_write_config.call_count, 1)
 
     def test_tune(self):
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
