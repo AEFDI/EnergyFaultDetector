@@ -65,5 +65,5 @@ class TestQuickstartConfig(TestCase):
         loaded_cfg = Config(config_path)
 
         # Compare dictionaries
-        self.assertEqual(cfg.config_dict, loaded_cfg.config_dict)
+        self.assertEqual(cfg.model_dump(exclude_none=True), loaded_cfg.model_dump(exclude_none=True))
         self.assertEqual(loaded_cfg.train.data_splitter.validation_split, 0.25)
