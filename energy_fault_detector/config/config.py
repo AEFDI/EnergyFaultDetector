@@ -15,12 +15,18 @@ threshold selector, default preprocessing pipeline, sklearn data splitter with
 import logging
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, PrivateAttr, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    PrivateAttr,
+    ValidationError,
+    model_validator,
+)
 
-logger = logging.getLogger('energy_fault_detector')
+logger = logging.getLogger("energy_fault_detector")
 
 
 class InvalidConfigFile(Exception):
@@ -31,26 +37,20 @@ def _format_validation_error(exc: ValidationError) -> InvalidConfigFile:
     """Convert a Pydantic ``ValidationError`` into an :class:`InvalidConfigFile`."""
     lines = []
     for err in exc.errors():
-        loc = '.'.join(str(p) for p in err['loc'])
+        loc = ".".join(str(p) for p in err["loc"])
         lines.append(f"{loc}: {err['msg']}")
-    return InvalidConfigFile('Configuration is not valid: ' + '; '.join(lines))
-
-
-# --- Section models ----------------------------------------------------------
-# extra='allow' lets unknown keys survive at every nested level (matching the
-# former Cerberus allow_unknown=True).  DataPreprocessorConfig uses
-# extra='forbid' because its schema explicitly disallowed unknown keys.
+    return InvalidConfigFile("Configuration is not valid: " + "; ".join(lines))
 
 
 class AnomalyScoreConfig(BaseModel):
     """``train.anomaly_score`` section."""
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
-    name: str = 'rmse'
-    params: Dict[str, Any] = {}
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    name: str = "rmse"
+    params: dict[str, Any] = {}
 
-    @model_validator(mode='after')
-    def _none_params_to_empty(self) -> 'AnomalyScoreConfig':
+    @model_validator(mode="after")
+    def _none_params_to_empty(self) -> "AnomalyScoreConfig":
         if self.params is None:
             self.params = {}
         return self
@@ -63,13 +63,13 @@ class AutoencoderConfig(BaseModel):
     (includes autoencoder-specific keys like ``sequence_builder``).
     """
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
-    name: str = 'default'
-    params: Dict[str, Any] = {}
-    verbose: Optional[int] = None
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    name: str = "default"
+    params: dict[str, Any] = {}
+    verbose: int | None = None
 
-    @model_validator(mode='after')
-    def _none_params_to_empty(self) -> 'AutoencoderConfig':
+    @model_validator(mode="after")
+    def _none_params_to_empty(self) -> "AutoencoderConfig":
         if self.params is None:
             self.params = {}
         return self
@@ -85,11 +85,11 @@ class DataPreprocessorConfig(BaseModel):
     default pipeline".
     """
 
-    model_config = ConfigDict(extra='forbid', validate_assignment=True)
-    params: Optional[Dict[str, Any]] = None
-    steps: Optional[List[Dict[str, Any]]] = []
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+    params: dict[str, Any] | None = None
+    steps: list[dict[str, Any]] | None = []
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def _none_to_empty(cls, data: Any) -> Any:
         """Treat ``data_preprocessor: null`` (or missing) as an empty config."""
@@ -97,8 +97,8 @@ class DataPreprocessorConfig(BaseModel):
             return {}
         return data
 
-    @model_validator(mode='after')
-    def _convert_params_to_steps(self) -> 'DataPreprocessorConfig':
+    @model_validator(mode="after")
+    def _convert_params_to_steps(self) -> "DataPreprocessorConfig":
         if self.steps and self.params:
             warnings.warn(
                 "Both 'data_preprocessor.steps' and 'data_preprocessor.params' provided in config; "
@@ -125,13 +125,13 @@ class DataPreprocessorConfig(BaseModel):
 class ThresholdSelectorConfig(BaseModel):
     """``train.threshold_selector`` section."""
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
-    name: str = 'quantile'
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    name: str = "quantile"
     fit_on_val: bool = False
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
 
-    @model_validator(mode='after')
-    def _none_params_to_empty(self) -> 'ThresholdSelectorConfig':
+    @model_validator(mode="after")
+    def _none_params_to_empty(self) -> "ThresholdSelectorConfig":
         if self.params is None:
             self.params = {}
         return self
@@ -140,11 +140,11 @@ class ThresholdSelectorConfig(BaseModel):
 class DataClippingConfig(BaseModel):
     """``train.data_clipping`` section."""
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
-    lower_percentile: Optional[float] = None
-    upper_percentile: Optional[float] = None
-    features_to_exclude: Optional[List[str]] = None
-    features_to_clip: Optional[List[str]] = None
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    lower_percentile: float | None = None
+    upper_percentile: float | None = None
+    features_to_exclude: list[str] | None = None
+    features_to_clip: list[str] | None = None
 
 
 class DataSplitterConfig(BaseModel):
@@ -159,13 +159,19 @@ class DataSplitterConfig(BaseModel):
     set.  This enables early stopping and ``fit_on_val`` out of the box.
     """
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
-    type: Literal['DataSplitter', 'BlockDataSplitter', 'blocks', 'sklearn',
-                  'train_test_split', 'train_val_split'] = 'sklearn'
-    train_block_size: Optional[int] = None
-    val_block_size: Optional[int] = None
-    validation_split: Optional[float] = 0.1
-    shuffle: Optional[bool] = False
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    type: Literal[
+        "DataSplitter",
+        "BlockDataSplitter",
+        "blocks",
+        "sklearn",
+        "train_test_split",
+        "train_val_split",
+    ] = "sklearn"
+    train_block_size: int | None = None
+    val_block_size: int | None = None
+    validation_split: float | None = 0.1
+    shuffle: bool | None = False
 
 
 class TrainConfig(BaseModel):
@@ -175,12 +181,12 @@ class TrainConfig(BaseModel):
     configuration.
     """
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
     autoencoder: AutoencoderConfig = AutoencoderConfig()
     anomaly_score: AnomalyScoreConfig = AnomalyScoreConfig()
     data_preprocessor: DataPreprocessorConfig = DataPreprocessorConfig()
     threshold_selector: ThresholdSelectorConfig = ThresholdSelectorConfig()
-    data_clipping: Optional[DataClippingConfig] = None
+    data_clipping: DataClippingConfig | None = None
     data_splitter: DataSplitterConfig = DataSplitterConfig()
     protect_conditional_features: bool = False
 
@@ -193,39 +199,35 @@ class RootCauseAnalysisConfig(BaseModel):
     unpacking (``Arcana(**config.root_cause_analysis.params)``).
     """
 
-    model_config = ConfigDict(extra='allow', validate_assignment=True)
-    alpha: Optional[float] = None
-    init_x_bias: Optional[str] = None
-    num_iter: Optional[int] = None
-    epsilon: Optional[float] = None
-    verbose: Optional[bool] = None
-    max_sample_threshold: Optional[int] = None
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    alpha: float | None = None
+    init_x_bias: str | None = None
+    num_iter: int | None = None
+    epsilon: float | None = None
+    verbose: bool | None = None
+    max_sample_threshold: int | None = None
 
     @property
-    def params(self) -> Dict[str, Any]:
+    def params(self) -> dict[str, Any]:
         """Return all non-None RCA parameters as a dict (including extras)."""
-        result = {k: v for k, v in self.__dict__.items() if v is not None and not k.startswith('_')}
-        extra = getattr(self, '__pydantic_extra__', None)
+        result = {
+            k: v
+            for k, v in self.__dict__.items()
+            if v is not None and not k.startswith("_")
+        }
+        extra = getattr(self, "__pydantic_extra__", None)
         if extra:
             result.update({k: v for k, v in extra.items() if v is not None})
         return result
 
 
-# --- Extra validation helpers ------------------------------------------------
-
-
-def _ae_params(model: 'Config') -> Dict[str, Any]:
-    """Return the autoencoder params dict."""
-    return model.train.autoencoder.params
-
-
-def _validate_early_stopping(model: 'Config') -> None:
+def _validate_early_stopping(model: "Config") -> None:
     """Check whether early_stopping settings are consistent with the data splitter."""
-    params = _ae_params(model)
-    early_stopping = params.get('early_stopping', False)
+    params = model.train.autoencoder.params
+    early_stopping = params.get("early_stopping", False)
 
     splitter = model.train.data_splitter
-    block_types = {'DataSplitter', 'BlockDataSplitter', 'blocks'}
+    block_types = {"DataSplitter", "BlockDataSplitter", "blocks"}
 
     if splitter.type in block_types:
         val_block_size = splitter.val_block_size or 0
@@ -237,19 +239,21 @@ def _validate_early_stopping(model: 'Config') -> None:
         validation = 0 < validation_split < 1
 
     if early_stopping and not validation:
-        msg = ('Configuration is not valid: If early_stopping is enabled either validation_split or '
-               'val_block_size must be given. If validation_split is used, it must be a float >0 and <1.')
+        msg = (
+            "Configuration is not valid: If early_stopping is enabled either validation_split or "
+            "val_block_size must be given. If validation_split is used, it must be a float >0 and <1."
+        )
         raise InvalidConfigFile(msg)
 
 
-def _validate_sequence_fit_on_val(model: 'Config') -> None:
+def _validate_sequence_fit_on_val(model: "Config") -> None:
     """Warn if ``fit_on_val=True`` with a sequence model and ``shuffle=True``.
 
     Sequence models need temporally contiguous validation data.  Shuffling
     breaks that contiguity, and the sequence builder will drop windows that cross
     data gaps — potentially leaving no valid windows for threshold fitting.
     """
-    params = _ae_params(model)
+    params = model.train.autoencoder.params
     has_sequence_builder = "sequence_builder" in params
     fit_on_val = model.train.threshold_selector.fit_on_val
     shuffle = model.train.data_splitter.shuffle or False
@@ -265,10 +269,7 @@ def _validate_sequence_fit_on_val(model: 'Config') -> None:
         )
 
 
-# --- DataPreprocessor params->steps translation ------------------------------
-
-
-def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _data_preprocessor_params_to_steps(params: dict[str, Any]) -> list[dict[str, Any]]:
     """Translate old ``data_preprocessor.params`` into a ``steps`` specification.
 
     Args:
@@ -285,61 +286,71 @@ def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str,
     """
 
     p = params or {}
-    steps: List[Dict[str, Any]] = []
+    steps: list[dict[str, Any]] = []
 
     # 0. DuplicateValuesToNan
     if p.get("include_duplicate_value_to_nan", False):
-        steps.append({
-            "name": "duplicate_to_nan",
-            "params": {
-                "value_to_replace": p.get("value_to_replace", 0),
-                "n_max_duplicates": p.get("n_max_duplicates", 144),
-                "features_to_exclude": p.get("duplicate_features_to_exclude"),
-            },
-        })
+        steps.append(
+            {
+                "name": "duplicate_to_nan",
+                "params": {
+                    "value_to_replace": p.get("value_to_replace", 0),
+                    "n_max_duplicates": p.get("n_max_duplicates", 144),
+                    "features_to_exclude": p.get("duplicate_features_to_exclude"),
+                },
+            }
+        )
 
     # 1. CounterDiffTransformer
     counter_cols = p.get("counter_columns_to_transform", []) or []
     if counter_cols:
-        steps.append({
-            "name": "counter_diff_transformer",
-            "params": {
-                "counters": counter_cols,
-                "compute_rate": False,
-                "reset_strategy": "zero",
-            },
-        })
+        steps.append(
+            {
+                "name": "counter_diff_transformer",
+                "params": {
+                    "counters": counter_cols,
+                    "compute_rate": False,
+                    "reset_strategy": "zero",
+                },
+            }
+        )
 
     # 2. ColumnSelector
     if p.get("include_column_selector", True):
-        steps.append({
-            "name": "column_selector",
-            "params": {
-                "max_nan_frac_per_col": p.get("max_nan_frac_per_col", 0.05),
-                "features_to_exclude": p.get("features_to_exclude"),
-            },
-        })
+        steps.append(
+            {
+                "name": "column_selector",
+                "params": {
+                    "max_nan_frac_per_col": p.get("max_nan_frac_per_col", 0.05),
+                    "features_to_exclude": p.get("features_to_exclude"),
+                },
+            }
+        )
 
     # 3. LowUniqueValueFilter
     if p.get("include_low_unique_value_filter", True):
-        steps.append({
-            "name": "low_unique_value_filter",
-            "params": {
-                "min_unique_value_count": p.get("min_unique_value_count", 2),
-                "max_col_zero_frac": p.get("max_col_zero_frac", 1.0),
-            },
-        })
+        steps.append(
+            {
+                "name": "low_unique_value_filter",
+                "params": {
+                    "min_unique_value_count": p.get("min_unique_value_count", 2),
+                    "max_col_zero_frac": p.get("max_col_zero_frac", 1.0),
+                },
+            }
+        )
 
     # 4. AngleTransformer
     angles = p.get("angles", []) or []
     if angles:
-        steps.append({
-            "name": "angle_transformer",
-            "params": {"angles": angles},
-        })
+        steps.append(
+            {
+                "name": "angle_transformer",
+                "params": {"angles": angles},
+            }
+        )
 
     # 5. SimpleImputer
-    imputer_params: Dict[str, Any] = {"strategy": p.get("imputer_strategy", "mean")}
+    imputer_params: dict[str, Any] = {"strategy": p.get("imputer_strategy", "mean")}
     if imputer_params["strategy"] == "constant":
         imputer_params["fill_value"] = p.get("imputer_fill_value", None)
     steps.append({"name": "simple_imputer", "params": imputer_params})
@@ -347,14 +358,23 @@ def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str,
     # 6. Scaler
     scale = p.get("scale", "standardize")
     if scale in ["standardize", "standard", "standardscaler"]:
-        steps.append({"name": "scaler", "step_name": "scaler", "params": {"scaler_type": "standard"}})
+        steps.append(
+            {
+                "name": "scaler",
+                "step_name": "scaler",
+                "params": {"scaler_type": "standard"},
+            }
+        )
     else:
-        steps.append({"name": "scaler", "step_name": "scaler", "params": {"scaler_type": "minmax"}})
+        steps.append(
+            {
+                "name": "scaler",
+                "step_name": "scaler",
+                "params": {"scaler_type": "minmax"},
+            }
+        )
 
     return steps
-
-
-# --- Config (top-level model) ------------------------------------------------
 
 
 class Config(BaseModel):
@@ -390,37 +410,43 @@ class Config(BaseModel):
             a dict as the first positional argument).
     """
 
-    model_config = ConfigDict(extra='ignore', validate_default=True, validate_assignment=True)
+    model_config = ConfigDict(
+        extra="ignore", validate_default=True, validate_assignment=True
+    )
     train: TrainConfig = TrainConfig()
-    root_cause_analysis: Optional[RootCauseAnalysisConfig] = None
-    dtype: Literal['float32', 'float64'] = 'float32'
+    root_cause_analysis: RootCauseAnalysisConfig | None = None
+    dtype: Literal["float32", "float64"] = "float32"
 
-    _configuration_file: Optional[str] = PrivateAttr(default=None)
+    _configuration_file: str | None = PrivateAttr(default=None)
 
-    @model_validator(mode='after')
-    def _run_extra_checks(self) -> 'Config':
+    @model_validator(mode="after")
+    def _run_extra_checks(self) -> "Config":
         """Run post-validation checks."""
         _validate_early_stopping(self)
         _validate_sequence_fit_on_val(self)
         return self
 
-    def __init__(self, config_filename: str | Path | Dict[str, Any] = None,
-                 config_dict: Dict[str, Any] = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        config_filename: str | Path | dict[str, Any] | None = None,
+        config_dict: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         if isinstance(config_filename, dict):
             config_dict = config_filename
             config_filename = None
 
         if config_filename is not None:
-            with open(config_filename, 'r', encoding='utf-8') as f:
+            with open(config_filename, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
             if data is None:
-                raise InvalidConfigFile('The configuration file is empty!')
+                raise InvalidConfigFile("The configuration file is empty!")
             self._log_unknown_keys(data)
             try:
                 super().__init__(**data)
             except ValidationError as exc:
                 raise _format_validation_error(exc) from exc
-            object.__setattr__(self, '_configuration_file', str(config_filename))
+            object.__setattr__(self, "_configuration_file", str(config_filename))
         elif config_dict is not None:
             self._log_unknown_keys(config_dict)
             try:
@@ -436,15 +462,15 @@ class Config(BaseModel):
             known_keys = set(Config.model_fields.keys())
             for key in list(data.keys()):
                 if key not in known_keys:
-                    logger.info('Key `%s` is an unknown field and will be ignored.', key)
+                    logger.info(
+                        "Key `%s` is an unknown field and will be ignored.", key
+                    )
 
     def __repr__(self) -> str:
         return repr(self.model_dump(exclude_none=True))
 
-    # --- serialization --------------------------------------------------------
-
     @property
-    def config_dict(self) -> Dict[str, Any]:
+    def config_dict(self) -> dict[str, Any]:
         """Return a plain dictionary representation of the config.
 
         .. deprecated::
@@ -459,9 +485,9 @@ class Config(BaseModel):
         )
         return self.model_dump(exclude_none=True)
 
-    # --- write / save --------------------------------------------------------
-
-    def write_config(self, file_name: Optional[str] = None, overwrite: bool = False) -> None:
+    def write_config(
+        self, file_name: str | None = None, overwrite: bool = False
+    ) -> None:
         """Write the configuration to a YAML file.
 
         Args:
@@ -470,15 +496,19 @@ class Config(BaseModel):
                 already exists.
         """
         if file_name is None and self._configuration_file is None:
-            raise ValueError('No file name given and no known configuration file to overwrite.')
+            raise ValueError(
+                "No file name given and no known configuration file to overwrite."
+            )
 
         file_name = file_name if file_name is not None else self._configuration_file
         if Path(file_name).exists() and not overwrite:
-            raise FileExistsError(f'File {file_name} already exists and overwrite is set to False.')
+            raise FileExistsError(
+                f"File {file_name} already exists and overwrite is set to False."
+            )
 
         conf_dict = self.model_dump(exclude_none=True)
 
-        with open(file_name, 'w', encoding='utf-8') as f:
+        with open(file_name, "w", encoding="utf-8") as f:
             yaml.safe_dump(conf_dict, f)
 
     def save(self, file_name: str, overwrite: bool = False) -> None:
