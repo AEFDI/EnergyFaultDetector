@@ -18,7 +18,7 @@ class TestConfig(unittest.TestCase):
 
     def test_init(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config.yaml'))
-        self.assertDictEqual(conf.config_dict['train'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train'], {
             'anomaly_score': {'name': 'mahalanobis',
                               'params': {'pca': True, 'pca_min_var': 0.85}},
             'data_preprocessor': {'steps': []},
@@ -33,15 +33,15 @@ class TestConfig(unittest.TestCase):
                                        'epochs': 10,
                                        'loss_name': 'mean_squared_error'}},
             'threshold_selector': {'name': 'FDR',
-                                   'params': {'target_false_discovery_rate': 0.8},
-                                   'fit_on_val': False},
+                                    'params': {'target_false_discovery_rate': 0.8},
+                                    'fit_on_val': False},
             'data_splitter': {'type': 'BlockDataSplitter',
                               'train_block_size': 7, 'val_block_size': 3,
                               'validation_split': 0.1, 'shuffle': False},
             'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99},
             'protect_conditional_features': False,
         })
-        self.assertDictEqual(conf.config_dict['root_cause_analysis'],
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['root_cause_analysis'],
                              {'alpha': 0.8,
                               'init_x_bias': 'recon',
                               'num_iter': 200}
@@ -60,7 +60,7 @@ class TestConfig(unittest.TestCase):
 
     def test_early_stopping_val_split_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_early_stopping_val_split_config.yaml'))
-        self.assertDictEqual(conf.config_dict['train']['autoencoder']['params'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['autoencoder']['params'], {
             'layers': [300],
             'code_size': 50,
             'learning_rate': 0.001,
@@ -73,7 +73,7 @@ class TestConfig(unittest.TestCase):
             'epochs': 100,
             'loss_name': 'mean_squared_error'
         })
-        self.assertDictEqual(conf.config_dict['train']['data_splitter'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['data_splitter'], {
             'type': 'sklearn',
             'shuffle': True,
             'validation_split': 0.25
@@ -81,7 +81,7 @@ class TestConfig(unittest.TestCase):
 
     def test_early_stopping_val_block_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_early_stopping_val_block_config.yaml'))
-        self.assertDictEqual(conf.config_dict['train']['autoencoder']['params'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['autoencoder']['params'], {
             'layers': [300],
             'code_size': 50,
             'learning_rate': 0.001,
@@ -94,7 +94,7 @@ class TestConfig(unittest.TestCase):
             'epochs': 100,
             'loss_name': 'mean_squared_error'
         })
-        self.assertDictEqual(conf.config_dict['train']['data_splitter'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['data_splitter'], {
             'type': 'DataSplitter',
             'train_block_size': 7,
             'val_block_size': 3,

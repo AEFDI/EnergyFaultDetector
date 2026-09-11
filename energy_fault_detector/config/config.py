@@ -36,43 +36,6 @@ def _format_validation_error(exc: ValidationError) -> InvalidConfigFile:
     return InvalidConfigFile('Configuration is not valid: ' + '; '.join(lines))
 
 
-def _dump_value(value: Any) -> Any:
-    """Recursively dump nested models/lists; plain dicts/lists are kept as-is."""
-    if isinstance(value, BaseModel):
-        return _model_to_config_dict(value)
-    if isinstance(value, list):
-        return [_dump_value(item) for item in value]
-    return value
-
-
-def _model_to_config_dict(model: BaseModel) -> Dict[str, Any]:
-    """Serialize a validated Pydantic model back to a plain configuration dict.
-
-      * fields that are *required* (no default) are always included, even when
-        their value is ``None``;
-      * fields that are *optional* (have a default) are included only when their
-        value is not ``None`` (falsy defaults such as ``False`` are kept because
-        ``False is not None``);
-      * unknown fields kept via ``extra='allow'`` are merged back in.
-
-    Args:
-        model: The validated configuration model.
-
-    Returns:
-        Plain (mutable) dictionary representation.
-    """
-    result: Dict[str, Any] = {}
-    for name, field in type(model).model_fields.items():
-        value = getattr(model, name)
-        if not field.is_required() and value is None:
-            continue
-        result[name] = _dump_value(value)
-    extra = getattr(model, '__pydantic_extra__', None)
-    if extra:
-        result.update(extra)
-    return result
-
-
 # --- Section models ----------------------------------------------------------
 # extra='allow' lets unknown keys survive at every nested level (matching the
 # former Cerberus allow_unknown=True).  DataPreprocessorConfig uses
@@ -476,21 +439,25 @@ class Config(BaseModel):
                     logger.info('Key `%s` is an unknown field and will be ignored.', key)
 
     def __repr__(self) -> str:
-        return self.config_dict.__repr__()
+        return repr(self.model_dump(exclude_none=True))
 
     # --- serialization --------------------------------------------------------
 
     @property
     def config_dict(self) -> Dict[str, Any]:
-        """Return a plain (mutable) dictionary representation of the config.
+        """Return a plain dictionary representation of the config.
 
-        The dict is rebuilt from the underlying Pydantic model on every call, so
-        it always reflects the current model state.  Leaf dicts (``params``,
-        ``steps``) are the same mutable objects stored on the model, so
-        in-place mutations (``config.train.autoencoder.params.update(...)``)
-        persist.
+        .. deprecated::
+            Use :meth:`model_dump` (Pydantic's built-in) or direct attribute
+            access instead.
         """
-        return _model_to_config_dict(self)
+        warnings.warn(
+            "Config.config_dict is deprecated; use Config.model_dump() or "
+            "direct attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.model_dump(exclude_none=True)
 
     # --- write / save --------------------------------------------------------
 
@@ -502,8 +469,6 @@ class Config(BaseModel):
             overwrite: If ``False``, raises :class:`FileExistsError` when the file
                 already exists.
         """
-        from copy import deepcopy
-
         if file_name is None and self._configuration_file is None:
             raise ValueError('No file name given and no known configuration file to overwrite.')
 
@@ -511,7 +476,7 @@ class Config(BaseModel):
         if Path(file_name).exists() and not overwrite:
             raise FileExistsError(f'File {file_name} already exists and overwrite is set to False.')
 
-        conf_dict = deepcopy(self.config_dict)
+        conf_dict = self.model_dump(exclude_none=True)
 
         with open(file_name, 'w', encoding='utf-8') as f:
             yaml.safe_dump(conf_dict, f)
