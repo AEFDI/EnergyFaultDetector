@@ -24,11 +24,11 @@ Throughout this documentation we use the following objects and conventions.
     predicted anomalies.
 
 * Configuration: :class:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` behaviour
-  is controlled via a YAML configuration parsed by :class:`Config <energy_fault_detector.config.config.Config>`.
-  For most users, the easiest entry point is
-  :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`,
-  which returns a minimal, valid configuration. For more control, you can provide your own YAML file; see
-  :doc:`configuration` for examples.
+  is controlled via a :class:`Config <energy_fault_detector.config.config.Config>` object.
+  ``Config()`` with no arguments produces a ready-to-use default configuration; for custom
+  preprocessing (angle columns, scaler, etc.) use
+  :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`.
+  See :doc:`configuration` for details.
 
 * ``sensor_data``: a :class:`pandas.DataFrame` in **wide format**.
   Each row is a timestamp (or index entry), each column a sensor or feature.
@@ -61,7 +61,6 @@ create a configuration, train a model and predict.
 
     import pandas as pd
     from energy_fault_detector import FaultDetector, Config
-    from energy_fault_detector.config import generate_quickstart_config
 
     # 1. Load your data
     df = pd.read_csv("my_data.csv", parse_dates=["timestamp"], index_col="timestamp")
@@ -73,9 +72,8 @@ create a configuration, train a model and predict.
     # This is optional; if omitted, all data is treated as normal
     normal_index = df["status"] == "normal"
 
-    # 2. Generate and load a base config
-    generate_quickstart_config(output_path="base_config.yaml")
-    config = Config("base_config.yaml")
+    # 2. Create a default configuration
+    config = Config()  # MultilayerAutoencoder, RMSE score, quantile threshold, default preprocessing
 
     # 3. Train a normal-behavior model
     fault_detector = FaultDetector(config=config, model_directory="fault_detector_model")
@@ -186,7 +184,7 @@ Configuration
 ^^^^^^^^^^^^^
 
 The behaviour of the :py:class:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>`
-is controlled by a YAML configuration, parsed by :py:class:`Config <energy_fault_detector.config.config.Config>`.
+is controlled by a :py:class:`Config <energy_fault_detector.config.config.Config>` object (a Pydantic model).
 The config typically has:
 
 - a ``train`` section:
@@ -198,19 +196,22 @@ The config typically has:
   - optional ``data_clipping``: outlier clipping on training data only.
 - an optional ``root_cause_analysis`` section for ARCANA.
 
-For most users, the easiest way to create a valid configuration is via :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
+``Config()`` with no arguments produces a ready-to-use default configuration.
+For custom preprocessing (angle columns, scaler, etc.) or to generate a YAML file, use
+:func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
 
 .. code-block:: python
 
-   from energy_fault_detector.config.quickstart_config import generate_quickstart_config
+   from energy_fault_detector import FaultDetector
    from energy_fault_detector.config import Config
+   from energy_fault_detector.config import generate_quickstart_config
 
-   # Create a minimal, valid config file
-   generate_quickstart_config(output_path="base_config.yaml")
+   # Simplest: use defaults
+   config = Config()
+   fd = FaultDetector(config=config)
 
-   # Load and use it
-   cfg = Config("base_config.yaml")
-   fd = FaultDetector(config=cfg)
+   # Or generate a config with custom preprocessing and save to YAML:
+   config = generate_quickstart_config(angle_columns=["wind_dir"], output_path="base_config.yaml")
 
 If you prefer to write the YAML yourself or need more control, see the :ref:`Configuration guide <configuration_guide>`
 for a full reference and examples.
