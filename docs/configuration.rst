@@ -30,11 +30,19 @@ This setup:
 - Runs ARCANA with provided parameters when calling :py:obj:`FaultDetector.predict(..., root_cause_analysis=True) <energy_fault_detector.fault_detector.FaultDetector.predict>`.
   If not provided, default ARCANA parameters are used (see :py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`).
 
-If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor: {}``), a default preprocessing pipeline
+If you leave out the ``data_preprocessor`` section entirely (or set it to ``null``), a default preprocessing pipeline
 is generated, which drops constant and binary features, features where >5% of the data is missing, imputes remaining
 missing values with the mean value and scales the data to zero mean and unit standard deviation.
 
-You can also generate this kind of configuration programmatically using
+The simplest way to get started is ``Config()`` with no arguments, which uses all defaults:
+
+.. code-block:: python
+
+   from energy_fault_detector.config import Config
+
+   config = Config()  # ready-to-use defaults
+
+For custom preprocessing (angle columns, scaler, etc.) or to generate a YAML file, use
 :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
 
 .. code-block:: python
