@@ -79,8 +79,8 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         self.assertEqual(original_threshold_params, loaded_threshold_params)
 
         # Check the configuration
-        self.assertDictEqual(self.fault_detector.config.config_dict,
-                             loaded_fault_detector.config.config_dict)
+        self.assertDictEqual(self.fault_detector.config.model_dump(exclude_none=True),
+                             loaded_fault_detector.config.model_dump(exclude_none=True))
 
         # Check path when overwrite = True
         results = self.fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index,
@@ -445,7 +445,7 @@ class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
             np.testing.assert_allclose(a, b, atol=1e-6)
 
         # Config should round-trip as well
-        self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
+        self.assertDictEqual(fd.config.model_dump(exclude_none=True), fd2.config.model_dump(exclude_none=True))
 
 
 class TestFaultDetectorBidirectionalSequenceSaveLoad(unittest.TestCase):
@@ -496,7 +496,7 @@ class TestFaultDetectorBidirectionalSequenceSaveLoad(unittest.TestCase):
         for a, b in zip(w1, w2):
             np.testing.assert_allclose(a, b, atol=1e-6)
 
-        self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
+        self.assertDictEqual(fd.config.model_dump(exclude_none=True), fd2.config.model_dump(exclude_none=True))
 
 
 class TestAutoencoderGetReconstructionError(unittest.TestCase):

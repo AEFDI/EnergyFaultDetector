@@ -87,7 +87,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
         Returns:
             MSE of the reconstruction on validation data.
         """
-        trial_config_dict = deepcopy(config.config_dict)  # make a copy of the config object, so we do not mutate the original config
+        trial_config_dict = deepcopy(config.model_dump(exclude_none=True))  # make a copy of the config object, so we do not mutate the original config
         params = trial_config_dict['train']['autoencoder']['params']
 
         # sample new parameters
@@ -137,7 +137,7 @@ def automatic_hyper_opt(config: Config, train_data: pd.DataFrame, normal_index: 
                             study_name='autoencoder_optimization',
                             direction='minimize')
 
-    autoencoder_params = config.config_dict['train']['autoencoder']['params']
+    autoencoder_params = config.train.autoencoder.params
     study.enqueue_trial(params={
         'batch_size': autoencoder_params['batch_size'],
         'learning_rate': autoencoder_params['learning_rate'],
