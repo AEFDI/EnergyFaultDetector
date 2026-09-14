@@ -325,5 +325,31 @@ class TestImputer(unittest.TestCase):
         self.assertEqual(result.shape, self.data_only_categorical.shape)
         self.assertFalse(result.isna().any().any())
 
+    def test_transform_zero_rows_preserves_columns(self):
+        """Regression for EFD 0.7.0 Bug 1 pattern: a 0-row DataFrame must still
+        produce the correct output column schema. The old 'not numerical_data.empty'
+        check skipped SimpleImputer.transform() on 0 rows, producing a 0-column
+        DataFrame that relied on a downstream reindex to recover the columns."""
+        imputer = Imputer(categorical_features=['status', 'region'])
+        imputer.fit(self.data_mixed)
+
+        empty_df = pd.DataFrame(columns=self.data_mixed.columns, index=pd.DatetimeIndex([]))
+        result = imputer.transform(empty_df)
+
+        self.assertEqual(result.shape[0], 0)
+        self.assertListEqual(list(result.columns), imputer.get_feature_names_out())
+
+    def test_transform_zero_rows_numerical_only_preserves_columns(self):
+        """Regression for EFD 0.7.0 Bug 1 pattern (numerical-only): 0-row input
+        must preserve the numerical column schema."""
+        imputer = Imputer()
+        imputer.fit(self.data_numerical)
+
+        empty_df = pd.DataFrame(columns=self.data_numerical.columns, index=pd.DatetimeIndex([]))
+        result = imputer.transform(empty_df)
+
+        self.assertEqual(result.shape[0], 0)
+        self.assertListEqual(list(result.columns), ['temperature', 'humidity', 'pressure'])
+
 if __name__ == '__main__':
     unittest.main()
