@@ -68,6 +68,7 @@ class ForwardFillImputer(DataTransformer):
         self.numerical_columns: List[str] = []
         self.categorical_columns: List[str] = []
         self.non_declared_categorical_features: List[str] = []
+        self._fallback_values: dict = {}
 
     def fit(self, x: pd.DataFrame, y: Optional[pd.Series] = None) -> "ForwardFillImputer":
         """Fits the imputer to the input data by identifying feature types and storing metadata.
@@ -130,7 +131,6 @@ class ForwardFillImputer(DataTransformer):
         # column that becomes entirely NaN (e.g. a column missing from inference data) can be
         # filled with its training mean (numerical) / most-frequent value (categorical) instead
         # of causing dropna(how="any") to drop every row.
-        self._fallback_values = {}
         if self.numerical_columns or self.categorical_columns:
             fallback = Imputer(categorical_features=self.categorical_columns)
             cols = self.numerical_columns + self.categorical_columns
