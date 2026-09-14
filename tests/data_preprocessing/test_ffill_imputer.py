@@ -276,6 +276,59 @@ class TestForwardFillImputer(unittest.TestCase):
         self.assertListEqual(list(result.columns), ['value1'])
         self.assertEqual(result.shape[0], 3)
 
+    def test_transform_column_becomes_all_nan_keeps_rows(self):
+        """Regression for EFD 0.7.0 Bug 2: a tracked column that becomes entirely NaN
+        during transform (e.g. a column missing from inference data and filled with NaN)
+        must be filled with its training mean rather than causing dropna(how='any') to
+        drop every row. Categorical columns are filled with their training mode."""
+        df_train = pd.DataFrame(
+            {"temp": [20.0, 21.0, 22.0], "extra": [1.0, 2.0, 3.0]},
+            index=pd.date_range("2024-01-01", periods=3, freq="1h"),
+        )
+        imputer = ForwardFillImputer(ffill_limit="1h")
+        imputer.fit(df_train)
+
+        expected_extra_mean = df_train["extra"].mean()  # 2.0
+
+        # 'extra' is entirely NaN during inference (no valid value to forward-fill).
+        df_infer = pd.DataFrame(
+            {"temp": [20.0, 21.0, 22.0], "extra": [np.nan, np.nan, np.nan]},
+            index=pd.date_range("2024-02-01", periods=3, freq="1h"),
+        )
+        result = imputer.transform(df_infer)
+
+        # All rows must be retained; none should be dropped because 'extra' was all-NaN.
+        self.assertEqual(result.shape[0], 3)
+        self.assertListEqual(list(result.columns), ['temp', 'extra'])
+        # 'extra' should be filled with the training mean and hold no NaNs.
+        self.assertFalse(result['extra'].isna().any())
+        self.assertTrue((result['extra'] == expected_extra_mean).all())
+
+    def test_transform_categorical_column_becomes_all_nan_filled_with_mode(self):
+        """Regression for EFD 0.7.0 Bug 2 (categorical): a categorical column that becomes
+        entirely NaN during transform is filled with its training most-frequent value
+        via the package Imputer, keeping all rows."""
+        df_train = pd.DataFrame(
+            {"temp": [20.0, 21.0, 22.0],
+             "status": ["A", "A", "B"]},
+            index=pd.date_range("2024-01-01", periods=3, freq="1h"),
+        )
+        imputer = ForwardFillImputer(ffill_limit="1h", categorical_features=["status"])
+        imputer.fit(df_train)
+
+        # 'status' is entirely NaN during inference.
+        df_infer = pd.DataFrame(
+            {"temp": [20.0, 21.0, 22.0],
+             "status": [np.nan, np.nan, np.nan]},
+            index=pd.date_range("2024-02-01", periods=3, freq="1h"),
+        )
+        result = imputer.transform(df_infer)
+
+        self.assertEqual(result.shape[0], 3)
+        self.assertFalse(result['status'].isna().any())
+        # Most-frequent training value for 'status' is 'A'.
+        self.assertTrue((result['status'] == "A").all())
+
     def test_numerical_conversion_error(self):
         """Test error handling for non-convertible numerical columns."""
 
