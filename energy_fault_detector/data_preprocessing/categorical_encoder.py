@@ -105,7 +105,7 @@ class CategoricalEncoder(DataTransformer):
         numerical_data = x[self.numerical_columns]
         categorical_data = x[self.categorical_columns]
 
-        if not categorical_data.empty:
+        if self.categorical_columns and len(categorical_data) > 0:
             for i, col in enumerate(self.categorical_columns):
                 fitted_cats = set(self.one_hot_encoder.categories_[i])
                 current_cats = set(categorical_data[col].dropna().unique())
@@ -121,6 +121,12 @@ class CategoricalEncoder(DataTransformer):
             self.feature_names_out_ = self.get_feature_names_out(self.feature_names_in_)
             transformed_data = pd.DataFrame(x_, columns=self.feature_names_out_, index=x.index)
             return transformed_data
+        elif self.categorical_columns:
+            # 0 rows but categorical columns exist — produce empty output with the correct
+            # one-hot encoded columns. OneHotEncoder.transform() raises on 0-row input,
+            # so the result is built manually to keep the column schema stable.
+            self.feature_names_out_ = self.get_feature_names_out(self.feature_names_in_)
+            return pd.DataFrame(columns=self.feature_names_out_, index=x.index)
         else:
             return numerical_data  # Returns input df if no categorical features are specified in config file
 
