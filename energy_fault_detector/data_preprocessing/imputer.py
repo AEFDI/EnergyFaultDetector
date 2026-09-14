@@ -127,9 +127,9 @@ class Imputer(DataTransformer):
         logger.debug(f"Categorical columns: {self.categorical_columns}")
 
         # Fit the imputers
-        if not numerical_data.empty:
+        if self.numerical_columns:
             self.numerical_imputer.fit(numerical_data)
-        if not categorical_data.empty:
+        if self.categorical_columns:
             self.categorical_imputer.fit(categorical_data)
 
         return self
@@ -173,19 +173,29 @@ class Imputer(DataTransformer):
         categorical_data = x.loc[:, self.categorical_columns]
 
         # Transform the data
-        if not numerical_data.empty:
+        if self.numerical_columns and len(numerical_data) > 0:
             numerical_transformed = pd.DataFrame(
                 self.numerical_imputer.transform(numerical_data),
                 columns=self.numerical_columns,
                 index=x.index
             )
+        elif self.numerical_columns:
+            # 0 rows — SimpleImputer.transform() raises on 0-sample input, so build
+            # the output manually to keep the column schema stable.
+            numerical_transformed = pd.DataFrame(
+                columns=self.numerical_columns, index=x.index
+            )
         else:
             numerical_transformed = pd.DataFrame(index=x.index)
-        if not categorical_data.empty:
+        if self.categorical_columns and len(categorical_data) > 0:
             categorical_transformed = pd.DataFrame(
                 self.categorical_imputer.transform(categorical_data),
                 columns=self.categorical_columns,
                 index=x.index
+            )
+        elif self.categorical_columns:
+            categorical_transformed = pd.DataFrame(
+                columns=self.categorical_columns, index=x.index
             )
         else:
             categorical_transformed = pd.DataFrame(index=x.index)  # Empty DataFrame for consistency
