@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.data_transformer import DataTransformer
+from energy_fault_detector.data_preprocessing.imputer import Imputer
 
 logger = logging.getLogger('energy_fault_detector')
 
@@ -125,6 +126,22 @@ class ForwardFillImputer(DataTransformer):
             self.numerical_columns = [col for col in self.numerical_columns if col not in all_nan_cols]
             self.categorical_columns = [col for col in self.categorical_columns if col not in all_nan_cols]
 
+        # Fit a fallback Imputer on the surviving columns so that, during transform, any
+        # column that becomes entirely NaN (e.g. a column missing from inference data) can be
+        # filled with its training mean (numerical) / most-frequent value (categorical) instead
+        # of causing dropna(how="any") to drop every row.
+        self._fallback_values = {}
+        if self.numerical_columns or self.categorical_columns:
+            fallback = Imputer(categorical_features=self.categorical_columns)
+            cols = self.numerical_columns + self.categorical_columns
+            fallback.fit(x[cols])
+            for col, stat in zip(fallback.numerical_columns,
+                                 getattr(fallback.numerical_imputer, "statistics_", [])):
+                self._fallback_values[col] = stat
+            for col, stat in zip(fallback.categorical_columns,
+                                 getattr(fallback.categorical_imputer, "statistics_", [])):
+                self._fallback_values[col] = stat
+
         return self
 
     def transform(self, x: pd.DataFrame) -> pd.DataFrame:
@@ -197,6 +214,16 @@ class ForwardFillImputer(DataTransformer):
             invalid = nan_mask & (elapsed > self.ffill_limit_)
             filled[invalid] = np.nan
             df_filled[col] = filled
+
+        all_nan_after_ffill = [col for col in df_filled.columns if df_filled[col].isna().all()]
+        if all_nan_after_ffill:
+            logger.warning(
+                f"Columns entirely NaN after forward-fill during transform: {all_nan_after_ffill}. "
+                f"Filling with training mean/mode to prevent dropping all rows. "
+                f"These columns had valid data during fit."
+            )
+            for col in all_nan_after_ffill:
+                df_filled[col] = self._fallback_values.get(col, 0.0)
 
         df_cleaned = df_filled.drop_duplicates(keep="first")
         df_final = df_cleaned.dropna(how="any")
