@@ -194,6 +194,29 @@ class TestCategoricalEncoder(unittest.TestCase):
         result = encoder.transform(empty_df)
         
         self.assertEqual(result.shape[0], 0)
+        # Regression for EFD 0.7.0 Bug 1: a 0-row DataFrame must still produce the
+        # full one-hot encoded column schema, not just the numerical columns.
+        self.assertListEqual(list(result.columns), encoder.get_feature_names_out())
+        for col in self.data_clean_encoded_features:
+            self.assertIn(col, result.columns)
+
+    def test_transform_zero_rows_preserves_one_hot_columns(self):
+        """Regression for EFD 0.7.0 Bug 1: a 0-row DataFrame must still yield the
+        full one-hot encoded column schema so downstream pipeline steps don't hit
+        a column-length mismatch (ValueError from sklearn _set_output wrapper)."""
+        encoder = CategoricalEncoder(categorical_features=['category', 'region'])
+        encoder.fit(self.data_clean)
+
+        empty_df = pd.DataFrame(columns=self.data_clean.columns, index=pd.DatetimeIndex([]))
+        result = encoder.transform(empty_df)
+
+        # Must contain the one-hot encoded columns, not just the 2 numerical ones.
+        self.assertEqual(result.shape[0], 0)
+        self.assertEqual(result.shape[1], len(encoder.get_feature_names_out()))
+        self.assertListEqual(list(result.columns), encoder.get_feature_names_out())
+        self.assertIn('category_A', result.columns)
+        self.assertIn('region_North', result.columns)
+        self.assertNotEqual(result.shape[1], len(encoder.numerical_columns))
 
     def test_transform_preserves_index_type(self):
         """Test that index type is preserved after transformation."""
