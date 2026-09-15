@@ -1,0 +1,7 @@
+data\_preprocessing.ffill\_imputer
+==================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.ffill_imputer
+   :members:
+   :show-inheritance:
+   :undoc-members:

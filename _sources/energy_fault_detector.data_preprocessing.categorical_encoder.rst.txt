@@ -1,0 +1,7 @@
+data\_preprocessing.categorical\_encoder
+========================================
+
+.. automodule:: energy_fault_detector.data_preprocessing.categorical_encoder
+   :members:
+   :show-inheritance:
+   :undoc-members:

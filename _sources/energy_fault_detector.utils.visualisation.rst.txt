@@ -1,0 +1,7 @@
+utils.visualisation
+===================
+
+.. automodule:: energy_fault_detector.utils.visualisation
+   :members:
+   :show-inheritance:
+   :undoc-members:
