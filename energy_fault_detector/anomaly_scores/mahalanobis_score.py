@@ -1,4 +1,5 @@
 
+import warnings
 from typing import Optional, Union
 
 import numpy as np
@@ -11,16 +12,21 @@ from energy_fault_detector.core.anomaly_score import AnomalyScore
 
 DataType = Union[pd.DataFrame, np.ndarray]
 
+# Sentinel used to detect whether the deprecated `scale` parameter was passed explicitly.
+_DEPRECATED = object()
+
 
 class MahalanobisScore(AnomalyScore):
     """Calculate mahalanobis scores using sklearn MinCovDet und optionally a PCA to accelerate calculations.
+
+    .. deprecated::
+        The ``scale`` parameter no longer has any effect and is only accepted for backwards compatibility.
+        Reconstruction errors are always standardized. It will be removed in a future version.
 
     Args:
         pca: boolean to indicate whether PCA should be done before determining the covariance. Default true.
         pca_min_var: parameter for PCA, variance to keep. Default 0.9
         mcd_support_fraction: parameter for Minimum Covariance Determinant estimation. Default 0.9
-        scale: If True, std of the training/fit reconstruction errors will be used to scale recon
-            errors before applying MinCovDet. Default: False
 
 
     Configuration example:
@@ -34,17 +40,24 @@ class MahalanobisScore(AnomalyScore):
               pca: True
               pca_min_var: 0.9
               mcd_support_fraction: 0.9
-              scale: False
     """
 
     def __init__(self, pca: bool = True, pca_min_var: float = 0.9, mcd_support_fraction: float = 0.9,
-                 scale: bool = False):
+                 scale: bool = _DEPRECATED):
         super().__init__()
 
         self.pca: bool = pca
         self.pca_min_var = pca_min_var
         self.mcd_support_fraction = mcd_support_fraction
-        self.scale = scale
+        if scale is not _DEPRECATED:
+            warnings.warn(
+                "The 'scale' parameter of MahalanobisScore is deprecated and no longer has any effect. "
+                "It will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        # `scale` is kept as an attribute for backwards compatibility but no longer influences the behaviour.
+        self.scale = True
 
         # fitted attributes need trailing underscore
         self.pca_object: PCA = PCA(n_components=self.pca_min_var)
@@ -60,17 +73,8 @@ class MahalanobisScore(AnomalyScore):
             y (optional): not used, labels indicating whether sample is normal (True) or anomalous (False).
         """
         self.mean_x_: np.array = np.mean(x, axis=0)
-        if self.scale:
-            self.std_x_: np.array = np.std(x, axis=0)
-            # standardization of the reconstruction error in X
-            if np.all(self.std_x_ > 0):
-                scaled_x = (x - self.mean_x_) / self.std_x_
-            else:
-                scaled_x = x - self.mean_x_
-            # replace possible inf values with 0
-            scaled_x[np.isinf(scaled_x)] = 0
-        else:
-            scaled_x = x - self.mean_x_
+        self.std_x_: np.array = np.std(x, axis=0)
+        scaled_x = self.standardize(x)
 
         # Covariance estimation
         if self.pca:
@@ -83,6 +87,19 @@ class MahalanobisScore(AnomalyScore):
 
         return self
 
+    def standardize(self, x: DataType):
+        """Standardization of the reconstruction error in x"""
+
+        check_is_fitted(self)
+        x_ = x.copy()
+        if np.all(self.std_x_ > 0):
+            x_ = (x - self.mean_x_) / self.std_x_
+        else:
+            x_ = x - self.mean_x_
+        # replace possible inf values with 0
+        x_[np.isinf(x_)] = 0
+        return x_
+
     def transform(self, x: DataType) -> pd.Series:
         """Calculate Mahalanobis distance from x.
 
@@ -94,16 +111,7 @@ class MahalanobisScore(AnomalyScore):
         """
         check_is_fitted(self)
         check_is_fitted(self.min_cov_det_object)
-        if self.scale:
-            # standardization of the reconstruction error in X
-            if np.all(self.std_x_ > 0):
-                scaled_x = (x - self.mean_x_) / self.std_x_
-            else:
-                scaled_x = x - self.mean_x_
-                # replace possible inf values with 0
-            scaled_x[np.isinf(scaled_x)] = 0
-        else:
-            scaled_x = x - self.mean_x_
+        scaled_x = self.standardize(x)
 
         if self.pca:
             pca_result = self.pca_object.transform(scaled_x)
