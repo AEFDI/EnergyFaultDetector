@@ -1,4 +1,5 @@
 
+import warnings
 from typing import Optional, Union
 
 import numpy as np
@@ -9,13 +10,16 @@ from energy_fault_detector.core.anomaly_score import AnomalyScore
 
 DataType = Union[pd.DataFrame, np.ndarray]
 
+# Sentinel used to detect whether the deprecated `scale` parameter was passed explicitly.
+_DEPRECATED = object()
+
 
 class RMSEScore(AnomalyScore):
     """Calculate the RMSE of given reconstruction errors.
 
-    Attributes:
-        scale: If True, mean and std of the training/fit reconstruction errors will be used to standardize recon errors
-            during transform. Default: True
+    .. deprecated::
+        The ``scale`` parameter no longer has any effect and is only accepted for backwards compatibility.
+        It will be removed in a future version.
 
     Configuration example:
 
@@ -24,15 +28,21 @@ class RMSEScore(AnomalyScore):
         train:
           anomaly_score:
             name: rmse
-            params:
-              scale: false
 
     """
 
-    def __init__(self, scale: bool = True, **kwargs):
+    def __init__(self, scale: bool = _DEPRECATED, **kwargs):
 
         super().__init__(**kwargs)
-        self.scale = scale
+        if scale is not _DEPRECATED:
+            warnings.warn(
+                "The 'scale' parameter of RMSEScore is deprecated and no longer has any effect. "
+                "It will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        # `scale` is kept as an attribute for backwards compatibility but no longer influences the behaviour.
+        self.scale = True
 
     # pylint: disable=attribute-defined-outside-init
     # noinspection PyAttributeOutsideInit
@@ -43,17 +53,25 @@ class RMSEScore(AnomalyScore):
             x: numpy 2d array with differences between prediction and actual sensor values
             y (optional): not used, labels indicating whether sample is normal (True) or anomalous (False).
         """
-        if not hasattr(self, 'scale'):
-            # backwards compatibility, add missing attribute and set to True (as that was the standard behaviour)
-            self.scale = True
-
-        if self.scale:
-            # fitted attributes need trailing underscore - and are not initialized
-            self.std_x_: np.array = np.std(x, axis=0)
-            self.mean_x_: np.array = np.mean(x, axis=0)
+        # fitted attributes need trailing underscore - and are not initialized
+        self.std_x_: np.array = np.std(x, axis=0)
+        self.mean_x_: np.array = np.mean(x, axis=0)
 
         self.fitted_ = True  # nothing to fit
         return self
+
+    def standardize(self, x: DataType):
+        """Standardization of the reconstruction error in x"""
+
+        check_is_fitted(self)
+        x_ = x.copy()
+        if np.all(self.std_x_ > 0):
+            x_ = (x - self.mean_x_) / self.std_x_
+        else:
+            x_ = x - self.mean_x_
+        # replace possible inf values with 0
+        x_[np.isinf(x_)] = 0
+        return x_
 
     def transform(self, x: DataType) -> pd.Series:
         """Calculate the RMSE based on the deviation matrix.
@@ -64,21 +82,7 @@ class RMSEScore(AnomalyScore):
         Returns:
             RMSE for each sample.
         """
-        if not hasattr(self, 'scale'):
-            # backwards compatibility, add missing attribute and set to True (as that was the standard behaviour)
-            self.scale = True
-
-        check_is_fitted(self)
-
-        x_ = x
-        if self.scale:
-            # standardization of the reconstruction error in X
-            if np.all(self.std_x_ > 0):
-                x_ = (x - self.mean_x_) / self.std_x_
-            else:
-                x_ = x - self.mean_x_
-            # replace possible inf values with 0
-            x_[np.isinf(x_)] = 0
+        x_ = self.standardize(x)
 
         scores = np.sqrt(np.mean(x_ ** 2, axis=1))
         if isinstance(x, (pd.DataFrame, pd.Series)):
