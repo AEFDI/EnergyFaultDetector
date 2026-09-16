@@ -39,6 +39,7 @@ Installation
     care2compare_faq
     models_overview
     sequence_models
+    anomaly_scores
 
 .. toctree::
     :caption: Advanced usage
