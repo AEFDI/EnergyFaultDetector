@@ -45,19 +45,6 @@ class WeightedRMSEScore(RMSEScore):
         # load mechanism). The actual weights must be provided before `fit` or `transform` are called.
         self.feature_weights = feature_weights
 
-    def standardize_weighted(self, x: pd.DataFrame):
-        """Standardization of the weighted reconstruction error in x"""
-
-        check_is_fitted(self)
-        x_ = x.copy()
-        if np.all(self.std_x_ > 0):
-            x_ = (x - self.mean_x_weighted_) / self.std_x_weighted_
-        else:
-            x_ = x - self.mean_x_weighted_
-        # replace possible inf values with 0
-        x_[np.isinf(x_)] = 0
-        return x_
-
     def apply_weights(self, x: pd.DataFrame) -> pd.DataFrame:
         """ Applies specified weights to x, if x is a pandas DataFrame and the features acutally occur in x's columns.
 
@@ -92,10 +79,6 @@ class WeightedRMSEScore(RMSEScore):
 
         # Standardize reconstruction errors to remove potential model bias towards specific features
         super().fit(x, y)
-        x_weighted = self.apply_weights(x)
-        # Compute mean and std of weighted reconstruction errors for standardization in 
-        self.mean_x_weighted_ = x_weighted.mean()
-        self.std_x_weighted_ = x_weighted.std()
         self.fitted_ = True
         return self
 
@@ -114,9 +97,8 @@ class WeightedRMSEScore(RMSEScore):
                                     'specified weights.')
 
         x_weighted = self.apply_weights(x)
-        x_standardized = self.standardize_weighted(x_weighted)
         
-        scores = np.sqrt(np.mean(x_standardized ** 2, axis=1))
+        scores = np.sqrt(np.mean(x_weighted ** 2, axis=1))
         if isinstance(x, (pd.DataFrame, pd.Series)):
             scores = pd.Series(scores, index=x.index)
         return scores
