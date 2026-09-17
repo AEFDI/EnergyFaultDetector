@@ -109,8 +109,6 @@ train:
 
   anomaly_score:
     name: rmse
-    params:
-      scale: false
 
   threshold_selector:
     name: fbeta
