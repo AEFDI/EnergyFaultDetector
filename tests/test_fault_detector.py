@@ -96,6 +96,62 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         self.assertEqual(expected_path, model_path)
 
 
+class TestFaultDetectorWeightedRMSESaveLoad(unittest.TestCase):
+    """Saving and loading a FaultDetector that uses the weighted_rmse anomaly score.
+
+    Loading a FaultDetector reconstructs each sub-model with `model_class()` (i.e. without
+    arguments). The WeightedRMSEScore therefore needs a default value for `feature_weights`
+    so it can be instantiated on load. Previously `feature_weights` was a required argument,
+    which caused the load to fail for trained detectors that used the weighted_rmse score.
+    """
+
+    def setUp(self) -> None:
+        self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_config_weighted_rmse.yaml')
+        self.conf = Config(self.config_path)
+        self.test_dir = tempfile.mkdtemp()
+
+        np.random.seed(42)
+        self.sensor_data = pd.DataFrame(data=np.random.random(size=(100, 3)), columns=['a', 'b', 'c'])
+        self.normal_index = pd.Series(np.random.choice([True, False], size=100))
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.test_dir)
+
+    def test_save_load_roundtrip_with_weighted_rmse(self):
+        from energy_fault_detector.anomaly_scores.weighted_rmse_score import WeightedRMSEScore
+
+        fault_detector = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        self.assertIsInstance(fault_detector.anomaly_score, WeightedRMSEScore)
+        self.assertEqual(fault_detector.anomaly_score.feature_weights,
+                         {'a': 2.0, 'b': 1.0, 'c': 0.5})
+
+        # Train and save the model
+        results = fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index)
+
+        # Load the saved models into a fresh FaultDetector
+        loaded_fault_detector = FaultDetector.load(model_path=results.model_path)
+
+        # The weighted_rmse score must load back as a WeightedRMSEScore instance ...
+        self.assertIsInstance(loaded_fault_detector.anomaly_score, WeightedRMSEScore)
+        # ... and its feature_weights must be restored from the pickled state
+        self.assertEqual(loaded_fault_detector.anomaly_score.feature_weights,
+                         {'a': 2.0, 'b': 1.0, 'c': 0.5})
+
+        # The loaded score must still be usable for scoring
+        recon_error = pd.DataFrame(np.random.random(size=(5, 3)), columns=['a', 'b', 'c'])
+        scores = loaded_fault_detector.anomaly_score.transform(recon_error)
+        self.assertEqual(len(scores), 5)
+
+        # Autoencoder weights should round-trip as well
+        original_weights = fault_detector.autoencoder.model.get_weights()
+        loaded_weights = loaded_fault_detector.autoencoder.model.get_weights()
+        for original_weight, loaded_weight in zip(original_weights, loaded_weights):
+            np.testing.assert_array_almost_equal(original_weight, loaded_weight)
+
+        self.assertDictEqual(fault_detector.config.config_dict,
+                             loaded_fault_detector.config.config_dict)
+
+
 @patch("energy_fault_detector.core.autoencoder.Autoencoder", new=mock_autoencoder)
 @patch("energy_fault_detector.core.model_factory.AnomalyScore", new=mock_score)
 @patch("energy_fault_detector.core.model_factory.ThresholdSelector", new=mock_threshold)

@@ -15,7 +15,8 @@ class WeightedRMSEScore(RMSEScore):
     """Calculate the RMSE of given reconstruction errors manipulated with specified weights.
     
         Attributes:
-            feature_weights (Dict[str, float]): Weight definition for input features. Weights can be chosen from [0, infinity). 
+            feature_weights (Dict[str, float]): Weight definition for input features. 
+            Weights can be chosen from [0, infinity). Defaults to None.
     
         Configuration example:
     
@@ -32,13 +33,17 @@ class WeightedRMSEScore(RMSEScore):
     
         """
 
-    def __init__(self, feature_weights: Dict[str, float], **kwargs):
+    def __init__(self, feature_weights: Optional[Dict[str, float]] = None, **kwargs):
         super().__init__(**kwargs)
-        if np.min(list(feature_weights.values())) < 0:
-             raise ValueError('WeightedRMSEScore does not accept negative feature weights. If you want to decrease the importance ' \
-             'of a feature in the AnomalyScore, choose a weight x with 0<= x < 1.')
-        else:
-            self.feature_weights = feature_weights
+        if feature_weights is not None:
+            if np.min(list(feature_weights.values())) < 0:
+                raise ValueError('WeightedRMSEScore does not accept negative feature weights. ' \
+                                 'If you want to decrease the importance '
+                                 'of a feature in the AnomalyScore, choose a weight x with 0<= x < 1.')
+        # `feature_weights` is restored from the pickled state on load, so it is allowed to be
+        # None only temporarily (e.g. when the scorer is constructed with no arguments by the
+        # load mechanism). The actual weights must be provided before `fit` or `transform` are called.
+        self.feature_weights = feature_weights
 
     def standardize_weighted(self, x: pd.DataFrame):
         """Standardization of the weighted reconstruction error in x"""
