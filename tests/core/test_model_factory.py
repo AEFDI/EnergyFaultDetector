@@ -2,7 +2,9 @@
 import os
 import unittest
 
-from energy_fault_detector.core.model_factory import ModelFactory
+import numpy as np
+
+from energy_fault_detector.core.model_factory import ModelFactory, _parse_ts_freq
 from energy_fault_detector.config import Config
 from energy_fault_detector.autoencoders import MultilayerAutoencoder
 from energy_fault_detector.anomaly_scores import MahalanobisScore
@@ -36,3 +38,16 @@ class TestModelFactory(unittest.TestCase):
         # Test for anomaly score
         anomaly_score = model_factory.anomaly_score
         self.assertIsInstance(anomaly_score, MahalanobisScore)
+
+    def test_parse_ts_freq_to_timedelta64(self):
+        """The model factory parses ts_freq strings into np.timedelta64 for the SequenceDatasetBuilder."""
+        from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
+
+        self.assertEqual(_parse_ts_freq('30s'), np.timedelta64(30, 's'))
+        self.assertEqual(_parse_ts_freq('10m'), np.timedelta64(10, 'm'))
+
+        builder = SequenceDatasetBuilder(
+            sequence_length=36, ts_freq=_parse_ts_freq('30s'), stride=1
+        )
+        self.assertIsInstance(builder.ts_freq, np.timedelta64)
+        self.assertEqual(builder.ts_freq, np.timedelta64(30, 's'))

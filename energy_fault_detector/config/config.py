@@ -8,8 +8,7 @@ typed fields accessible via normal attribute access
 
 All sections have sensible defaults — ``Config()`` with no arguments produces a
 ready-to-use configuration (MultilayerAutoencoder, RMSE anomaly score, quantile
-threshold selector, default preprocessing pipeline, sklearn data splitter with
-10% validation split).
+threshold selector, default preprocessing pipeline, BlockDataSplitter).
 """
 
 import logging
@@ -154,9 +153,13 @@ class DataSplitterConfig(BaseModel):
     fields are type-specific options; irrelevant ones are ignored by the
     splitter implementation.
 
-    Defaults: ``sklearn`` with ``validation_split=0.1`` and ``shuffle=False``,
-    i.e. the last 10% of the data (in original order) is used as a validation
-    set.  This enables early stopping and ``fit_on_val`` out of the box.
+    Defaults to ``BlockDataSplitter`` with ``train_block_size``, ``val_block_size``,
+    ``validation_split`` and ``shuffle`` all ``None``; the
+    :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`
+    then falls back to its own block-size defaults (5040 / 1680 samples).  Early
+    stopping requires validation data to be configured explicitly: a positive
+    ``val_block_size`` for block splitters, or a ``validation_split`` in (0, 1)
+    for sklearn splitters.
     """
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
@@ -167,11 +170,11 @@ class DataSplitterConfig(BaseModel):
         "sklearn",
         "train_test_split",
         "train_val_split",
-    ] = "sklearn"
+    ] = "BlockDataSplitter"
     train_block_size: int | None = None
     val_block_size: int | None = None
-    validation_split: float | None = 0.1
-    shuffle: bool | None = False
+    validation_split: float | None = None
+    shuffle: bool | None = None
 
 
 class TrainConfig(BaseModel):
@@ -514,3 +517,28 @@ class Config(BaseModel):
     def save(self, file_name: str, overwrite: bool = False) -> None:
         """Save the configuration to a YAML file. Wrapper for :meth:`write_config`."""
         self.write_config(file_name, overwrite)
+
+    @property
+    def configuration_file(self) -> str | None:
+        """Original YAML file path, if this config was loaded from one."""
+        return self._configuration_file
+
+    def update_config(self, new_config_dict: dict[str, Any]) -> None:
+        """Update configuration from a top-level partial dictionary.
+
+        Deprecated: prefer direct typed attribute access or a new Config instance.
+        """
+        warnings.warn(
+            "Config.update_config() is deprecated; use typed attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        merged = self.model_dump(exclude_none=True)
+        merged.update(new_config_dict)  # preserves old shallow-merge semantics
+        updated = Config(config_dict=merged)
+
+        for name in self.__class__.model_fields:
+            setattr(self, name, getattr(updated, name))
+
+        object.__setattr__(self, "_configuration_file", None)
