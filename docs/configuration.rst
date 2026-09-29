@@ -156,9 +156,9 @@ Other training configuration sections
 
 - Data splitter (``train.data_splitter``):
 
-  - ``type``: one of ``sklearn`` (alias ``train_test_split``) or ``BlockDataSplitter`` (aliases: ``blocks``, ``DataSplitter``). Default: ``sklearn``.
-  - For sklearn: ``validation_split`` (float in (0, 1), default 0.1 = last 10%) and ``shuffle`` (bool, default False).
-  - For :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`: ``train_block_size`` and ``val_block_size``.
+  - ``type``: one of ``BlockDataSplitter`` (aliases: ``blocks``, ``DataSplitter``) or ``sklearn`` (alias ``train_test_split``). Default: ``BlockDataSplitter``.
+  - For :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`: ``train_block_size`` and ``val_block_size`` (both optional; the splitter falls back to 5040 / 1680 samples when left unset).
+  - For sklearn: ``validation_split`` (float in (0, 1)) and ``shuffle`` (bool). With ``shuffle`` false or unset, the last fraction of the data (in original order) is taken as the validation set.
   - Early stopping guard: if ``train.autoencoder.params.early_stopping`` is true, you must either set a
     valid ``validation_split`` in (0, 1), or use :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`
     with a positive ``val_block_size``.
