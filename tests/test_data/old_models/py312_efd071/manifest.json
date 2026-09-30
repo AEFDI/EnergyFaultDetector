@@ -1,0 +1,22 @@
+{
+  "purpose": "Saved-model compatibility fixtures created before the Pydantic config migration.",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "package_versions": {
+    "energy-fault-detector": "0.7.1",
+    "tensorflow": "2.18.1",
+    "keras": "3.14.1",
+    "pydantic": "2.13.4",
+    "scikit-learn": "1.7.0",
+    "pandas": "2.2.3",
+    "numpy": "1.26.4"
+  },
+  "fixtures": {
+    "dense": "dense",
+    "sequence": "sequence"
+  },
+  "data_generation": {
+    "dense": "make_dense_data(seed=42, rows=80)",
+    "sequence": "make_sequence_data(seed=123, rows=120)"
+  }
+}
