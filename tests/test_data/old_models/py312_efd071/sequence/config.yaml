@@ -1,0 +1,36 @@
+train:
+  anomaly_score:
+    name: rmse
+    params:
+      scale: false
+  autoencoder:
+    name: lstm_seq2one
+    params:
+      batch_size: 16
+      code_size: 4
+      decoder_layers:
+      - 8
+      early_stopping: false
+      epochs: 1
+      layers:
+      - 8
+      learning_rate: 0.001
+      loss_name: mean_squared_error
+      sequence_builder:
+        pad_incomplete: false
+        pad_value: 0.0
+        sequence_length: 8
+        stride: 1
+        ts_freq: 600s
+    verbose: 0
+  data_preprocessor: null
+  data_splitter:
+    shuffle: false
+    type: sklearn
+    validation_split: 0.2
+  protect_conditional_features: false
+  threshold_selector:
+    fit_on_val: false
+    name: quantile
+    params:
+      quantile: 0.95
