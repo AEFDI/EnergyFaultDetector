@@ -43,23 +43,23 @@ class WeightedRMSEScore(RMSEScore):
                                     'of a feature in the AnomalyScore, choose a weight x with 0<= x < 1.')
 
     def scale_with_std(self, x: pd.DataFrame) -> pd.DataFrame:
+        """Scale the input data with the fitted standard deviation of the training data."""
         if np.all(self.std_x_ > 0):
                 x_ = x / self.std_x_
         x_[np.isinf(x_)] = 0
         return x_
 
     def apply_weights_to_squared_residuals(self, x: pd.DataFrame) -> pd.DataFrame:
-        """ Applies specified weights to squared standardized x, if x is a pandas DataFrame and the features acutally occur in x's columns.
+        """ Applies specified weights to squared std-scaled x, if x is a pandas DataFrame and the features acutally occur in x's columns.
 
         x (pd.DataFrame): DataFrame of reconstruction errors.
         Returns:
                 pd.DataFrame weighted version of x.
         """
-        # Standardize reconstruction errors to remove potential model bias towards specific features
-        # x_squared = pd.DataFrame(data=super().standardize(x), columns=x.columns, index=x.index) ** 2
+        # std-scale reconstruction errors to remove potential model bias towards specific features
         x_squared = pd.DataFrame(data=self.scale_with_std(x), columns=x.columns, index=x.index) ** 2
 
-        # Weight standardized reconstruction errors to introduce useful application context bias
+        # Weight std-scaled reconstruction errors to introduce useful application context bias
         for feature in self.feature_weights:
             if feature in x.columns:
                 x_squared[feature] = x_squared[feature] * self.feature_weights[feature]
@@ -81,7 +81,6 @@ class WeightedRMSEScore(RMSEScore):
                             raise ValueError('WeightedRMSEScore requires a DataFrame as input to correctly ' \
                             'apply specified weights.')
 
-        # Standardize reconstruction errors to remove potential model bias towards specific features
         super().fit(x, y)
         self.fitted_ = True
         return self
