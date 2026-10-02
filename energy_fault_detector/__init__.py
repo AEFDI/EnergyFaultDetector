@@ -52,6 +52,9 @@ register(module_path='energy_fault_detector.anomaly_scores.mahalanobis_score.Mah
 register(module_path='energy_fault_detector.anomaly_scores.rmse_score.RMSEScore',
          class_type='anomaly_score',
          class_names=['RMSEScore', 'RMSE', 'rmse'])
+register(module_path='energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore',
+         class_type='anomaly_score',
+         class_names=['WeightedRMSEScore', 'WeightedRMSE', 'weighted_rmse', 'Weighted_RMSE'])
 
 # threshold selectors
 register(module_path='energy_fault_detector.threshold_selectors.fdr_threshold.FDRSelector',
