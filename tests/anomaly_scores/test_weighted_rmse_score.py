@@ -40,8 +40,7 @@ class TestWeightedRMSEScore(TestCase):
     def test_transform(self) -> None:
         self.weighted_rmse_score.fit(self.train_data)
         weighted_score = self.weighted_rmse_score.transform(self.test_data)
-        assert_array_almost_equal(weighted_score, np.array([1.154701, 0.57735 , 0.288675, 
-                                                            1.290994, 0.645497, 1.190238, 1.322876]))
+        assert_array_almost_equal(weighted_score, np.array([1.603567, 1.133893, 0.801784, 1.963961, 1.38873 , 1.792843, 2.12132]))
 
     def test_instantiate_without_feature_weights(self) -> None:
         """The scorer must be constructible without arguments.
@@ -51,7 +50,7 @@ class TestWeightedRMSEScore(TestCase):
         Before a default value was added for `feature_weights`, this raised a TypeError.
         """
         score = WeightedRMSEScore()
-        self.assertIsNone(score.feature_weights)
+        self.assertEqual(score.feature_weights, {})
 
     def test_feature_weights_restored_on_load(self) -> None:
         """`feature_weights` must be restored from the pickled state on load."""
@@ -75,3 +74,14 @@ class TestWeightedRMSEScore(TestCase):
             self.assertTrue(loaded_score.fitted_)
         finally:
             shutil.rmtree(tmp_dir)
+
+    def test_test_transform_with_incomplete_feature_weights(self) -> None:
+        """If a feature is missing from the weights, it should be treated as weight=1.0."""
+        incomplete_weights = {"feature_A": 2.0, "feature_B": 1.0}  # feature_C is missing
+        weighted_rmse_score = WeightedRMSEScore(feature_weights=incomplete_weights)
+        weighted_rmse_score.fit(self.train_data)
+        weighted_score = weighted_rmse_score.transform(self.test_data)
+
+        # The expected score is calculated with feature_C having weight=1.0
+        expected_score = np.array([1.5, 1.06066 , 1.06066 , 1.837117, 1.5, 1.837117, 2.12132])
+        assert_array_almost_equal(weighted_score, expected_score)

@@ -78,7 +78,7 @@ class MahalanobisScore(AnomalyScore):
               shrinkage_method: oas
     """
 
-    def __init__(self, pca: bool = True, pca_min_var: float = 0.9, mcd_support_fraction: float = 0.9,
+    def __init__(self, pca: bool = _DEPRECATED, pca_min_var: float = 0.9, mcd_support_fraction: float = 0.9,
                  scale: bool = _DEPRECATED, covariance_method: str = "auto",
                  min_cov_det_ratio: float = 2.0, shrinkage_method: str = "oas"):
         super().__init__()
@@ -90,13 +90,17 @@ class MahalanobisScore(AnomalyScore):
         self.min_cov_det_ratio = min_cov_det_ratio
         self.shrinkage_method = shrinkage_method
 
-        if pca:
-            warnings.warn(
-                "The PCA-based MahalanobisScore is deprecated and will be replaced by the full-dimensionality Mahalanobis "
-                "norm implementation. Use pca=False for the direct full-dimensionality Mahalanobis norm.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+        if pca is _DEPRECATED:
+            self.pca=True
+        else:
+            self.pca=pca
+            if self.pca:
+                warnings.warn(
+                    "The PCA-based MahalanobisScore is deprecated and will be replaced by the full-dimensionality Mahalanobis "
+                    "norm implementation. Use pca=False for the direct full-dimensionality Mahalanobis norm.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
         if scale is not _DEPRECATED:
             warnings.warn(
                 "The 'scale' parameter of MahalanobisScore is deprecated and no longer has any effect. "
@@ -229,10 +233,14 @@ class MahalanobisScore(AnomalyScore):
             check_is_fitted(self.min_cov_det_object)
             scaled_x = self.standardize(x)
             pca_result = self.pca_object.transform(scaled_x)
-            scores = self.cov_estimator_.mahalanobis(pca_result)
+            # Define fallback option in case MahalanobisScore is loaded from an older version where cov_estimator_ was not present
+            cov_estimator = getattr(self, 'cov_estimator_', self.min_cov_det_object)
+            scores = cov_estimator.mahalanobis(pca_result)
         else:
             centered = x - self.mean_x_
-            scores = self.cov_estimator_.mahalanobis(centered)
+            # Define fallback option in case MahalanobisScore is loaded from an older version where cov_estimator_ was not present
+            cov_estimator = getattr(self, 'cov_estimator_', self.min_cov_det_object)
+            scores = cov_estimator.mahalanobis(centered)
 
         if isinstance(x, (pd.DataFrame, pd.Series)):
             scores = pd.Series(scores, index=x.index)

@@ -35,34 +35,38 @@ class WeightedRMSEScore(RMSEScore):
 
     def __init__(self, feature_weights: Optional[Dict[str, float]] = None, **kwargs):
         super().__init__(**kwargs)
-        if feature_weights is not None:
-            if np.min(list(feature_weights.values())) < 0:
+        self.feature_weights = {} if feature_weights is None else feature_weights
+        if self.feature_weights:
+            if np.min(list(self.feature_weights.values())) < 0:
                 raise ValueError('WeightedRMSEScore does not accept negative feature weights. ' \
-                                 'If you want to decrease the importance '
-                                 'of a feature in the AnomalyScore, choose a weight x with 0<= x < 1.')
-        # `feature_weights` is restored from the pickled state on load, so it is allowed to be
-        # None only temporarily (e.g. when the scorer is constructed with no arguments by the
-        # load mechanism). The actual weights must be provided before `fit` or `transform` are called.
-        self.feature_weights = feature_weights
+                                    'If you want to decrease the importance '
+                                    'of a feature in the AnomalyScore, choose a weight x with 0<= x < 1.')
 
-    def apply_weights(self, x: pd.DataFrame) -> pd.DataFrame:
-        """ Applies specified weights to x, if x is a pandas DataFrame and the features acutally occur in x's columns.
+    def scale_with_std(self, x: pd.DataFrame) -> pd.DataFrame:
+        if np.all(self.std_x_ > 0):
+                x_ = x / self.std_x_
+        x_[np.isinf(x_)] = 0
+        return x_
+
+    def apply_weights_to_squared_residuals(self, x: pd.DataFrame) -> pd.DataFrame:
+        """ Applies specified weights to squared standardized x, if x is a pandas DataFrame and the features acutally occur in x's columns.
 
         x (pd.DataFrame): DataFrame of reconstruction errors.
         Returns:
-                pd.DataFrame weighted verison of x.
+                pd.DataFrame weighted version of x.
         """
         # Standardize reconstruction errors to remove potential model bias towards specific features
-        x_ = pd.DataFrame(data=super().standardize(x), columns=x.columns, index=x.index)
+        # x_squared = pd.DataFrame(data=super().standardize(x), columns=x.columns, index=x.index) ** 2
+        x_squared = pd.DataFrame(data=self.scale_with_std(x), columns=x.columns, index=x.index) ** 2
 
         # Weight standardized reconstruction errors to introduce useful application context bias
         for feature in self.feature_weights:
             if feature in x.columns:
-                x_[feature] = x[feature] * self.feature_weights[feature]
+                x_squared[feature] = x_squared[feature] * self.feature_weights[feature]
             else:
                 logger.warning(f'Specified feature {feature} is not part of the list of input '
-                                'features. Thus it can not be weighted. Input features: {x.columns}.')
-        return x_
+                                f'features. Thus it can not be weighted. Input features: {x.columns}.')
+        return x_squared
 
     def fit(self, x: pd.DataFrame, y: Optional[pd.Series] = None) -> 'WeightedRMSEScore':
         """Calculate standard deviation and mean on weighted training data
@@ -74,8 +78,8 @@ class WeightedRMSEScore(RMSEScore):
                         Example: Angle features might be transformed into [feature_name_sin, feature_name_cos. Defaults to an empty dictionary.
         """
         if not isinstance(x, pd.DataFrame):
-                            raise ValueError('WeightedRMSEScore requires a DataFrame as input to correctly apply ' \
-                            'specified weights.')
+                            raise ValueError('WeightedRMSEScore requires a DataFrame as input to correctly ' \
+                            'apply specified weights.')
 
         # Standardize reconstruction errors to remove potential model bias towards specific features
         super().fit(x, y)
@@ -93,12 +97,14 @@ class WeightedRMSEScore(RMSEScore):
             weighted RMSE for each sample.
         """
         if not isinstance(x, pd.DataFrame):
-                                    raise ValueError('WeightedRMSEScore requires a DataFrame as input to correctly apply ' \
-                                    'specified weights.')
+                                    raise ValueError('WeightedRMSEScore requires a DataFrame as input to correctly ' \
+                                    'apply specified weights.')
 
-        x_weighted = self.apply_weights(x)
-        
-        scores = np.sqrt(np.mean(x_weighted ** 2, axis=1))
+        x_squared_weighted = self.apply_weights_to_squared_residuals(x)
+
+        total_feature_weights = np.sum(list(self.feature_weights.values()))
+        total_feature_weights += x.shape[1] - len(self.feature_weights)  # add omitted features with weight 1.0
+        scores = np.sqrt(np.sum(x_squared_weighted, axis=1) / total_feature_weights)
         if isinstance(x, (pd.DataFrame, pd.Series)):
             scores = pd.Series(scores, index=x.index)
         return scores
