@@ -2,6 +2,7 @@
 from unittest import TestCase
 
 import numpy as np
+import pandas as pd
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from energy_fault_detector.anomaly_scores.rmse_score import RMSEScore
@@ -36,6 +37,29 @@ class TestRMSEScore(TestCase):
     def test_transform_not_fitted(self) -> None:
         with self.assertRaises(ValueError):
             self.rmse_score.transform(self.test_data)
+
+    def test_transform_with_zero_std_feature(self) -> None:
+        """A feature with std 0 in the training data must not crash a later transform.
+
+        The std-0 feature is left unscaled (dividing by 0 would produce inf/nan),
+        while the remaining features are still standardized.
+        """
+        train_data = pd.DataFrame({
+            "feature_A": [1.0, 2.0, 3.0],
+            "feature_B": [5.0, 5.0, 5.0],  # std == 0
+        })
+        test_data = pd.DataFrame({
+            "feature_A": [1.0, 5.0],
+            "feature_B": [4.0, 6.0],
+        })
+        self.rmse_score.fit(train_data)
+        with self.assertLogs('energy_fault_detector', level='WARNING') as captured:
+            score = self.rmse_score.transform(test_data)
+        self.assertTrue(np.isfinite(score).all())
+        assert_array_almost_equal(score, np.array([2.95803989, 6.06217783]))
+        self.assertTrue(any(
+            'standard deviation of 0.0' in message for message in captured.output
+        ))
 
     def test_scale_is_deprecated(self) -> None:
         with self.assertWarns(DeprecationWarning):

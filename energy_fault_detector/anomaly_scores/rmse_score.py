@@ -2,11 +2,14 @@
 import warnings
 from typing import Optional, Union
 
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_is_fitted
 
 from energy_fault_detector.core.anomaly_score import AnomalyScore
+
+logger = logging.getLogger('energy_fault_detector')
 
 DataType = Union[pd.DataFrame, np.ndarray]
 
@@ -65,10 +68,15 @@ class RMSEScore(AnomalyScore):
 
         check_is_fitted(self)
         x_ = x.copy()
-        if np.all(self.std_x_ > 0):
+        std_mask = self.std_x_ > 0
+        if np.all(std_mask):
             x_ = (x - self.mean_x_) / self.std_x_
         else:
-            x_ = x - self.mean_x_
+            logger.warning(f'The reconstruction error of the following features has a standard deviation of 0.0 and will not be scaled: {x_.columns[~std_mask]}.' \
+                                       f'Please check these features whether they are useful for anomaly detection or if they should be excluded.')
+            x_ = x.copy()
+            scaleable_features = x_.columns[std_mask]
+            x_[scaleable_features] = x_[scaleable_features] / self.std_x_[std_mask]
         # replace possible inf values with 0
         x_[np.isinf(x_)] = 0
         return x_
