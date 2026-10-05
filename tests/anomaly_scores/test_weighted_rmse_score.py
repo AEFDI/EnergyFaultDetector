@@ -85,3 +85,26 @@ class TestWeightedRMSEScore(TestCase):
         # The expected score is calculated with feature_C having weight=1.0
         expected_score = np.array([1.5, 1.06066 , 1.06066 , 1.837117, 1.5, 1.837117, 2.12132])
         assert_array_almost_equal(weighted_score, expected_score)
+
+    def test_transform_with_zero_std_feature(self) -> None:
+        """A feature with std 0 in the training data must not crash a later transform.
+
+        The std-0 feature is left unscaled (dividing by 0 would produce inf/nan),
+        while the remaining features are still scaled by their standard deviation.
+        """
+        train_data = pd.DataFrame({
+            "feature_A": [1.0, 2.0, 3.0],
+            "feature_B": [5.0, 5.0, 5.0],  # std == 0
+        })
+        test_data = pd.DataFrame({
+            "feature_A": [1.0, 5.0],
+            "feature_B": [4.0, 6.0],
+        })
+        self.weighted_rmse_score.fit(train_data)
+        with self.assertLogs('energy_fault_detector', level='WARNING') as captured:
+            score = self.weighted_rmse_score.transform(test_data)
+        self.assertTrue(np.isfinite(score).all())
+        assert_array_almost_equal(score, np.array([2.51661148, 6.08276253]))
+        self.assertTrue(any(
+            'standard deviation of 0.0' in message for message in captured.output
+        ))
