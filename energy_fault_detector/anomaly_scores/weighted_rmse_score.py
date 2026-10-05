@@ -44,8 +44,15 @@ class WeightedRMSEScore(RMSEScore):
 
     def scale_with_std(self, x: pd.DataFrame) -> pd.DataFrame:
         """Scale the input data with the fitted standard deviation of the training data."""
-        if np.all(self.std_x_ > 0):
-                x_ = x / self.std_x_
+        std_mask = self.std_x_ > 0
+        if np.all(std_mask):
+            x_ = x / self.std_x_
+        else:
+            scaleable_features = x.columns[std_mask]
+            logger.warning(f'The reconstruction error of the following features has a standard deviation of 0.0 and will not be scaled: {x.columns[~std_mask]}.' \
+                           f'Please check these features whether they are useful for anomaly detection or if they should be excluded.')
+            x_ = x.copy()
+            x_[scaleable_features] = x_[scaleable_features] / self.std_x_[std_mask]
         x_[np.isinf(x_)] = 0
         return x_
 
@@ -101,8 +108,9 @@ class WeightedRMSEScore(RMSEScore):
 
         x_squared_weighted = self.apply_weights_to_squared_residuals(x)
 
-        total_feature_weights = np.sum(list(self.feature_weights.values()))
-        total_feature_weights += x.shape[1] - len(self.feature_weights)  # add omitted features with weight 1.0
+        applicable_weights = [self.feature_weights[feature] for feature in self.feature_weights if feature in x.columns]
+        total_feature_weights = np.sum(applicable_weights)
+        total_feature_weights += x.shape[1] - len(applicable_weights)  # add omitted features with weight 1.0
         scores = np.sqrt(np.sum(x_squared_weighted, axis=1) / total_feature_weights)
         if isinstance(x, (pd.DataFrame, pd.Series)):
             scores = pd.Series(scores, index=x.index)
