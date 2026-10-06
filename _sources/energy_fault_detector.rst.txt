@@ -1,0 +1,30 @@
+energy\_fault\_detector
+=======================
+
+.. automodule:: energy_fault_detector
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.anomaly_scores
+   energy_fault_detector.autoencoders
+   energy_fault_detector.config
+   energy_fault_detector.core
+   energy_fault_detector.data_preprocessing
+   energy_fault_detector.data_splitting
+   energy_fault_detector.evaluation
+   energy_fault_detector.quick_fault_detection
+   energy_fault_detector.root_cause_analysis
+   energy_fault_detector.threshold_selectors
+   energy_fault_detector.utils
+
+
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector.registration

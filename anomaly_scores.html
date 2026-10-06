@@ -1,0 +1,371 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anomaly scores &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=486e5634"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced usage and customization" href="advanced_usage.html" />
+    <link rel="prev" title="Sequence models" href="sequence_models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_guide.html">CARE2Compare guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_faq.html">CARE2Compare FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-one-models">Sequence-to-one models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-sequence-models">Sequence-to-sequence models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Anomaly scores</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#available-scores">Available scores</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rmse-recommended-default">RMSE (recommended default)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#weighted-rmse">Weighted RMSE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mahalanobis">Mahalanobis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-derived-stability-threshold">The derived stability threshold</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#which-score-should-i-use">Which score should I use?</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Anomaly scores</li>
+  
+  
+  
+    
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/docs/anomaly_scores.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="anomaly-scores">
+<span id="id1"></span><h1>Anomaly scores<a class="headerlink" href="#anomaly-scores" title="Link to this heading"></a></h1>
+<p>The reconstruction errors of an autoencoder are per-sample <em>and</em> per-feature: for every input sample there is a
+vector of residuals (prediction minus actual value). An <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore" title="energy_fault_detector.core.anomaly_score.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a>
+reduces that vector to a <strong>single scalar score per sample</strong>. Samples with high scores deviate strongly from the learned
+normal behaviour and are therefore candidate anomalies.</p>
+<p>The chosen score is configured under <code class="docutils literal notranslate"><span class="pre">train.anomaly_score</span></code> in the YAML config. This page explains the available
+scores, how they differ and when to use which, and recommends:
+<a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore" title="energy_fault_detector.anomaly_scores.rmse_score.RMSEScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">RMSEScore</span></code></a> as the default.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An anomaly score only ranks samples; it does <strong>not</strong> classify them. The actual <em>anomaly decision</em>
+(normal vs. anomalous) is taken afterwards by a <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.ThresholdSelector" title="energy_fault_detector.core.threshold_selector.ThresholdSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThresholdSelector</span></code></a>.</p>
+</div>
+<section id="available-scores">
+<h2>Available scores<a class="headerlink" href="#available-scores" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35.0%" />
+<col style="width: 25.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Typical config names (<code class="docutils literal notranslate"><span class="pre">train.anomaly_score.name</span></code>)</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.RMSEScore" title="energy_fault_detector.anomaly_scores.rmse_score.RMSEScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">RMSEScore</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;rmse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;RMSE&quot;</span></code></p></td>
+<td><p>Root-mean-square reconstruction error over all features. <strong>Recommended default.</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore" title="energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedRMSEScore</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;weighted_rmse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;WeightedRMSE&quot;</span></code></p></td>
+<td><p>RMSE where selected features can be up- or down-weighted.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore" title="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mahalanobis&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Mahalanobis&quot;</span></code></p></td>
+<td><p>Correlation-aware Mahalanobis distance.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="rmse-recommended-default">
+<h2>RMSE (recommended default)<a class="headerlink" href="#rmse-recommended-default" title="Link to this heading"></a></h2>
+<p>The RMSE score standardises the reconstruction errors (using the mean and standard deviation learned on the training
+data) and then computes the per-sample root mean square across all features:</p>
+<div class="math">
+<p><span class="math">s_i = \sqrt{\frac{1}{p} \sum_{j=1}^{p} z_{ij}^{\,2}},
+\qquad z_{ij} = \frac{x_{ij} - \mu_j}{\sigma_j}</span></p>
+</div><p>where <span class="math">x_{ij}</span> is the reconstruction error of sample <span class="math">i</span> on feature <span class="math">j</span>, and <span class="math">\mu_j</span>,
+<span class="math">\sigma_j</span> the corresponding training mean and standard deviation.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Advantages</p></th>
+<th class="head"><p>Limitations</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Simple, fast and numerically robust.</p></td>
+<td><p>Treats all features as independent (does not account for correlation).</p></td>
+</tr>
+<tr class="row-odd"><td><p>Does not require estimating a covariance and is stable for <strong>any</strong> number of samples.</p></td>
+<td><p>A feature shown to be more fault-relevant is not emphasised automatically.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">anomaly_score</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rmse</span><span class="w">           </span><span class="c1"># RMSE is the recommended default</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</pre></div>
+</div>
+<p>Use RMSE as a robust, well-understood default that works well out of the box for most use cases.</p>
+</section>
+<section id="weighted-rmse">
+<h2>Weighted RMSE<a class="headerlink" href="#weighted-rmse" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore" title="energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedRMSEScore</span></code></a> extends RMSE by
+allowing <strong>per-feature weights</strong>, so that deviations on sensor/feature values you care most about contribute more to the
+final score. The reconstruction errors are first standardised (to remove model bias towards high-magnitude features) and
+then multiplied by the feature weight before taking the per-sample root mean square.</p>
+<p>Choosing a weight:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> increases the influence of a feature (deviations on it are treated as more suspicious),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">weight</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> decreases its influence,</p></li>
+<li><p>a weight of <code class="docutils literal notranslate"><span class="pre">0</span></code> ignores the feature,</p></li>
+<li><p>features are <em>not</em> required to have an entry; omitted features keep weight <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">anomaly_score</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">weighted_rmse</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">feature_weights</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">rotor_speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w">     </span><span class="c1"># emphasise this sensor</span>
+<span class="w">        </span><span class="nt">temperature_11</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span><span class="w">  </span><span class="c1"># de-emphasise this sensor</span>
+<span class="w">        </span><span class="c1"># any other feature keeps weight 1.0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore</span></code> requires the input to be a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code> so that the weights can be matched to
+the feature names. Negative weights are not allowed.</p>
+</div>
+<p>Use weighted RMSE when you have <strong>domain knowledge</strong> about which features are most relevant for the faults of interest
+and want that prior to influence the anomaly score directly.</p>
+</section>
+<section id="mahalanobis">
+<h2>Mahalanobis<a class="headerlink" href="#mahalanobis" title="Link to this heading"></a></h2>
+<p><a class="reference internal" href="energy_fault_detector.anomaly_scores.html#energy_fault_detector.anomaly_scores.MahalanobisScore" title="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a> computes the
+<strong>Mahalanobis distance</strong>, which unlike RMSE accounts for the <em>correlation</em> between features. Instead of summing
+independent standardised errors, it measures the distance in units of the covariance of the (mean-centred) errors:</p>
+<div class="math">
+<p><span class="math">s_i = \sqrt{(x_i - \mu)^{\top} \Sigma^{-1} (x_i - \mu)}</span></p>
+</div><p>The covariance estimator is chosen via the <code class="docutils literal notranslate"><span class="pre">covariance_method</span></code> parameter:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">covariance_method</span></code></p></th>
+<th class="head"><p>Behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (default)</p></td>
+<td><p>Use MinCovDet when it is stable, otherwise fall back to a shrinkage estimator (see below).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;min_cov_det&quot;</span></code></p></td>
+<td><p>Always use Minimum Covariance Determinant (robust, but requires enough samples).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;shrinkage&quot;</span></code></p></td>
+<td><p>Always use a shrinkage estimator (Ledoit-Wolf / OAS). Robust for high-dimensional data.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Advantages</p></th>
+<th class="head"><p>Limitations</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Accounts for correlation between features; can separate faults that RMSE cannot.</p></td>
+<td><p>More computationally expensive and more complex than RMSE.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Robust (MinCovDet) or high-dimensional-friendly (shrinkage) variants available.</p></td>
+<td><p>Sensitive to covariance estimation quality.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Use the Mahalanobis score when features are strongly correlated and you need a <strong>correlation-aware</strong> score, but reserve
+it for cases where the added complexity is justified.</p>
+<section id="the-derived-stability-threshold">
+<h3>The derived stability threshold<a class="headerlink" href="#the-derived-stability-threshold" title="Link to this heading"></a></h3>
+<p>MinCovDet needs enough samples per feature: as the sample-to-feature ratio <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">/</span> <span class="pre">p</span></code> drops it quickly becomes unstable
+(its covariance becomes rank-deficient and ill-conditioned). Concretely:</p>
+<ul class="simple">
+<li><p>for <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">/</span> <span class="pre">p</span> <span class="pre">&gt;=</span> <span class="pre">min_cov_det_ratio</span></code> (default <code class="docutils literal notranslate"><span class="pre">2.0</span></code>) the covariance is well conditioned and MinCovDet is usable;</p></li>
+<li><p>below that, or when the covariance is singular / ill-conditioned, a <strong>shrinkage</strong> estimator (Ledoit-Wolf / OAS)
+should be used instead.</p></li>
+</ul>
+<p>With <code class="docutils literal notranslate"><span class="pre">covariance_method=&quot;auto&quot;</span></code> this threshold is applied automatically and the estimator falls back to shrinkage
+(Ledoit-Wolf / OAS) whenever MinCovDet would be unstable.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">anomaly_score</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mahalanobis</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">covariance_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span><span class="w">     </span><span class="c1"># "auto" | "min_cov_det" | "shrinkage"</span>
+<span class="w">      </span><span class="nt">min_cov_det_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w">      </span><span class="c1"># minimum n/p for MinCovDet when "auto"</span>
+<span class="w">      </span><span class="nt">shrinkage_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oas</span><span class="w">       </span><span class="c1"># "oas" | "ledoit_wolf"</span>
+</pre></div>
+</div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version The: </span>legacy <code class="docutils literal notranslate"><span class="pre">pca=True</span></code> path of <code class="xref py py-class docutils literal notranslate"><span class="pre">MahalanobisScore</span></code> is deprecated and will be replaced by the clean Mahalanobis
+norm implementation (<code class="docutils literal notranslate"><span class="pre">pca=False</span></code>). Likewise the <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter is deprecated and no longer has any effect.
+See <a class="reference internal" href="advanced_usage.html"><span class="doc">Advanced usage and customization</span></a> for details.</p>
+</div>
+</section>
+</section>
+<section id="which-score-should-i-use">
+<h2>Which score should I use?<a class="headerlink" href="#which-score-should-i-use" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 45.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Your situation</p></th>
+<th class="head"><p>Recommended score</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>You want a simple, robust default that works out of the box.</p></td>
+<td><p><strong>RMSE</strong> (<code class="docutils literal notranslate"><span class="pre">name:</span> <span class="pre">rmse</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>You have domain knowledge about which features matter most for the fault.</p></td>
+<td><p>Weighted RMSE (<code class="docutils literal notranslate"><span class="pre">name:</span> <span class="pre">weighted_rmse</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>Features are strongly correlated and a correlation-aware score is important.</p></td>
+<td><p>Mahalanobis (<code class="docutils literal notranslate"><span class="pre">name:</span> <span class="pre">mahalanobis</span></code>, <code class="docutils literal notranslate"><span class="pre">covariance_method:</span> <span class="pre">auto</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>High-dimensional input where a stable covariance is hard to estimate.</p></td>
+<td><p>Mahalanobis with <code class="docutils literal notranslate"><span class="pre">covariance_method:</span> <span class="pre">shrinkage</span></code> (or RMSE)</p></td>
+</tr>
+</tbody>
+</table>
+<p>For most projects the RMSE score is a safe, interpretable and efficient default: it needs no covariance estimation,
+is stable regardless of the number of samples and features, and pairs well with a good threshold selector. Start with
+RMSE and move to a more specialised score only when a concrete need arises.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sequence_models.html" class="btn btn-neutral float-left" title="Sequence models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="advanced_usage.html" class="btn btn-neutral float-right" title="Advanced usage and customization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

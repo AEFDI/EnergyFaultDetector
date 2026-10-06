@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>anomaly_scores &mdash; EnergyFaultDetector documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=486e5634"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="anomaly_scores.weighted_rmse_score" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html" />
+    <link rel="prev" title="energy_fault_detector" href="energy_fault_detector.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            EnergyFaultDetector
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage_examples.html">Usage examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_fault_detection.html">Quick fault detection (CLI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models and methods</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arcana.html">ARCANA: Root cause analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_guide.html">CARE2Compare guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="care2compare_faq.html">CARE2Compare FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_overview.html">Model overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html">Sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-one-models">Sequence-to-one models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_models.html#sequence-to-sequence-models">Sequence-to-sequence models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anomaly_scores.html">Anomaly scores</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced usage and customization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">The EnergyFaultDetector package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="energy_fault_detector.html">energy_fault_detector</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.html#energy_fault_detector.FaultDetector"><code class="docutils literal notranslate"><span class="pre">FaultDetector</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">anomaly_scores</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.anomaly_scores.MahalanobisScore"><code class="docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#energy_fault_detector.anomaly_scores.RMSEScore"><code class="docutils literal notranslate"><span class="pre">RMSEScore</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html">anomaly_scores.weighted_rmse_score</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.autoencoders.html">autoencoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.config.html">config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.core.html">core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_preprocessing.html">data_preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.data_splitting.html">data_splitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.evaluation.html">evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.quick_fault_detection.html">quick_fault_detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.root_cause_analysis.html">root_cause_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.threshold_selectors.html">threshold_selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.utils.html">utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.registration.html">registration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EnergyFaultDetector</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">energy_fault_detector</a></li>
+          <li class="breadcrumb-item"><a href="energy_fault_detector.html">energy_fault_detector</a></li>
+      <li class="breadcrumb-item active">anomaly_scores</li>
+  
+  
+  
+
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-energy_fault_detector.anomaly_scores">
+<span id="anomaly-scores"></span><h1>anomaly_scores<a class="headerlink" href="#module-energy_fault_detector.anomaly_scores" title="Link to this heading"></a></h1>
+<p>Anomaly scores that reduce per-feature reconstruction errors to one score per sample.</p>
+<p>After an autoencoder reconstructs its input, an <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore" title="energy_fault_detector.core.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a>
+aggregates the per-feature reconstruction errors into a single scalar per sample.
+Samples with high scores are candidate anomalies.</p>
+<p>Each scorer subclasses <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore" title="energy_fault_detector.core.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a> and is selected
+via the <code class="docutils literal notranslate"><span class="pre">train.anomaly_score</span></code> config key.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.MahalanobisScore">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MahalanobisScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pca</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pca_min_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mcd_support_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariance_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cov_det_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shrinkage_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'oas'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/mahalanobis_score.py#L23-L248"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.MahalanobisScore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore" title="energy_fault_detector.core.anomaly_score.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a></p>
+<p>Calculate Mahalanobis scores on the reconstruction errors.</p>
+<p>This class implements the mahalanobis norm calculation based on multiple variants of covariance
+matrix estimation. The cases are defined by the user-set parameter <code class="docutils literal notranslate"><span class="pre">pca</span></code> and the relation of
+the number of samples <code class="docutils literal notranslate"><span class="pre">n</span></code> and the number of features <code class="docutils literal notranslate"><span class="pre">p</span></code>:</p>
+<blockquote>
+<div><p>1. (<code class="docutils literal notranslate"><span class="pre">pca=False</span></code>) and n&gt;=min_cov_det_ratio * p: Estimates the covariance of the
+mean-centred reconstruction errors using the MinCovDet algorithm and returns the
+Mahalanobis distance of each sample.
+2. (<code class="docutils literal notranslate"><span class="pre">pca=False</span></code>) and n&lt;min_cov_det_ratio * p: Estimates the covariance of the
+mean-centred reconstruction errors using shrinkage based algorithms like Ledoit-Wolf or OAS.
+The estimator can be specified via the parameter <code class="docutils literal notranslate"><span class="pre">covariance_method</span></code> and automatically
+falls back to a shrinkage estimator (Ledoit-Wolf/OAS) when MinCovDet would become unstable.
+3. (<code class="docutils literal notranslate"><span class="pre">pca=True</span></code>): A PCA is carried out on  standardized reconstruction errors to reduce the
+dimensionality. MinCovDet is then used to estimate the Covariance matrix in order to compute
+the Mahalanobis distance of each sample. This method is deprecated because it does not consider
+all correlations in the reconstruction errors which might lead to less useful anomaly scores.</p>
+</div></blockquote>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version The: </span><code class="docutils literal notranslate"><span class="pre">pca=True</span></code> path is deprecated and will be replaced by full covariance matrix estimators.
+It is kept for backwards compatibility; use <code class="docutils literal notranslate"><span class="pre">pca=False</span></code> for the direct
+full-dimensionality Mahalanobis distance. The <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter is deprecated and no
+longer has any effect.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pca</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – deprecated. If True, standardize, reduce dimensionality via PCA and estimate the
+covariance with MinCovDet (legacy behaviour). If False, estimate the
+covariance on the full-dimensionality mean-centred errors. Default <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>scale</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – deprecated, no longer has any effect.</p></li>
+<li><p><strong>pca_min_var</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – parameter for PCA, variance to keep. Default 0.9</p></li>
+<li><p><strong>mcd_support_fraction</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – parameter for Minimum Covariance Determinant estimation. Default 0.9</p></li>
+<li><p><strong>covariance_method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <p>which covariance estimator to use in the (<code class="docutils literal notranslate"><span class="pre">pca=False</span></code>) path.
+One of:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (default): use MinCovDet when <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">/</span> <span class="pre">p</span> <span class="pre">&gt;=</span> <span class="pre">min_cov_det_ratio</span></code> and the
+resulting covariance is stable (full rank / well conditioned), otherwise fall back
+to a shrinkage estimator (<code class="docutils literal notranslate"><span class="pre">shrinkage_method</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;min_cov_det&quot;</span></code>: always use MinCovDet. May raise or be unstable when <code class="docutils literal notranslate"><span class="pre">n</span></code> is
+not sufficiently larger than <code class="docutils literal notranslate"><span class="pre">p</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;shrinkage&quot;</span></code>: always use a shrinkage estimator (<code class="docutils literal notranslate"><span class="pre">shrinkage_method</span></code>).</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>min_cov_det_ratio</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – minimum sample-to-feature ratio <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">/</span> <span class="pre">p</span></code> required (in <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> mode)
+for MinCovDet to be used instead of shrinkage. Default <code class="docutils literal notranslate"><span class="pre">2.0</span></code>.</p></li>
+<li><p><strong>shrinkage_method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – which shrinkage estimator to use. One of <code class="docutils literal notranslate"><span class="pre">&quot;oas&quot;</span></code> (default) or
+<code class="docutils literal notranslate"><span class="pre">&quot;ledoit_wolf&quot;</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Configuration example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">anomaly_score</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mahalanobis</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">pca</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">      </span><span class="nt">covariance_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+<span class="w">      </span><span class="nt">min_cov_det_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">      </span><span class="nt">shrinkage_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oas</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.MahalanobisScore.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/mahalanobis_score.py#L132-L155"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.MahalanobisScore.fit" title="Link to this definition"></a></dt>
+<dd><p>Fit the covariance estimator to determine Mahalanobis distance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – numpy 2d array or pandas DataFrame with differences between prediction and actual sensor values.</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – not used, labels indicating whether sample is normal (True) or anomalous (False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.anomaly_scores.MahalanobisScore" title="energy_fault_detector.anomaly_scores.mahalanobis_score.MahalanobisScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MahalanobisScore</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.MahalanobisScore.standardize">
+<span class="sig-name descname"><span class="pre">standardize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/mahalanobis_score.py#L209-L220"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.MahalanobisScore.standardize" title="Link to this definition"></a></dt>
+<dd><p>Standardization of the reconstruction error in x (only used in the deprecated PCA path).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.MahalanobisScore.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/mahalanobis_score.py#L222-L248"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.MahalanobisScore.transform" title="Link to this definition"></a></dt>
+<dd><p>Calculate Mahalanobis distance from x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – numpy 2d array or pandas Dataframe with differences between prediction and actual sensor values</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mahalanobis distance for each sample. Output is a pandas Series if input was a pandas DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.RMSEScore">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">RMSEScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;object</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/rmse_score.py#L20-L99"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.RMSEScore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="energy_fault_detector.core.html#energy_fault_detector.core.AnomalyScore" title="energy_fault_detector.core.anomaly_score.AnomalyScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnomalyScore</span></code></a></p>
+<p>Calculate the RMSE of given reconstruction errors.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version The: </span><code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter no longer has any effect and is only accepted for backwards compatibility.
+It will be removed in a future version.</p>
+</div>
+<p>Configuration example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">anomaly_score</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rmse</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.RMSEScore.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/rmse_score.py#L52-L64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.RMSEScore.fit" title="Link to this definition"></a></dt>
+<dd><p>Calculate standard deviation and mean on training data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – numpy 2d array with differences between prediction and actual sensor values</p></li>
+<li><p><strong>y</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code>]</span>) – not used, labels indicating whether sample is normal (True) or anomalous (False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#energy_fault_detector.anomaly_scores.RMSEScore" title="energy_fault_detector.anomaly_scores.rmse_score.RMSEScore"><code class="xref py py-class docutils literal notranslate"><span class="pre">RMSEScore</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.RMSEScore.standardize">
+<span class="sig-name descname"><span class="pre">standardize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/rmse_score.py#L66-L82"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.RMSEScore.standardize" title="Link to this definition"></a></dt>
+<dd><p>Standardization of the reconstruction error in x</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="energy_fault_detector.anomaly_scores.RMSEScore.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/AEFDI/EnergyFaultDetector/blob/main/energy_fault_detector/anomaly_scores/rmse_score.py#L84-L99"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#energy_fault_detector.anomaly_scores.RMSEScore.transform" title="Link to this definition"></a></dt>
+<dd><p>Calculate the RMSE based on the deviation matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – numpy 2d array or pandas Dataframe with differences between prediction and actual sensor values</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>RMSE for each sample.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html">anomaly_scores.weighted_rmse_score</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore"><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore.feature_weights"><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore.feature_weights</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore.apply_weights_to_squared_residuals"><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore.apply_weights_to_squared_residuals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore.fit"><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore.scale_with_std"><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore.scale_with_std()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html#energy_fault_detector.anomaly_scores.weighted_rmse_score.WeightedRMSEScore.transform"><code class="docutils literal notranslate"><span class="pre">WeightedRMSEScore.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="energy_fault_detector.html" class="btn btn-neutral float-left" title="energy_fault_detector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="energy_fault_detector.anomaly_scores.weighted_rmse_score.html" class="btn btn-neutral float-right" title="anomaly_scores.weighted_rmse_score" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Fraunhofer IEE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

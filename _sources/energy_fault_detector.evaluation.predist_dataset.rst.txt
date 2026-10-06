@@ -1,0 +1,7 @@
+evaluation.predist\_dataset
+===========================
+
+.. automodule:: energy_fault_detector.evaluation.predist_dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:
