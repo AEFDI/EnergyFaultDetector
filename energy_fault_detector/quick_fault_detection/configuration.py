@@ -72,36 +72,30 @@ def update_preprocessor_config(config: Config, features_to_exclude: Union[List[s
         Config: Updated config object.
     """
 
+    dp = config.train.data_preprocessor
+
     if features_to_exclude is not None:
-        if config['train']['data_preprocessor'].get('params'):
-            # old data preprocessing configuration style
-            config['train']['data_preprocessor']['params']['features_to_exclude'] = features_to_exclude
-        else:
-            # new configuration style
-            steps = config['train']['data_preprocessor'].setdefault('steps', [])
-            column_selector_found = False
-            for step in steps:
-                if step['name'] == 'column_selector':
-                    step['params']['features_to_exclude'] = features_to_exclude
-                    column_selector_found = True
-                    break
-            if not column_selector_found:
-                steps.append({'name': 'column_selector', 'params': {'features_to_exclude': features_to_exclude}})
+        if dp.steps is None:
+            dp.steps = []
+        column_selector_found = False
+        for step in dp.steps:
+            if step['name'] == 'column_selector':
+                step['params']['features_to_exclude'] = features_to_exclude
+                column_selector_found = True
+                break
+        if not column_selector_found:
+            dp.steps.append({'name': 'column_selector', 'params': {'features_to_exclude': features_to_exclude}})
     if angles is not None:
-        if config['train']['data_preprocessor'].get('params'):
-            # old data preprocessing configuration style
-            config['train']['data_preprocessor']['params']['angles'] = angles
-        else:
-            # new configuration style
-            steps = config['train']['data_preprocessor'].setdefault('steps', [])
-            angle_transformer_found = False
-            for step in steps:
-                if step['name'] == 'angle_transformer':
-                    step['params']['angles'] = angles
-                    angle_transformer_found = True
-                    break
-            if not angle_transformer_found:
-                steps.append({'name': 'angle_transformer', 'params': {'angles': angles}})
+        if dp.steps is None:
+            dp.steps = []
+        angle_transformer_found = False
+        for step in dp.steps:
+            if step['name'] == 'angle_transformer':
+                step['params']['angles'] = angles
+                angle_transformer_found = True
+                break
+        if not angle_transformer_found:
+            dp.steps.append({'name': 'angle_transformer', 'params': {'angles': angles}})
     return config
 
 
@@ -115,7 +109,7 @@ def update_autoencoder_config(config: Config, autoencoder_params: dict) -> Confi
     Returns:
         Config: Updated config object.
     """
-    config['train']['autoencoder']['params'].update(autoencoder_params)
+    config.train.autoencoder.params.update(autoencoder_params)
     return config
 
 
@@ -137,5 +131,5 @@ def update_threshold_config(config: Config, quantile: float) -> Config:
         logger.warning(f'Quantile for reconstruction error threshold was specified as {quantile} which smaller than 0.'
                        f'To avoid an exception quantile will be set to the default value 0.95')
         quantile = 0.95
-    config['train']['threshold_selector']['params']['quantile'] = quantile
+    config.train.threshold_selector.params['quantile'] = quantile
     return config

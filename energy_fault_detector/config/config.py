@@ -1,176 +1,267 @@
-"""Configuration object for anomaly detection"""
+"""Configuration object for anomaly detection.
+
+The :class:`Config` class is a Pydantic ``BaseModel`` that validates YAML/dict
+input.  Top-level sections (``train``, ``root_cause_analysis``, ``dtype``) are
+typed fields accessible via normal attribute access
+(``config.train.autoencoder.params``).  File I/O (``Config('file.yaml')``,
+``write_config``) is built into the constructor and model methods.
+
+All sections have sensible defaults — ``Config()`` with no arguments produces a
+ready-to-use configuration (MultilayerAutoencoder, RMSE anomaly score, quantile
+threshold selector, default preprocessing pipeline, BlockDataSplitter).
+"""
 
 import logging
-from pathlib import Path
-from typing import Dict, Optional, List, Callable, Any
 import warnings
+from pathlib import Path
+from typing import Any, Literal
 
-from energy_fault_detector.config.base_config import BaseConfig, InvalidConfigFile
+import yaml
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    PrivateAttr,
+    ValidationError,
+    model_validator,
+)
 
-logger = logging.getLogger('energy_fault_detector')
+logger = logging.getLogger("energy_fault_detector")
 
-# TODO: Clearer error/validation messages
-# Consider pydantic or data classes instead of cerberus
-TRAIN_SCHEMA = {
-    'anomaly_score': {
-        'type': 'dict',
-        'required': True,
-        'schema': {
-            'name': {'type': 'string', 'required': True},
-            'params': {'type': 'dict', 'required': False},
+
+class InvalidConfigFile(Exception):
+    """Raise when the configuration file is not valid."""
+
+
+def _format_validation_error(exc: ValidationError) -> InvalidConfigFile:
+    """Convert a Pydantic ``ValidationError`` into an :class:`InvalidConfigFile`."""
+    lines = []
+    for err in exc.errors():
+        loc = ".".join(str(p) for p in err["loc"])
+        lines.append(f"{loc}: {err['msg']}")
+    return InvalidConfigFile("Configuration is not valid: " + "; ".join(lines))
+
+
+class AnomalyScoreConfig(BaseModel):
+    """``train.anomaly_score`` section."""
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    name: str = "rmse"
+    params: dict[str, Any] = {}
+
+    @model_validator(mode="after")
+    def _none_params_to_empty(self) -> "AnomalyScoreConfig":
+        if self.params is None:
+            self.params = {}
+        return self
+
+
+class AutoencoderConfig(BaseModel):
+    """``train.autoencoder`` section.
+
+    ``params`` is an opaque dict consumed by the registry/model factory
+    (includes autoencoder-specific keys like ``sequence_builder``).
+    """
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    name: str = "default"
+    params: dict[str, Any] = {}
+    verbose: int | None = None
+
+    @model_validator(mode="after")
+    def _none_params_to_empty(self) -> "AutoencoderConfig":
+        if self.params is None:
+            self.params = {}
+        return self
+
+
+class DataPreprocessorConfig(BaseModel):
+    """``train.data_preprocessor`` section (``extra='forbid'``).
+
+    After validation, ``steps`` is always a list (converted from legacy
+    ``params`` if needed, or defaulted to ``[]``).  The ``params`` field is
+    cleared after conversion so that ``write_config`` produces the ``steps``
+    format.  An empty ``steps`` list means "use the DataPreprocessor's built-in
+    default pipeline".
+    """
+
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+    params: dict[str, Any] | None = None
+    steps: list[dict[str, Any]] | None = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def _none_to_empty(cls, data: Any) -> Any:
+        """Treat ``data_preprocessor: null`` (or missing) as an empty config."""
+        if data is None:
+            return {}
+        return data
+
+    @model_validator(mode="after")
+    def _convert_params_to_steps(self) -> "DataPreprocessorConfig":
+        if self.steps and self.params:
+            warnings.warn(
+                "Both 'data_preprocessor.steps' and 'data_preprocessor.params' provided in config; "
+                "'data_preprocessor.steps' take precedence and 'data_preprocessor.params' are ignored. "
+                "Note: 'data_preprocessor.params' will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.params = None
+        elif self.params and not self.steps:
+            warnings.warn(
+                "Using deprecated 'data_preprocessor.params' to create a DataPreprocessor. "
+                "Please update to 'steps'; 'data_preprocessor.params' will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.steps = _data_preprocessor_params_to_steps(self.params)
+            self.params = None
+        if self.steps is None:
+            self.steps = []
+        return self
+
+
+class ThresholdSelectorConfig(BaseModel):
+    """``train.threshold_selector`` section."""
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    name: str = "quantile"
+    fit_on_val: bool = False
+    params: dict[str, Any] = {}
+
+    @model_validator(mode="after")
+    def _none_params_to_empty(self) -> "ThresholdSelectorConfig":
+        if self.params is None:
+            self.params = {}
+        return self
+
+
+class DataClippingConfig(BaseModel):
+    """``train.data_clipping`` section."""
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    lower_percentile: float | None = None
+    upper_percentile: float | None = None
+    features_to_exclude: list[str] | None = None
+    features_to_clip: list[str] | None = None
+
+
+class DataSplitterConfig(BaseModel):
+    """``train.data_splitter`` section.
+
+    ``type`` selects block-style vs sklearn-style splitting.  The remaining
+    fields are type-specific options; irrelevant ones are ignored by the
+    splitter implementation.
+
+    Defaults to ``BlockDataSplitter`` with ``train_block_size``, ``val_block_size``,
+    ``validation_split`` and ``shuffle`` all ``None``; the
+    :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`
+    then falls back to its own block-size defaults (5040 / 1680 samples).  Early
+    stopping requires validation data to be configured explicitly: a positive
+    ``val_block_size`` for block splitters, or a ``validation_split`` in (0, 1)
+    for sklearn splitters.
+    """
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    type: Literal[
+        "DataSplitter",
+        "BlockDataSplitter",
+        "blocks",
+        "sklearn",
+        "train_test_split",
+        "train_val_split",
+    ] = "BlockDataSplitter"
+    train_block_size: int | None = None
+    val_block_size: int | None = None
+    validation_split: float | None = None
+    shuffle: bool | None = None
+
+
+class TrainConfig(BaseModel):
+    """``train`` section.
+
+    All sub-sections have defaults; ``TrainConfig()`` produces a ready-to-use
+    configuration.
+    """
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    autoencoder: AutoencoderConfig = AutoencoderConfig()
+    anomaly_score: AnomalyScoreConfig = AnomalyScoreConfig()
+    data_preprocessor: DataPreprocessorConfig = DataPreprocessorConfig()
+    threshold_selector: ThresholdSelectorConfig = ThresholdSelectorConfig()
+    data_clipping: DataClippingConfig | None = None
+    data_splitter: DataSplitterConfig = DataSplitterConfig()
+    protect_conditional_features: bool = False
+
+
+class RootCauseAnalysisConfig(BaseModel):
+    """``root_cause_analysis`` section.
+
+    The YAML keeps all ARCANA parameters flat (``alpha``, ``num_iter``, …) at the
+    section level.  The :attr:`params` property returns them as a dict for easy
+    unpacking (``Arcana(**config.root_cause_analysis.params)``).
+    """
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+    alpha: float | None = None
+    init_x_bias: str | None = None
+    num_iter: int | None = None
+    epsilon: float | None = None
+    verbose: bool | None = None
+    max_sample_threshold: int | None = None
+
+    @property
+    def params(self) -> dict[str, Any]:
+        """Return all non-None RCA parameters as a dict (including extras)."""
+        result = {
+            k: v
+            for k, v in self.__dict__.items()
+            if v is not None and not k.startswith("_")
         }
-    },
-    'autoencoder': {
-        'type': 'dict',
-        'required': True,
-        'schema': {
-            'name': {'type': 'string', 'required': True},
-            'params': {'type': ['dict', 'list'], 'required': True},
-            'verbose': {'type': 'integer', 'required': False},
-        }
-    },
-    'data_preprocessor': {
-        'type': 'dict',
-        'required': True,
-        'allow_unknown': False,
-        'nullable': True,  # if not specified, create default pipeline
-        'schema': {
-            'params': {'type': 'dict', 'required': False, 'nullable': True,},
-            'steps': {
-                'type': 'list',
-                'required': False,
-                'nullable': True,
-                'schema': {
-                    'type': 'dict',
-                    'allow_unknown': True
-                }
-            },
-        }
-    },
-    'threshold_selector': {
-        'type': 'dict',
-        'required': True,
-        'schema': {
-            'name': {'type': 'string', 'required': True},
-            'fit_on_val': {'type': 'boolean', 'required': False, 'default': False},
-            'params': {'type': 'dict', 'required': False},
-        }
-    },
-    'data_clipping': {
-        'type': 'dict',
-        'required': False,  # no data clipping if not specified
-        'schema': {
-            'lower_percentile': {'type': 'float', 'required': False},
-            'upper_percentile': {'type': 'float', 'required': False},
-            'features_to_exclude': {'type': 'list', 'required': False, 'schema': {'type': 'string'}},
-            'features_to_clip': {'type': 'list', 'required': False, 'schema': {'type': 'string'}},
-        }
-    },
-    'data_splitter': {
-        'type': 'dict',
-        'required': False,  # defaults if not specified
-        'schema': {
-            'type': {'type': 'string', 'required': False, 'default': 'BlockDataSplitter',
-                     'allowed': ['DataSplitter', 'BlockDataSplitter', 'blocks', 'sklearn', 'train_test_split', 'train_val_split']},
-            'train_block_size': {'type': 'integer', 'required': False, 'dependencies': {'type': ['DataSplitter', 'BlockDataSplitter', 'blocks']}},
-            'val_block_size': {'type': 'integer', 'required': False, 'dependencies': {'type': ['DataSplitter', 'BlockDataSplitter', 'blocks']}},
-            'validation_split': {'type': 'float', 'required': False, 'dependencies': {'type': ['sklearn', 'train_test_split', 'train_val_split']}},
-            'shuffle': {'type': 'boolean', 'required': False, 'dependencies': {'type': ['sklearn', 'train_test_split']}},
-        }
-    },
-    'protect_conditional_features': {'type': 'boolean', 'required': False, 'default': False},
-}
-
-ROOT_CAUSE_ANALYSIS_SCHEMA = {
-    'alpha': {'type': 'float', 'required': False},
-    'init_x_bias': {'type': 'string', 'required': False},
-    'num_iter': {'type': 'integer', 'required': False},
-    'epsilon': {'type': 'float', 'required': False},
-    'verbose': {'type': 'boolean', 'required': False},
-    'max_sample_threshold': {'type': 'integer', 'required': False},
-}
-
-PREDICT_SCHEMA = {
-    'criticality': {'type': 'dict', 'required': False, 'schema': {
-        'max_criticality': {'type': 'integer', 'required': False}
-    }}
-}
-
-CONFIG_SCHEMA = {
-    'train': {'type': 'dict', 'schema': TRAIN_SCHEMA, 'required': False, 'allow_unknown': True},
-    'predict': {'type': 'dict', 'schema': PREDICT_SCHEMA, 'required': False},
-    'root_cause_analysis': {'type': 'dict', 'schema': ROOT_CAUSE_ANALYSIS_SCHEMA, 'required': False},
-    'dtype': {'type': 'string', 'required': False, 'allowed': ['float32', 'float64']}
-}
+        extra = getattr(self, "__pydantic_extra__", None)
+        if extra:
+            result.update({k: v for k, v in extra.items() if v is not None})
+        return result
 
 
-def _validate_early_stopping(config_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """Check whether early_stopping settings are ok."""
+def _validate_early_stopping(model: "Config") -> None:
+    """Check whether early_stopping settings are consistent with the data splitter."""
+    params = model.train.autoencoder.params
+    early_stopping = params.get("early_stopping", False)
 
-    train_config = config_dict.get('train', {})
-    early_stopping = train_config.get('autoencoder', {}).get('params', {}).get('early_stopping', False)
+    splitter = model.train.data_splitter
+    block_types = {"DataSplitter", "BlockDataSplitter", "blocks"}
 
-    data_splitter = train_config.get('data_splitter', {})
-    validation_split = data_splitter.get('validation_split', 0.0)
-    val_block_size = data_splitter.get('val_block_size', 0)
-
-    if not isinstance(validation_split, float):
-        validation_split = 0.0
-
-    validation = 0 < validation_split < 1 or val_block_size > 0
+    if splitter.type in block_types:
+        val_block_size = splitter.val_block_size or 0
+        validation = val_block_size > 0
+    else:
+        validation_split = splitter.validation_split or 0.0
+        if not isinstance(validation_split, float):
+            validation_split = 0.0
+        validation = 0 < validation_split < 1
 
     if early_stopping and not validation:
-        msg = f'Configuration is not valid: If early_stopping is enabled either validation_split or ' \
-              f'val_block_size must be given. If validation_split is used, it must be a float >0 and <1.'
+        msg = (
+            "Configuration is not valid: If early_stopping is enabled either validation_split or "
+            "val_block_size must be given. If validation_split is used, it must be a float >0 and <1."
+        )
         raise InvalidConfigFile(msg)
 
-    return config_dict
 
+def _validate_sequence_fit_on_val(model: "Config") -> None:
+    """Warn if ``fit_on_val=True`` with a sequence model and ``shuffle=True``.
 
-def _parse_timedelta(config_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse sequence_builder.ts_freq from a compact string (e.g. '10m') to np.timedelta64.
-
-    Expects `ts_freq` under: train.autoencoder.params.sequence_builder.ts_freq
-    and supports strings like '10m', '1h', '30s'.
+    Sequence models need temporally contiguous validation data.  Shuffling
+    breaks that contiguity, and the sequence builder will drop windows that cross
+    data gaps — potentially leaving no valid windows for threshold fitting.
     """
-    UNIT_MAP = {"min": "m", "sec": "s", "hr": "h", "hour": "h"}
-
-    train_cfg = config_dict.get("train", {})
-    ae_cfg = train_cfg.get("autoencoder", {}) or {}
-    params_cfg = ae_cfg.get("params", {}) or {}
-    seq_builder_cfg = params_cfg.get("sequence_builder", {}) or {}
-    ts_freq = seq_builder_cfg.get("ts_freq")
-
-    if isinstance(ts_freq, str):
-        # Parse '10m', '1h', etc.
-        digits = "".join(ch for ch in ts_freq if ch.isdigit())
-        unit = "".join(ch for ch in ts_freq if not ch.isdigit())
-        unit = UNIT_MAP.get(unit, unit)
-        if not digits or not unit:
-            raise ValueError(f"Unexpected value for `ts_freq`: {ts_freq!r}. Expected format like '10m', '1h'.")
-        import numpy as np  # noqa: F401
-        value = int(digits)
-        seq_builder_cfg["ts_freq"] = np.timedelta64(value, unit)
-        params_cfg["sequence_builder"] = seq_builder_cfg
-        ae_cfg["params"] = params_cfg
-        train_cfg["autoencoder"] = ae_cfg
-        config_dict["train"] = train_cfg
-
-    return config_dict
-
-
-def _validate_sequence_fit_on_val(config_dict: Dict[str, Any]) -> Dict[str, Any]:
-    """Warn if fit_on_val=True with a sequence model and shuffle=True."""
-
-    train_cfg = config_dict.get("train", {})
-    has_sequence_builder = "sequence_builder" in (
-        train_cfg.get("autoencoder", {}).get("params", {}) or {}
-    )
-    fit_on_val = train_cfg.get("threshold_selector", {}).get("fit_on_val", False)
-    shuffle = train_cfg.get("data_splitter", {}).get("shuffle", False)
+    params = model.train.autoencoder.params
+    has_sequence_builder = "sequence_builder" in params
+    fit_on_val = model.train.threshold_selector.fit_on_val
+    shuffle = model.train.data_splitter.shuffle or False
 
     if has_sequence_builder and fit_on_val and shuffle:
-        import warnings
         warnings.warn(
             "Using 'fit_on_val=True' with a sequence model and 'shuffle=True' may result in "
             "non-contiguous validation timestamps. The sequence builder will drop windows that "
@@ -180,170 +271,89 @@ def _validate_sequence_fit_on_val(config_dict: Dict[str, Any]) -> Dict[str, Any]
             stacklevel=2,
         )
 
-    return config_dict
 
+def _data_preprocessor_params_to_steps(params: dict[str, Any]) -> list[dict[str, Any]]:
+    """Translate old ``data_preprocessor.params`` into a ``steps`` specification.
 
-class Config(BaseConfig):
-    """Configuration class. Either config_filename or config_dict must be provided.
-    Reads a yaml file with the anomaly detection configuration and sets corresponding settings.
-    """
-
-    def __init__(self, config_filename: str | Path = None, config_dict: Dict[str, Any] = None):
-        super().__init__(config_filename=config_filename, config_dict=config_dict)
-        self._schema = CONFIG_SCHEMA
-        self._extra_validation_checks: List[Callable[[Dict], Dict]] = [_parse_timedelta,
-                                                                       _validate_early_stopping,
-                                                                       _validate_sequence_fit_on_val]
-        self.read_config()
-
-    def __getitem__(self, item) -> Any:
-        return self.config_dict[item]
-
-    def __contains__(self, item):
-        return item in self.config_dict
-
-    @property
-    def data_preprocessor_steps(self) -> List[Dict[str, Any]]:
-        """Get the data preprocessor steps."""
-        data_prep = self.config_dict.get('train', {}).get('data_preprocessor', {}) or {}
-        params = data_prep.get('params') or {}
-        steps = data_prep.get('steps') or []
-
-        if steps and params:
-            warnings.warn(
-                "Both 'data_preprocessor.steps' and 'data_preprocessor.params' provided in config; "
-                "'data_preprocessor.steps' take precedence and 'data_preprocessor.params' are ignored. "
-                "Note: 'data_preprocessor.params' will be removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            return steps
-
-        if params and not steps:
-            warnings.warn(
-                "Using deprecated 'data_preprocessor.params' to create a DataPreprocessor. "
-                "Please update to 'steps'; 'data_preprocessor.params' will be removed in a future version.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            steps = _data_preprocessor_params_to_steps(params)
-
-        return steps or []
-
-    @property
-    def root_cause_analysis(self) -> bool:
-        """Whether to run ARCANA."""
-        return 'root_cause_analysis' in self.config_dict
-
-    @property
-    def arcana_params(self) -> Dict[str, Any]:
-        """Get the ARCANA parameters."""
-        return self.config_dict.get('root_cause_analysis', {})
-
-    @property
-    def data_split_params(self) -> Dict[str, Any]:
-        """DataSplitter or train_test_split parameters."""
-        return self.config_dict.get('train', {}).get('data_splitter', {})
-
-    @property
-    def data_clipping(self) -> bool:
-        """Whether to clip training data."""
-        return 'data_clipping' in self.config_dict.get('train', {})
-
-    @property
-    def data_clipping_params(self) -> Dict[str, Any]:
-        """Data clipping parameters."""
-        return self.config_dict.get('train', {}).get('data_clipping', {})
-
-    @property
-    def max_criticality(self) -> Optional[int]:
-        """Max criticality value."""
-        return self.config_dict.get('predict', {}).get('criticality', {}).get('max_criticality', 144)
-
-    @property
-    def fit_threshold_on_val(self) -> bool:
-        """Whether to fit threshold on validation data only."""
-        return self.config_dict.get('train', {}).get('threshold_selector', {}).get('fit_on_val', False)
-
-    @property
-    def dtype(self):
-        """Data type, float32 by default."""
-        return self.config_dict.get('dtype', 'float32')
-
-    @property
-    def protect_conditional_features(self) -> bool:
-        """Whether to protect conditional features from being dropped by preprocessing."""
-        return self.config_dict.get('train', {}).get('protect_conditional_features', False)
-
-
-def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Translate old data_preprocessor params into a 'steps' specification.
+    Args:
+        params: Legacy params dict.
 
     Returns:
-        List of step-spec dicts to be passed to the DataPreprocessor, e.g.:
-        [
-            {"name": "duplicate_to_nan", "params": {...}},
-            {"name": "counter_diff_transformer", "params": {...}},
-            ...
-        ]
+        List of step-spec dicts to be passed to the DataPreprocessor, e.g.::
+
+            [
+                {"name": "duplicate_to_nan", "params": {...}},
+                {"name": "counter_diff_transformer", "params": {...}},
+                ...
+            ]
     """
 
     p = params or {}
-    steps: List[Dict[str, Any]] = []
+    steps: list[dict[str, Any]] = []
 
     # 0. DuplicateValuesToNan
     if p.get("include_duplicate_value_to_nan", False):
-        steps.append({
-            "name": "duplicate_to_nan",
-            "params": {
-                "value_to_replace": p.get("value_to_replace", 0),
-                "n_max_duplicates": p.get("n_max_duplicates", 144),
-                "features_to_exclude": p.get("duplicate_features_to_exclude"),
-            },
-        })
+        steps.append(
+            {
+                "name": "duplicate_to_nan",
+                "params": {
+                    "value_to_replace": p.get("value_to_replace", 0),
+                    "n_max_duplicates": p.get("n_max_duplicates", 144),
+                    "features_to_exclude": p.get("duplicate_features_to_exclude"),
+                },
+            }
+        )
 
     # 1. CounterDiffTransformer
     counter_cols = p.get("counter_columns_to_transform", []) or []
     if counter_cols:
-        steps.append({
-            "name": "counter_diff_transformer",
-            "params": {
-                "counters": counter_cols,
-                "compute_rate": False,
-                "reset_strategy": "zero",
-            },
-        })
+        steps.append(
+            {
+                "name": "counter_diff_transformer",
+                "params": {
+                    "counters": counter_cols,
+                    "compute_rate": False,
+                    "reset_strategy": "zero",
+                },
+            }
+        )
 
     # 2. ColumnSelector
     if p.get("include_column_selector", True):
-        steps.append({
-            "name": "column_selector",
-            "params": {
-                "max_nan_frac_per_col": p.get("max_nan_frac_per_col", 0.05),
-                "features_to_exclude": p.get("features_to_exclude"),
-            },
-        })
+        steps.append(
+            {
+                "name": "column_selector",
+                "params": {
+                    "max_nan_frac_per_col": p.get("max_nan_frac_per_col", 0.05),
+                    "features_to_exclude": p.get("features_to_exclude"),
+                },
+            }
+        )
 
     # 3. LowUniqueValueFilter
     if p.get("include_low_unique_value_filter", True):
-        steps.append({
-            "name": "low_unique_value_filter",
-            "params": {
-                "min_unique_value_count": p.get("min_unique_value_count", 2),
-                "max_col_zero_frac": p.get("max_col_zero_frac", 1.0),
-            },
-        })
+        steps.append(
+            {
+                "name": "low_unique_value_filter",
+                "params": {
+                    "min_unique_value_count": p.get("min_unique_value_count", 2),
+                    "max_col_zero_frac": p.get("max_col_zero_frac", 1.0),
+                },
+            }
+        )
 
     # 4. AngleTransformer
     angles = p.get("angles", []) or []
     if angles:
-        steps.append({
-            "name": "angle_transformer",
-            "params": {"angles": angles},
-        })
+        steps.append(
+            {
+                "name": "angle_transformer",
+                "params": {"angles": angles},
+            }
+        )
 
     # 5. SimpleImputer
-    imputer_params: Dict[str, Any] = {"strategy": p.get("imputer_strategy", "mean")}
+    imputer_params: dict[str, Any] = {"strategy": p.get("imputer_strategy", "mean")}
     if imputer_params["strategy"] == "constant":
         imputer_params["fill_value"] = p.get("imputer_fill_value", None)
     steps.append({"name": "simple_imputer", "params": imputer_params})
@@ -351,8 +361,184 @@ def _data_preprocessor_params_to_steps(params: Dict[str, Any]) -> List[Dict[str,
     # 6. Scaler
     scale = p.get("scale", "standardize")
     if scale in ["standardize", "standard", "standardscaler"]:
-        steps.append({"name": "scaler", "step_name": "scaler", "params": {"scaler_type": "standard"}})
+        steps.append(
+            {
+                "name": "scaler",
+                "step_name": "scaler",
+                "params": {"scaler_type": "standard"},
+            }
+        )
     else:
-        steps.append({"name": "scaler", "step_name": "scaler", "params": {"scaler_type": "minmax"}})
+        steps.append(
+            {
+                "name": "scaler",
+                "step_name": "scaler",
+                "params": {"scaler_type": "minmax"},
+            }
+        )
 
     return steps
+
+
+class Config(BaseModel):
+    """Configuration for the anomaly-detection pipeline.
+
+    Loads and validates a YAML configuration file (or an inline dict) using
+    Pydantic models.  Top-level sections (``train``, ``root_cause_analysis``,
+    ``dtype``) are accessible via normal attribute access
+    (e.g. ``config.train.autoencoder.params``).
+
+    All sections have defaults — ``Config()`` with no arguments produces a
+    ready-to-use configuration.
+
+    Example:
+
+        .. code-block:: python
+
+            from energy_fault_detector.config import Config
+
+            # defaults
+            config = Config()
+
+            # from YAML file
+            config = Config('config.yaml')
+
+            # from dict
+            config = Config({'train': {...}})
+
+    Args:
+        config_filename: Path to a YAML configuration file, or an inline
+            configuration dictionary.
+        config_dict: Inline configuration dictionary (alternative to passing
+            a dict as the first positional argument).
+    """
+
+    model_config = ConfigDict(
+        extra="ignore", validate_default=True, validate_assignment=True
+    )
+    train: TrainConfig = TrainConfig()
+    root_cause_analysis: RootCauseAnalysisConfig | None = None
+    dtype: Literal["float32", "float64"] = "float32"
+
+    _configuration_file: str | None = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def _run_extra_checks(self) -> "Config":
+        """Run post-validation checks."""
+        _validate_early_stopping(self)
+        _validate_sequence_fit_on_val(self)
+        return self
+
+    def __init__(
+        self,
+        config_filename: str | Path | dict[str, Any] | None = None,
+        config_dict: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if isinstance(config_filename, dict):
+            config_dict = config_filename
+            config_filename = None
+
+        if config_filename is not None:
+            with open(config_filename, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if data is None:
+                raise InvalidConfigFile("The configuration file is empty!")
+            self._log_unknown_keys(data)
+            try:
+                super().__init__(**data)
+            except ValidationError as exc:
+                raise _format_validation_error(exc) from exc
+            object.__setattr__(self, "_configuration_file", str(config_filename))
+        elif config_dict is not None:
+            self._log_unknown_keys(config_dict)
+            try:
+                super().__init__(**config_dict)
+            except ValidationError as exc:
+                raise _format_validation_error(exc) from exc
+        else:
+            super().__init__(**kwargs)
+
+    @staticmethod
+    def _log_unknown_keys(data: Any) -> None:
+        if isinstance(data, dict):
+            known_keys = set(Config.model_fields.keys())
+            for key in list(data.keys()):
+                if key not in known_keys:
+                    logger.info(
+                        "Key `%s` is an unknown field and will be ignored.", key
+                    )
+
+    def __repr__(self) -> str:
+        return repr(self.model_dump(exclude_none=True))
+
+    @property
+    def config_dict(self) -> dict[str, Any]:
+        """Return a plain dictionary representation of the config.
+
+        .. deprecated::
+            Use :meth:`model_dump` (Pydantic's built-in) or direct attribute
+            access instead.
+        """
+        warnings.warn(
+            "Config.config_dict is deprecated; use Config.model_dump() or "
+            "direct attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.model_dump(exclude_none=True)
+
+    def write_config(
+        self, file_name: str | None = None, overwrite: bool = False
+    ) -> None:
+        """Write the configuration to a YAML file.
+
+        Args:
+            file_name: Target path. If ``None``, uses the original configuration file.
+            overwrite: If ``False``, raises :class:`FileExistsError` when the file
+                already exists.
+        """
+        if file_name is None and self._configuration_file is None:
+            raise ValueError(
+                "No file name given and no known configuration file to overwrite."
+            )
+
+        file_name = file_name if file_name is not None else self._configuration_file
+        if Path(file_name).exists() and not overwrite:
+            raise FileExistsError(
+                f"File {file_name} already exists and overwrite is set to False."
+            )
+
+        conf_dict = self.model_dump(exclude_none=True)
+
+        with open(file_name, "w", encoding="utf-8") as f:
+            yaml.safe_dump(conf_dict, f)
+
+    def save(self, file_name: str, overwrite: bool = False) -> None:
+        """Save the configuration to a YAML file. Wrapper for :meth:`write_config`."""
+        self.write_config(file_name, overwrite)
+
+    @property
+    def configuration_file(self) -> str | None:
+        """Original YAML file path, if this config was loaded from one."""
+        return self._configuration_file
+
+    def update_config(self, new_config_dict: dict[str, Any]) -> None:
+        """Update configuration from a top-level partial dictionary.
+
+        Deprecated: prefer direct typed attribute access or a new Config instance.
+        """
+        warnings.warn(
+            "Config.update_config() is deprecated; use typed attribute access instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        merged = self.model_dump(exclude_none=True)
+        merged.update(new_config_dict)  # preserves old shallow-merge semantics
+        updated = Config(config_dict=merged)
+
+        for name in self.__class__.model_fields:
+            setattr(self, name, getattr(updated, name))
+
+        object.__setattr__(self, "_configuration_file", None)

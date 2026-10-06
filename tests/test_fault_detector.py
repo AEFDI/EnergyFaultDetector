@@ -79,8 +79,8 @@ class TestFaultDetectorSaveLoad(unittest.TestCase):
         self.assertEqual(original_threshold_params, loaded_threshold_params)
 
         # Check the configuration
-        self.assertDictEqual(self.fault_detector.config.config_dict,
-                             loaded_fault_detector.config.config_dict)
+        self.assertDictEqual(self.fault_detector.config.model_dump(exclude_none=True),
+                             loaded_fault_detector.config.model_dump(exclude_none=True))
 
         # Check path when overwrite = True
         results = self.fault_detector.fit(sensor_data=self.sensor_data, normal_index=self.normal_index,
@@ -159,7 +159,6 @@ class TestFaultDetectorWeightedRMSESaveLoad(unittest.TestCase):
 class TestFaultDetector(unittest.TestCase):
     def setUp(self) -> None:
         self.conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config.yaml'))
-        self.conf.read_config()
 
         self.sensor_data = pd.DataFrame(data=[[1., 2., 3.],
                                               [4., 5., 6.],
@@ -195,8 +194,8 @@ class TestFaultDetector(unittest.TestCase):
         self.assertEqual(fault_detector.model_directory, str(self.test_model_dir))
         self.assertEqual(fault_detector.config, self.conf)
 
-    def test_save_models(self):
-        self.conf.write_config = MagicMock()
+    @patch.object(Config, 'write_config')
+    def test_save_models(self, mock_write_config):
         fault_detector = self._create_fault_detector(self.conf)
 
         asset_id = 1
@@ -209,20 +208,19 @@ class TestFaultDetector(unittest.TestCase):
             self.assertEqual(model_object.save.call_args[0][0],
                              os.path.join(fault_detector.model_directory, str(asset_id), dt, name))
 
-        fault_detector.config.write_config.assert_called_once()
-        self.assertEqual(fault_detector.config.write_config.call_args[0][0],
+        mock_write_config.assert_called_once()
+        self.assertEqual(mock_write_config.call_args[0][0],
                          os.path.join(fault_detector.model_directory, str(asset_id), dt, 'config.yaml'))
 
     @patch("energy_fault_detector.core.fault_detection_model.FaultDetectionModel._load_pickled_model")
-    @patch("energy_fault_detector.config.Config.read_config")
-    def test_load_models(self, mock_load_pickled_model, mock_read_config):
+    @patch("energy_fault_detector.core.fault_detection_model.Config")
+    def test_load_models(self, mock_load_pickled_model, mock_config):
         mock_load_pickled_model.side_effect = [
             mock_data_preprocessor,
             mock_autoencoder,
             mock_threshold,
             mock_score,
         ]
-        mock_read_config = MagicMock()
 
         fault_detector = FaultDetector.load("path_to_saved_models")
 
@@ -233,8 +231,8 @@ class TestFaultDetector(unittest.TestCase):
             self.assertEqual(call_args[1]['model_type'], name)
             self.assertEqual(call_args[1]['model_directory'], os.path.join('path_to_saved_models', name))
 
-    def test_train(self):
-        self.conf.write_config = MagicMock()
+    @patch.object(Config, 'write_config')
+    def test_train(self, mock_write_config):
         fault_detector = self._create_fault_detector(self.conf)
 
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
@@ -258,7 +256,7 @@ class TestFaultDetector(unittest.TestCase):
         mock_threshold.fit.assert_called_once()
         # saved models:
         mock_score.save.assert_called_once()
-        self.conf.write_config.assert_called_once()
+        mock_write_config.assert_called_once()
 
         model_dir = os.path.join(fault_detector.model_directory, fault_detector.save_timestamps[0])
         model_date = results.model_date
@@ -278,7 +276,7 @@ class TestFaultDetector(unittest.TestCase):
                                save_models=False)
 
         mock_score.save.assert_not_called()
-        self.assertEqual(self.conf.write_config.call_count, 1)
+        self.assertEqual(mock_write_config.call_count, 1)
 
     def test_tune(self):
         mock_data_preprocessor.transform.side_effect = [self.sensor_data[self.normal_index],
@@ -447,7 +445,7 @@ class TestFaultDetectorSequenceSaveLoad(unittest.TestCase):
             np.testing.assert_allclose(a, b, atol=1e-6)
 
         # Config should round-trip as well
-        self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
+        self.assertDictEqual(fd.config.model_dump(exclude_none=True), fd2.config.model_dump(exclude_none=True))
 
 
 class TestFaultDetectorBidirectionalSequenceSaveLoad(unittest.TestCase):
@@ -498,7 +496,7 @@ class TestFaultDetectorBidirectionalSequenceSaveLoad(unittest.TestCase):
         for a, b in zip(w1, w2):
             np.testing.assert_allclose(a, b, atol=1e-6)
 
-        self.assertDictEqual(fd.config.config_dict, fd2.config.config_dict)
+        self.assertDictEqual(fd.config.model_dump(exclude_none=True), fd2.config.model_dump(exclude_none=True))
 
 
 class TestAutoencoderGetReconstructionError(unittest.TestCase):
@@ -603,7 +601,7 @@ class TestFaultDetectorConditionalFeatureResolution(unittest.TestCase):
         from energy_fault_detector.autoencoders import MultilayerAutoencoder
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
-        ae_params = self.conf['train']['autoencoder'].get('params', {})
+        ae_params = self.conf.train.autoencoder.params
 
         sensor_data_no_cond = self.sensor_data.drop(columns=['feature_a', 'feature_b'])
         fd._resolve_conditional_features(sensor_data_no_cond)
@@ -681,7 +679,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         self.config_path = os.path.join(PROJECT_ROOT, 'tests/test_data/test_conditional_ae_config.yaml')
         self.conf = Config(self.config_path)
         # Set protect_conditional_features to False
-        self.conf.config_dict['train']['protect_conditional_features'] = False
+        self.conf.train.protect_conditional_features = False
         self.test_dir = tempfile.mkdtemp()
 
         np.random.seed(42)
@@ -703,7 +701,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         from energy_fault_detector.autoencoders import MultilayerAutoencoder
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
-        self.assertFalse(fd.config.protect_conditional_features)
+        self.assertFalse(fd.config.train.protect_conditional_features)
 
         result = fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
 
@@ -719,7 +717,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
 
     def test_protect_true_keeps_constant_conditional(self):
         """When protect=True (default), constant conditional features are kept."""
-        self.conf.config_dict['train']['protect_conditional_features'] = True
+        self.conf.train.protect_conditional_features = True
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
         fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
@@ -769,7 +767,7 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
     def test_default_is_false(self):
         """Default value should be False when not specified."""
         config = Config(os.path.join(PROJECT_ROOT, 'tests/test_data/test_config.yaml'))
-        self.assertFalse(config.protect_conditional_features)
+        self.assertFalse(config.train.protect_conditional_features)
 
     def test_explicit_false(self):
         """Explicit False in config should be respected."""
@@ -782,7 +780,7 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
                 'threshold_selector': {'name': 'quantile', 'params': {'quantile': 0.95}},
             }
         })
-        self.assertFalse(config.protect_conditional_features)
+        self.assertFalse(config.train.protect_conditional_features)
 
     def test_explicit_true(self):
         """Explicit True in config should be respected."""
@@ -795,7 +793,7 @@ class TestProtectConditionalFeaturesConfigProperty(unittest.TestCase):
                 'threshold_selector': {'name': 'quantile', 'params': {'quantile': 0.95}},
             }
         })
-        self.assertTrue(config.protect_conditional_features)
+        self.assertTrue(config.train.protect_conditional_features)
 
 
 class TestHandleDuplicateIndex(unittest.TestCase):

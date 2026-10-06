@@ -30,11 +30,19 @@ This setup:
 - Runs ARCANA with provided parameters when calling :py:obj:`FaultDetector.predict(..., root_cause_analysis=True) <energy_fault_detector.fault_detector.FaultDetector.predict>`.
   If not provided, default ARCANA parameters are used (see :py:obj:`ARCANA docs <energy_fault_detector.root_cause_analysis.arcana.Arcana>`).
 
-If you leave out the data_preprocessor configuration (i.e., ``data_preprocessor: {}``), a default preprocessing pipeline
+If you leave out the ``data_preprocessor`` section entirely (or set it to ``null``), a default preprocessing pipeline
 is generated, which drops constant and binary features, features where >5% of the data is missing, imputes remaining
 missing values with the mean value and scales the data to zero mean and unit standard deviation.
 
-You can also generate this kind of configuration programmatically using
+The simplest way to get started is ``Config()`` with no arguments, which uses all defaults:
+
+.. code-block:: python
+
+   from energy_fault_detector.config import Config
+
+   config = Config()  # ready-to-use defaults
+
+For custom preprocessing (angle columns, scaler, etc.) or to generate a YAML file, use
 :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
 
 .. code-block:: python
@@ -54,23 +62,21 @@ You can look up the names for the available model classes in the class registry:
 Configuration updates
 ^^^^^^^^^^^^^^^^^^^^^
 
-To update the configuration 'on the fly' (for example for hyperparameter optimization), you provide a new
-configuration dictionary via the :py:obj:`Config.update_config <energy_fault_detector.config.config.Config.update_config>` method:
+To update the configuration 'on the fly' (for example for hyperparameter optimization), modify the
+attributes directly and create a new :class:`~energy_fault_detector.FaultDetector`:
 
 .. code-block:: python
 
   from energy_fault_detector.config import Config
-  from copy import deepcopy
+  from energy_fault_detector import FaultDetector
 
   config = Config('configs/base_config.yaml')
 
   # update some parameters:
-  new_config_dict = deepcopy(config.config_dict)
-  new_config_dict['train']['anomaly_score']['name'] = 'mahalanobis'
-  config = Config(new_config_dict)
+  config.train.anomaly_score.name = 'mahalanobis'
 
-  # or create a new configuration object and model
-  new_model = FaultDetector(Config(config_dict=new_config_dict))
+  # create a new model with the updated config
+  new_model = FaultDetector(config)
 
 Detailed configuration
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -150,9 +156,9 @@ Other training configuration sections
 
 - Data splitter (``train.data_splitter``):
 
-  - ``type``: one of ``BlockDataSplitter`` (aliases: ``blocks``, ``DataSplitter``), or ``sklearn`` (alias ``train_test_split``).
-  - For sklearn: ``validation_split`` (float in (0, 1)) and ``shuffle`` (bool).
-  - For :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`: ``train_block_size`` and ``val_block_size``.
+  - ``type``: one of ``BlockDataSplitter`` (aliases: ``blocks``, ``DataSplitter``) or ``sklearn`` (alias ``train_test_split``). Default: ``BlockDataSplitter``.
+  - For :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`: ``train_block_size`` and ``val_block_size`` (both optional; the splitter falls back to 5040 / 1680 samples when left unset).
+  - For sklearn: ``validation_split`` (float in (0, 1)) and ``shuffle`` (bool). With ``shuffle`` false or unset, the last fraction of the data (in original order) is taken as the validation set.
   - Early stopping guard: if ``train.autoencoder.params.early_stopping`` is true, you must either set a
     valid ``validation_split`` in (0, 1), or use :py:obj:`BlockDataSplitter <energy_fault_detector.data_splitting.data_splitter.BlockDataSplitter>`
     with a positive ``val_block_size``.
@@ -182,12 +188,6 @@ Other training configuration sections
   - ``fit_on_val``: fit the threshold on validation only.
   - ``params``: selector-specific parameters (e.g., ``quantile`` for the quantile selector).
     See the :py:obj:`threshold_selectors <energy_fault_detector.threshold_selectors>` docs for more info on the settings.
-
-Prediction options
-^^^^^^^^^^^^^^^^^^
-Under ``predict``, you can set:
-
-- ``criticality.max_criticality``: cap the calculated criticality (anomaly counter) to this value.
 
 
 Root cause analysis (ARCANA)
