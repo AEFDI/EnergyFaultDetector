@@ -195,27 +195,19 @@ class FaultDetectionModel(ABC):
             tuple: x_train, x_val
         """
 
-        data_splitter_params = self.config.data_split_params
+        splitter = self.config.train.data_splitter
 
-        # Normalize aliases
-        data_splitter_type = data_splitter_params.get('type')
-        if data_splitter_type in ('sklearn', 'train_test_split', 'train_val_split'):
-            splitter_kind = 'sklearn'
-        else:
-            splitter_kind = 'blocks'
-
-        if splitter_kind == 'blocks':
-            train_data, val_data = BlockDataSplitter(
-                train_block_size=data_splitter_params.get('train_block_size'),
-                val_block_size=data_splitter_params.get('val_block_size'),
-            ).split(x=x)
-        else:  # 'sklearn'
-            shuffle = data_splitter_params.get('shuffle')
+        if splitter.type in ('sklearn', 'train_test_split', 'train_val_split'):
             train_data, val_data = train_test_split(
                 x,
-                test_size=data_splitter_params['validation_split'],
-                shuffle=shuffle if shuffle is not None else False
+                test_size=splitter.validation_split,
+                shuffle=splitter.shuffle if splitter.shuffle is not None else False
             )
+        else:
+            train_data, val_data = BlockDataSplitter(
+                train_block_size=splitter.train_block_size,
+                val_block_size=splitter.val_block_size,
+            ).split(x=x)
 
         return train_data, val_data
 

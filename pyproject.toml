@@ -28,7 +28,7 @@ dependencies = [
     "pyyaml",
     "scikit-learn>=1.5.2,<=1.7.0",
     "pandas>=2.0,<3.0",
-    "cerberus",
+    "pydantic>=2.0",
     "matplotlib>=3.9.0",
     "optuna>=4.0",
     "chardet>=5.0",

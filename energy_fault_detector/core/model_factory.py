@@ -1,6 +1,8 @@
 
 from typing import Union, Dict, TYPE_CHECKING
 
+import numpy as np
+
 from energy_fault_detector.registration import registry
 from energy_fault_detector.config import Config
 from energy_fault_detector.data_preprocessing import DataPreprocessor
@@ -13,6 +15,19 @@ if TYPE_CHECKING:
     from energy_fault_detector.autoencoders.seq2one_autoencoder import Seq2OneAutoencoder
 
 ModelType = Union["Autoencoder", AnomalyScore, ThresholdSelector, DataPreprocessor]
+
+_TS_FREQ_UNIT_MAP = {"min": "m", "sec": "s", "hr": "h", "hour": "h"}
+
+
+def _parse_ts_freq(ts_freq: str) -> np.timedelta64:
+    """Parse a compact frequency string like ``'30s'`` or ``'10m'`` to ``np.timedelta64``."""
+    digits = "".join(ch for ch in ts_freq if ch.isdigit())
+    unit = "".join(ch for ch in ts_freq if not ch.isdigit())
+    unit = _TS_FREQ_UNIT_MAP.get(unit, unit)
+    if not digits or not unit:
+        raise ValueError(
+            f"Unexpected value for `ts_freq`: {ts_freq!r}. Expected format like '10m', '1h'.")
+    return np.timedelta64(int(digits), unit)
 
 
 class ModelFactory:
@@ -32,18 +47,18 @@ class ModelFactory:
         from energy_fault_detector.data_splitting.sequence_dataset import SequenceDatasetBuilder
         from energy_fault_detector.autoencoders.seq2one_autoencoder import SequenceAutoencoder
 
-        train_dict = self.config["train"]
+        train = self.config.train
 
         # Data preprocessor
-        self._models["data_preprocessor"] = DataPreprocessor(steps=self.config.data_preprocessor_steps)
+        self._models["data_preprocessor"] = DataPreprocessor(steps=train.data_preprocessor.steps)
 
         # autoencoder
-        ae_params = train_dict.get("autoencoder")
-        ae_class = registry.get("autoencoder", ae_params["name"])
-        ae_kwargs = dict(ae_params.get("params", {}))
+        ae_config = train.autoencoder
+        ae_class = registry.get("autoencoder", ae_config.name)
+        ae_kwargs = dict(ae_config.params)
 
         # Add verbose from config (train.autoencoder.verbose), defaulting to 1
-        ae_verbose = ae_params.get("verbose", 1)
+        ae_verbose = ae_config.verbose if ae_config.verbose is not None else 1
         ae_kwargs.setdefault("verbose", ae_verbose)
 
         # If this is a sequence AE, build the SequenceDatasetBuilder from config
@@ -54,7 +69,9 @@ class ModelFactory:
                     f"sequence_builder config is required for sequence autoencoder {ae_class.__name__}"
                 )
 
-            ts_freq = builder_conf["ts_freq"]  # already np.timedelta64 thanks to _parse_timedelta
+            ts_freq = builder_conf["ts_freq"]
+            if isinstance(ts_freq, str):
+                ts_freq = _parse_ts_freq(ts_freq)
             sequence_builder = SequenceDatasetBuilder(
                 sequence_length=builder_conf["sequence_length"],
                 ts_freq=ts_freq,
@@ -68,14 +85,14 @@ class ModelFactory:
         self._models["autoencoder"] = ae_class(**ae_kwargs)
 
         # anomaly_score
-        score_params = train_dict.get("anomaly_score")
-        score_class = registry.get("anomaly_score", score_params["name"])
-        self._models["anomaly_score"] = score_class(**score_params.get("params", {}))
+        score_config = train.anomaly_score
+        score_class = registry.get("anomaly_score", score_config.name)
+        self._models["anomaly_score"] = score_class(**score_config.params)
 
         # threshold_selector
-        thresh_params = train_dict.get("threshold_selector")
-        thresh_class = registry.get("threshold_selector", thresh_params["name"])
-        self._models["threshold_selector"] = thresh_class(**thresh_params.get("params", {}))
+        thresh_config = train.threshold_selector
+        thresh_class = registry.get("threshold_selector", thresh_config.name)
+        self._models["threshold_selector"] = thresh_class(**thresh_config.params)
 
     @property
     def data_preprocessor(self) -> DataPreprocessor:

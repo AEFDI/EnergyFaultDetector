@@ -291,30 +291,23 @@ class Care2CompareDataset:
         angle_columns = get_columns(angles)
         to_exclude_columns = get_columns(to_exclude)
 
-        # old:
-        dp = config['train'].setdefault('data_preprocessor', {})
-        params = dp.get('params')
-        steps = dp.get('steps')
-        if params:
-            params['angles'] = merge_unique(params.get('angles', []), angle_columns)
-            params['features_to_exclude'] = merge_unique(params.get('features_to_exclude', []), to_exclude_columns)
-        # new
-        else:
-            angle_step = find_step(['angle_transformer', 'angle_transform'])
-            if angle_step is None:
-                steps.append({'name': 'angle_transformer', 'params': {'angles': angle_columns}})
-            else:
-                angle_params = angle_step.setdefault('params', {})
-                angle_params['angles'] = merge_unique(angle_params.get('angles', []), angle_columns)
-            colsel_step = find_step(['column_selector'])
-            if colsel_step is None:
-                steps.append({'name': 'column_selector', 'params': {'features_to_exclude': to_exclude_columns}})
-            else:
-                colsel_params = colsel_step.setdefault('params', {})
-                colsel_params['features_to_exclude'] = merge_unique(
-                    colsel_params.get('features_to_exclude', []), to_exclude_columns)
+        train = config.train
+        dp = train.data_preprocessor
 
-        config.update_config(config.config_dict)
+        steps = dp.steps or []
+        angle_step = find_step(['angle_transformer', 'angle_transform'])
+        if angle_step is None:
+            steps.append({'name': 'angle_transformer', 'params': {'angles': angle_columns}})
+        else:
+            angle_params = angle_step.setdefault('params', {})
+            angle_params['angles'] = merge_unique(angle_params.get('angles', []), angle_columns)
+        colsel_step = find_step(['column_selector'])
+        if colsel_step is None:
+            steps.append({'name': 'column_selector', 'params': {'features_to_exclude': to_exclude_columns}})
+        else:
+            colsel_params = colsel_step.setdefault('params', {})
+            colsel_params['features_to_exclude'] = merge_unique(
+                colsel_params.get('features_to_exclude', []), to_exclude_columns)
 
     def _get_column_map(self, wind_farm: str) -> Dict[str, str]:
         """Maps anonymized columns to human-readable format using feature descriptions"""

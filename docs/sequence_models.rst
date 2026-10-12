@@ -71,8 +71,8 @@ Important points:
 - ``stride``:
   - ``stride=1`` → heavily overlapping windows,
   - ``stride=sequence_length`` → disjoint windows.
-- ``ts_freq``: expected sampling interval. The config parser converts
-  strings like ``"30s"``, ``"10m"`` into ``numpy.timedelta64``.
+- ``ts_freq``: expected sampling interval. Strings like ``"30s"``, ``"10m"``
+  are converted to ``numpy.timedelta64`` when the model is initialized.
 - ``pad_incomplete``: if ``true``, the data is resampled to a regular
   grid at ``ts_freq`` and missing timestamps are filled with ``pad_value``.
 
