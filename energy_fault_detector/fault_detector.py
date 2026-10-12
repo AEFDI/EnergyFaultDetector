@@ -124,44 +124,14 @@ class FaultDetector(FaultDetectionModel):
                                "floats during imputation. Non-declared categorical features will be dropped.")
         clear_session()
 
-        # --- Resolve conditional features against available data ---
-        self._resolve_conditional_features(sensor_data)
-
         # Preprocess data and fit autoencoder
         model_path = None
         x_prepped, x, y = self.preprocess_train_data(
             sensor_data=sensor_data, normal_index=normal_index, fit_preprocessor=fit_preprocessor
         )
 
-        # Capture conditions available in the raw data before the preprocessor may expand
-        # categorical conditions into one-hot encoded column names (e.g. 'state' -> 'state_A').
-        declared_conditions = list(self.autoencoder.conditional_features or [])
-
         # Resolve declared conditions against preprocessed data (may expand categorical names)
         self._resolve_conditional_features(x_prepped)
-
-        # Check conditionals: available conditions in original data and surviving conditions during preprocessing.
-        if self.autoencoder.is_conditional:
-            # Uses nested for loop in case categorical cols have been encoded already and contain the original
-            # conditional feature name as a substring.
-            available = [declared_condition for declared_condition in declared_conditions
-                         if any(declared_condition in col for col in sensor_data.columns)]
-            missing = [declared_condition for declared_condition in declared_conditions
-                       if declared_condition not in available]
-            if missing:
-                logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
-                               f"{sorted(missing)}. Using: {available or 'none'}")
-
-            if not self.config.protect_conditional_features:
-                # Uses nested for loop in case categorical cols have been encoded already and contain the original
-                # conditional feature name as a substring.
-                surviving = [declared_condition for declared_condition in available
-                             if any(declared_condition in col for col in x_prepped.columns)]
-                dropped_by_pipeline = set(available or []) - set(surviving)
-
-                if dropped_by_pipeline:
-                    logger.warning(f"Declared conditions dropped by preprocessing pipeline: "
-                                f"{sorted(dropped_by_pipeline)}. Remaining: {surviving or 'none'}")
 
         train_recon_error, val_recon_error = None, None
         x_train, x_val = self.train_val_split(x_prepped)
@@ -478,7 +448,7 @@ class FaultDetector(FaultDetectionModel):
         else:
             self.threshold_selector.fit(x=scores, y=y.loc[scores.index])
 
-    def _resolve_conditional_features(self, sensor_data: pd.DataFrame) -> List[str]:
+    def _resolve_conditional_features(self, prepped_sensor_data: pd.DataFrame) -> List[str]:
         """Resolve which declared conditions are actually available in the data.
 
         If all conditions are missing and the autoencoder is a ConditionalAE,
@@ -486,7 +456,7 @@ class FaultDetector(FaultDetectionModel):
         conditional_features list (they handle None gracefully).
 
         Args:
-            sensor_data: Input DataFrame to check column availability.
+            prepped_sensor_data: Input DataFrame to check column availability.
 
         Returns:
             List of available conditional feature names (may be empty).
@@ -497,13 +467,35 @@ class FaultDetector(FaultDetectionModel):
 
         # TODO: this can produce undesired results if any column in the original data contains a substring of a declared
         #  conditional feature name.
-        available = [col for col in sensor_data.columns if any(declared_condition in col for declared_condition in configured)]
+        available = [col for col in prepped_sensor_data.columns
+                     if any(declared_condition in col for declared_condition in configured)]
 
         if not available:
             self._fallback_if_no_conditionals()
         else:
             self.autoencoder.conditional_features = available
             self.autoencoder.is_conditional = True
+
+        # Check conditionals: available conditions in original data and surviving conditions during preprocessing.
+        if self.autoencoder.is_conditional:
+            # Uses nested for loop in case categorical cols have been encoded already and contain the original
+            # conditional feature name as a substring.
+            missing = [declared_condition for declared_condition in self.autoencoder.conditional_features
+                       if declared_condition not in available]
+            if missing:
+                logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
+                               f"{sorted(missing)}. Using: {available or 'none'}")
+
+            if not self.config.protect_conditional_features:
+                # Uses nested for loop in case categorical cols have been encoded already and contain the original
+                # conditional feature name as a substring.
+                surviving = [declared_condition for declared_condition in available
+                             if any(declared_condition in col for col in prepped_sensor_data.columns)]
+                dropped_by_pipeline = set(available or []) - set(surviving)
+
+                if dropped_by_pipeline:
+                    logger.warning(f"Declared conditions dropped by preprocessing pipeline: "
+                                   f"{sorted(dropped_by_pipeline)}. Remaining: {surviving or 'none'}")
 
         return available
 
