@@ -555,13 +555,14 @@ class TestFaultDetectorConditionalFeatureResolution(unittest.TestCase):
 
         np.random.seed(42)
         length = 100
+        self.timestamp_idx = pd.date_range(start='2022-01-01', periods=length, freq='15min')
         self.sensor_data = pd.DataFrame({
             'feature_a': np.random.random(size=length),
             'feature_b': np.random.random(size=length),
             'feature_c': np.random.random(size=length),
             'feature_d': np.random.random(size=length),
-        })
-        self.normal_index = pd.Series([True] * 80 + [False] * 20)
+        }, index=self.timestamp_idx)
+        self.normal_index = pd.Series([True] * 80 + [False] * 20, index=self.timestamp_idx)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.test_dir)
@@ -580,6 +581,18 @@ class TestFaultDetectorConditionalFeatureResolution(unittest.TestCase):
         self.assertEqual(available, ['feature_a'])
         self.assertEqual(fd.autoencoder.conditional_features, ['feature_a'])
         self.assertTrue(fd.autoencoder.is_conditional)
+
+    def test_resolve_partial_missing_conditionals_after_fit(self):
+        """When some conditional features are missing, only available ones are kept after fit."""
+        fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
+        fd.autoencoder.conditional_features = ['feature_a', 'feature_b', 'hour_of_day_sine', 'hour_of_day_cosine']
+
+        # Drop feature_b from sensor data
+        sensor_data_partial = self.sensor_data.drop(columns=['feature_b'])
+
+        fd.fit(sensor_data=sensor_data_partial, normal_index=self.normal_index)
+        self.assertEqual(fd.autoencoder.conditional_features,
+                         ['feature_a', 'hour_of_day_sine', 'hour_of_day_cosine'])
 
     def test_resolve_all_missing_conditionals_fallback_to_multilayer(self):
         """When ALL conditional features are missing, ConditionalAE falls back to MultilayerAutoencoder."""
