@@ -716,10 +716,9 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         """When protect=False, pipeline can drop constant conditional features."""
         from energy_fault_detector.autoencoders import MultilayerAutoencoder
         self.conf.config_dict['train']['protect_conditional_features'] = False
-
+        self.conf.config_dict['train']['data_preprocessor']['steps'].append({'name': 'low_unique_value_filter', 'params': {'min_unique_value_count': 2}})
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
         self.assertFalse(fd.config.protect_conditional_features)
-
         result = fd.fit(sensor_data=self.sensor_data, normal_index=self.normal_index, save_models=False)
 
         # feature_a was constant, should have been dropped, triggering fallback
