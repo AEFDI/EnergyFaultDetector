@@ -700,13 +700,14 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
         np.random.seed(42)
         length = 100
         # feature_a is constant → will be dropped by LowUniqueValueFilter when unprotected
+        self.timestamp_idx = pd.date_range(start='2022-01-01', periods=length, freq='15min')
         self.sensor_data = pd.DataFrame({
             'feature_a': [1.0] * length,
             'feature_b': np.random.random(size=length),
             'feature_c': np.random.random(size=length),
             'feature_d': np.random.random(size=length),
-        })
-        self.normal_index = pd.Series([True] * 80 + [False] * 20)
+        }, index=self.timestamp_idx)
+        self.normal_index = pd.Series([True] * 80 + [False] * 20, index=self.timestamp_idx)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.test_dir)
@@ -714,6 +715,7 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
     def test_conditional_features_can_be_dropped_when_unprotected(self):
         """When protect=False, pipeline can drop constant conditional features."""
         from energy_fault_detector.autoencoders import MultilayerAutoencoder
+        self.conf.config_dict['train']['protect_conditional_features'] = False
 
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
         self.assertFalse(fd.config.protect_conditional_features)
