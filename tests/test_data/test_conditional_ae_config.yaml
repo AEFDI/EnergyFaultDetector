@@ -6,6 +6,9 @@ train:
       pca_min_var: 0.85
   data_preprocessor:
     steps:
+      - name: low_unique_value_filter
+        params:
+          min_unique_value_count: 2
       - name: timestamp_transform
         params:
           features: ['hour_of_day']
