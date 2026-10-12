@@ -1,0 +1,7 @@
+registration
+============
+
+.. automodule:: energy_fault_detector.registration
+   :members:
+   :show-inheritance:
+   :undoc-members:

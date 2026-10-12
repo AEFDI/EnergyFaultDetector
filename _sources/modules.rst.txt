@@ -1,0 +1,7 @@
+energy_fault_detector
+=====================
+
+.. toctree::
+   :maxdepth: 4
+
+   energy_fault_detector

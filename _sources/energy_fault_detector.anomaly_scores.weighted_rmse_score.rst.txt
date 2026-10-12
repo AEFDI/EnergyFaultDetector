@@ -1,0 +1,7 @@
+anomaly\_scores.weighted\_rmse\_score
+=====================================
+
+.. automodule:: energy_fault_detector.anomaly_scores.weighted_rmse_score
+   :members:
+   :show-inheritance:
+   :undoc-members:
