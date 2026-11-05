@@ -187,7 +187,19 @@ Prediction options
 ^^^^^^^^^^^^^^^^^^
 Under ``predict``, you can set:
 
-- ``criticality.max_criticality``: cap the calculated criticality (anomaly counter) to this value.
+- ``criticality.max_criticality``: cap the calculated criticality (anomaly counter) to this value (default ``144``).
+  This controls how long it takes for an active alarm to be reset once the system returns to normal; see
+  :ref:`criticality` for how to choose it based on your sampling frequency and alarm policy.
+
+.. code-block:: yaml
+
+   predict:
+     criticality:
+       max_criticality: 144   # default: one day at 10 min resolution
+
+The criticality *threshold* used for raising alarms is not part of the config. Apply it to the criticality series
+returned by :meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`;
+see :ref:`criticality`.
 
 
 Root cause analysis (ARCANA)

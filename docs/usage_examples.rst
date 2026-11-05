@@ -149,6 +149,15 @@ with the following information:
 * arcana_losses: pandas DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
 * tracked_bias: List of pandas DataFrames. None if ARCANA was not run.
 
+On top of the raw predictions, you can derive the *criticality* counter, which accumulates sustained anomalies and is
+used to raise alarms only after anomalous behaviour persists over time. See :ref:`criticality` for the interpretation
+and how to choose a threshold:
+
+.. code-block:: python
+
+    criticality = results.criticality(normal_idx=test_status, max_criticality=144)
+    alarms = criticality >= 6   # threshold chosen based on time frequency and application context
+
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
 trained models using the :py:obj:`FaultDetector.load <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load>` class method.
 
@@ -240,6 +249,9 @@ For now, we recommend using the example notebooks for a full
 walkthrough of the evaluation workflow (event creation, criticality, CARE-Score
 on benchmark datasets such as CARE2Compare and PreDist). A higher-level
 evaluation helper/script may be added in a future version.
+
+See :ref:`criticality` for how criticality is computed and interpreted for both alarm raising and event-level
+evaluation.
 
 MultiIndex and sequence models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

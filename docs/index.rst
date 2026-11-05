@@ -40,6 +40,7 @@ Installation
     models_overview
     sequence_models
     anomaly_scores
+    criticality
 
 .. toctree::
     :caption: Advanced usage
