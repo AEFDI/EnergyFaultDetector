@@ -5,6 +5,8 @@ from typing import Tuple, List, Optional
 import numpy as np
 import pandas as pd
 
+_ALARM_EVENT_COLUMNS = ["start", "end", "duration"]
+
 
 def create_events(sensor_data: pd.DataFrame, boolean_information: pd.Series,
                   min_event_length: int = 10) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
@@ -173,6 +175,143 @@ def calculate_criticality(anomalies: pd.Series, normal_idx: pd.Series = None, in
         return pd.concat(results)
 
     return _compute_criticality_array(anomalies, normal_idx, init_criticality, max_criticality)
+
+
+def calculate_alarms(anomalies: pd.Series, normal_idx: pd.Series = None, init_criticality: int = 0,
+                     criticality_threshold: Optional[int] = None, alarm_reset_time_minutes: float = 60
+                     ) -> Tuple[pd.DataFrame, pd.Series]:
+    """Derive alarm events from predicted anomalies using a criticality counter.
+
+    The function computes the :func:`criticality <calculate_criticality>` and marks every timestamp at which the
+    criticality reaches or exceeds ``criticality_threshold`` as an alarm. Contiguous alarm timestamps are aggregated
+    into alarm events with ``start``, ``end`` and ``duration``.
+
+    If ``criticality_threshold`` is not provided, it defaults to ``int(1 hour / time_frequency)``, i.e. the number of
+    timestamps needed for one hour of anomalous behaviour. If the time frequency is larger than one hour, the default
+    threshold is ``1``. The time frequency is inferred from the datetime index of ``anomalies``.
+
+    ``max_criticality`` is derived from the threshold and ``alarm_reset_time_minutes`` so that an alarm is reset after
+    at most ``alarm_reset_time_minutes`` of normal behaviour:
+    ``max_criticality = criticality_threshold + int(alarm_reset_time_minutes / time_frequency)``. If the time frequency
+    is larger than ``alarm_reset_time_minutes`` (or cannot be inferred), ``max_criticality`` is
+    ``criticality_threshold + 1``.
+
+    Args:
+        anomalies (pd.Series): A pandas Series with boolean values indicating whether an anomaly was detected,
+            indexed by timestamp, or MultiIndex (device_id, timestamp).
+        normal_idx (pd.Series, optional): A pandas Series with boolean values indicating normal operation, same index
+            as ``anomalies``. If not provided, all timestamps are assumed to be normal operation. Defaults to None.
+        init_criticality (int, optional): The initial criticality value. Defaults to 0.
+        criticality_threshold (int, optional): Criticality value at which an alarm is raised. If None, it is derived
+            from the time frequency (one hour of anomalous behaviour). Defaults to None.
+        alarm_reset_time_minutes (float, optional): Time window in minutes after which an alarm is reset once the
+            system behaves normally again. Used to derive ``max_criticality``. Defaults to 60.
+
+    Returns:
+        Tuple[pd.DataFrame, pd.Series]: A tuple containing:
+            - alarm_events (pd.DataFrame): Columns ``start``, ``end`` and ``duration`` and, for a MultiIndex,
+              an additional ``group`` column.
+            - criticality (pd.Series): The criticality over time, indexed like ``anomalies``.
+    """
+    anomalies = anomalies.sort_index()
+
+    index = anomalies.index
+    if isinstance(index, pd.MultiIndex):
+        dt_level = _detect_datetime_level(index)
+        time_index = index.get_level_values(dt_level) if dt_level is not None else None
+    else:
+        time_index = index
+
+    time_frequency_nano_seconds = None
+    if isinstance(time_index, pd.DatetimeIndex):
+        # In a MultiIndex the datetime level repeats each timestamp per group, which prevents frequency inference.
+        time_index = pd.DatetimeIndex(time_index.drop_duplicates())
+        freq = time_index.freqstr or time_index.inferred_freq
+        if freq is not None:
+            try:
+                time_frequency_nano_seconds = pd.tseries.frequencies.to_offset(freq).nanos
+            except ValueError:            # non-fixed frequency
+                time_frequency_nano_seconds = None
+
+    nano_seconds_in_an_hour = 60 * 60 * 1e9
+    nano_seconds_alarm_reset_time = alarm_reset_time_minutes * 60 * 1e9
+
+    if criticality_threshold is None:
+        if time_frequency_nano_seconds is None or time_frequency_nano_seconds > nano_seconds_in_an_hour:
+            criticality_threshold = 1
+        else:
+            criticality_threshold = max(1, int(nano_seconds_in_an_hour / time_frequency_nano_seconds))
+    criticality_threshold = int(criticality_threshold)
+
+    if time_frequency_nano_seconds is None or time_frequency_nano_seconds > nano_seconds_alarm_reset_time:
+        max_criticality = criticality_threshold + 1
+    else:
+        reset_steps = max(1, int(nano_seconds_alarm_reset_time / time_frequency_nano_seconds))
+        max_criticality = criticality_threshold + reset_steps
+
+    criticality = calculate_criticality(anomalies, normal_idx, init_criticality, max_criticality)
+    alarm_events = _create_alarm_events(criticality, criticality_threshold)
+    return alarm_events, criticality
+
+
+def _detect_datetime_level(index: pd.MultiIndex) -> Optional[int]:
+    """Return the datetime level index of a MultiIndex, or None."""
+    for i, level in enumerate(index.levels):
+        if isinstance(level, pd.DatetimeIndex):
+            return i
+    return None
+
+
+def _create_alarm_events(criticality: pd.Series, criticality_threshold: int) -> pd.DataFrame:
+    """Aggregate contiguous timestamps above the criticality threshold into alarm events."""
+    alarm_mask = criticality >= criticality_threshold
+    index = alarm_mask.index
+
+    if isinstance(index, pd.MultiIndex):
+        group_level = _detect_group_level(index)
+        datetime_level = _detect_datetime_level(index)
+        if group_level is not None and datetime_level is not None:
+            group_values = index.get_level_values(group_level)
+            events = []
+            for group in pd.unique(group_values):
+                group_mask = alarm_mask[group_values == group].copy()
+                group_mask.index = index[group_values == group].get_level_values(datetime_level)
+                events.append(_single_alarm_events(group_mask, group_label=group))
+            columns = _ALARM_EVENT_COLUMNS + ["group"]
+            non_empty = [event for event in events if not event.empty]
+            if not non_empty:
+                return pd.DataFrame(columns=columns)
+            return pd.concat(non_empty, ignore_index=True)
+        if datetime_level is not None:
+            alarm_mask = alarm_mask.copy()
+            alarm_mask.index = index.get_level_values(datetime_level)
+        else:
+            alarm_mask = alarm_mask.reset_index(drop=True)
+
+    return _single_alarm_events(alarm_mask)
+
+
+def _single_alarm_events(alarm_mask: pd.Series, group_label=None) -> pd.DataFrame:
+    """Create alarm events for a single contiguous boolean series."""
+    mask = np.asarray(alarm_mask, dtype=bool)
+    if not mask.any():
+        columns = _ALARM_EVENT_COLUMNS + (["group"] if group_label is not None else [])
+        return pd.DataFrame(columns=columns)
+
+    padded = np.concatenate(([False], mask, [False]))
+    edges = np.diff(padded.astype(np.int8))
+    start_positions = np.flatnonzero(edges == 1)
+    end_positions = np.flatnonzero(edges == -1) - 1
+
+    index = alarm_mask.index
+    events = pd.DataFrame({
+        "start": index[start_positions],
+        "end": index[end_positions],
+    })
+    events["duration"] = events["end"] - events["start"]
+    if group_label is not None:
+        events["group"] = group_label
+    return events
 
 
 def _detect_group_level(index: pd.Index) -> Optional[int]:

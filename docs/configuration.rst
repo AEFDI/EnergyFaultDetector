@@ -208,6 +208,29 @@ returned by :meth:`FaultDetectionResult.criticality <energy_fault_detector.core.
 see :ref:`criticality`.
 
 
+Criticality and alarms
+^^^^^^^^^^^^^^^^^^^^^^
+The criticality counter and the derived alarm events are computed from the prediction result rather than configured
+in the YAML file. Call
+:meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`
+(or :func:`calculate_alarms <energy_fault_detector.utils.analysis.calculate_alarms>`) with the desired settings:
+
+.. code-block:: python
+
+   results = fault_detector.predict(sensor_data=test_data)
+
+   alarm_events, criticality = results.criticality(
+       normal_idx=test_status,         # optional: True = normal operation
+       criticality_threshold=None,     # None -> one hour of anomalous behaviour
+       alarm_reset_time_minutes=60,    # reset window used to derive max_criticality
+   )
+
+If ``criticality_threshold`` is omitted it defaults to ``int(1 hour / time_frequency)`` (or ``1`` if the time
+frequency exceeds one hour). ``max_criticality`` is derived as
+``criticality_threshold + int(alarm_reset_time_minutes / time_frequency)``. See :ref:`criticality` for the full
+interpretation and guidance on choosing these values.
+
+
 Root cause analysis (ARCANA)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If ``root_cause_analysis`` is provided, ARCANA will attempt to attribute anomalies to specific features using the

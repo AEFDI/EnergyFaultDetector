@@ -1,20 +1,25 @@
 .. _criticality:
 
-Criticality
-===========
+Criticality and alarms
+======================
 
 The criticality is a cumulative counter derived from the point-wise anomaly predictions of a model. It is used to
 convert raw per-timestamp anomaly decisions into a *persistence-aware* signal, so that alarms are raised only when
-anomalous behaviour is sustained over time. This avoids raising alarms for isolated anomalies caused by noise or by
-potential data-quality issues.
+anomalous behaviour is sustained over time. This avoids raising unnecessary alarms for isolated anomalies caused by
+noise or by potential data-quality issues.
 
-The reference implementation is
-:func:`calculate_criticality <energy_fault_detector.utils.analysis.calculate_criticality>` in
-:mod:`energy_fault_detector.utils.analysis`. The same calculation is available directly on a prediction result via
+The package provides two building blocks in :mod:`energy_fault_detector.utils.analysis`:
+
+- :func:`calculate_criticality <energy_fault_detector.utils.analysis.calculate_criticality>` computes the raw
+  criticality counter.
+- :func:`calculate_alarms <energy_fault_detector.utils.analysis.calculate_alarms>` builds on it to derive
+  **alarm events** (start, end, duration) from the criticality.
+
+Both are exposed on a prediction result via
 :meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`.
 
-How it works
-------------
+How the criticality works
+-------------------------
 
 For every timestamp the counter is updated by one of three rules, depending on the predicted anomaly and on the
 operating status (``normal_idx``):
@@ -40,41 +45,61 @@ The counter is bounded below by ``0`` and above by ``max_criticality``. If ``nor
 timestamps are treated as normal operation.
 
 .. note::
-   The status information (``normal_idx``) can be used to ignore alarms which otherwise inflate the
-   counter during periods in which anomalous behavior is not meaningful (e.g. during maintenance)
+   The status information (normal_idx) can be used to ignore alarms which otherwise inflate the counter during periods in which anomalous
+   behavior is not meaningful (e.g. during maintenance).
 
-Parameters
-----------
+Deriving alarms with ``calculate_alarms``
+-----------------------------------------
+
+:func:`calculate_alarms <energy_fault_detector.utils.analysis.calculate_alarms>` computes the criticality and turns
+every timestamp at which the criticality reaches the threshold into an alarm. Contiguous alarm timestamps are
+aggregated into alarm events.
 
 .. code-block:: python
 
-   from energy_fault_detector.utils.analysis import calculate_criticality
+   from energy_fault_detector.utils.analysis import calculate_alarms
 
-   criticality = calculate_criticality(
-       anomalies,                 # pd.Series[bool] over time
-       normal_idx=None,           # optional pd.Series[bool], True = normal operation
-       init_criticality=0,        # starting value of the counter
-       max_criticality=1000,      # upper bound of the counter
+   alarm_events, criticality = calculate_alarms(
+       anomalies,                    # pd.Series[bool] over time
+       normal_idx=None,              # optional pd.Series[bool], True = normal operation
+       init_criticality=0,           # starting value of the counter
+       criticality_threshold=None,   # None -> derived from the time frequency (see below)
+       alarm_reset_time_minutes=60,  # reset window used to derive max_criticality
    )
 
-- ``anomalies``: boolean :class:`pandas.Series` of predicted anomalies, indexed by timestamp or by a ``MultiIndex``
-  such as ``(asset_id, timestamp)``.
-- ``normal_idx``: optional boolean :class:`pandas.Series` with normal-operation status. It is reindexed to
-  ``anomalies``; missing values are treated as normal (``True``).
-- ``init_criticality``: initial value of the counter. Used if persistence is desired across multiple calls to the function (e.g. when processing a long time series in separatechunks).
-- ``max_criticality``: maximum value the counter can reach.
+``alarm_events`` is a :class:`pandas.DataFrame` with the columns ``start``, ``end`` and ``duration`` (and an
+additional ``group`` column for a ``MultiIndex``). ``criticality`` is the :class:`pandas.Series` of the counter over
+time.
 
-The function returns a :class:`pandas.Series` with the criticality value per timestamp and the same index as the
-input. For a ``MultiIndex``, the criticality is computed independently per group (e.g. per asset).
+If ``criticality_threshold`` is not given, it is derived from the time frequency of the data:
 
-On a prediction result you can call the method directly:
+- ``criticality_threshold = int(1 hour / time_frequency)`` — the number of timestamps needed to accumulate one hour
+  of anomalous behaviour.
+- If the time frequency is larger than one hour (or cannot be inferred, e.g. for a ``RangeIndex``), the threshold
+  defaults to ``1``.
+
+``max_criticality`` is derived from the threshold and ``alarm_reset_time_minutes``, which has a default value of ``60``:
+
+- ``max_criticality = criticality_threshold + int(alarm_reset_time_minutes / time_frequency)``
+- If the time frequency is larger than ``alarm_reset_time_minutes`` (or cannot be inferred),
+  ``max_criticality = criticality_threshold + 1``.
+
+The time frequency is inferred as the median difference between consecutive timestamps, using the datetime level of a
+``MultiIndex`` when present. For MultiIndex data the criticality and the alarm events are computed independently per
+group (e.g. per asset).
+
+On a prediction result you can call the method directly. It returns the same ``(alarm_events, criticality)`` tuple:
 
 .. code-block:: python
 
    results = fault_detector.predict(sensor_data=test_sensor_data)
 
-   criticality = results.criticality()                                   # all timestamps treated as normal
-   criticality = results.criticality(normal_idx=test_status, max_criticality=144)
+   alarm_events, criticality = results.criticality()   # defaults derived from the data
+   alarm_events, criticality = results.criticality(
+       normal_idx=test_status,
+       criticality_threshold=6,
+       alarm_reset_time_minutes=60,
+   )
 
 Interpreting criticality: raising alarms
 ----------------------------------------
@@ -84,9 +109,9 @@ Criticality is interpreted relative to an application-specific **criticality thr
 - as long as ``criticality < threshold``, no alarm is raised,
 - once ``criticality >= threshold``, an alarm is raised (the anomaly is treated as significant).
 
-Because the counter rises by one per anomalous timestamp, the threshold can be read as the minimum number of consecutive
-anomalous timestamps required to raise an alarm. With a fixed sampling frequency this corresponds directly to a time
-window:
+Because the counter rises by one per anomalous timestamp, the threshold can be read as the minimum number of
+consecutive anomalous timestamps required to raise an alarm. With a fixed sampling frequency this corresponds directly
+to a time window:
 
 .. code-block:: text
 
@@ -114,10 +139,10 @@ Consider:
 
 - **Time frequency** of the data and the desired alarm latency. The same physical time window maps to different
   thresholds for different sampling rates.
-- **Expected random anomalies** from noise or data-quality problems. These can be estimated from real anomalies used for validation
-  and or from validation data with normal status: run the model on validation data known to be normal, 
-  observe how the criticality behaves, and choose a threshold that random fluctuations do not reach. 
-  The more (expected) spurious anomalies per unit of time, the higher the threshold should be.
+- **Expected random anomalies** from noise or data-quality problems. These can be estimated from real anomalies used
+  for validation and/or from validation data with normal status: run the model on validation data known to be normal,
+  observe how the criticality behaves, and choose a threshold that random fluctuations do not reach. The more
+  (expected) spurious anomalies per unit of time, the higher the threshold should be.
 - **Severity and cost** of a missed fault versus a false alarm.
 
 A simple procedure:
@@ -126,29 +151,31 @@ A simple procedure:
 #. Observe the maximum criticality reached by random anomalies (noise / data quality).
 #. Set the threshold well above that level, and additionally require the desired minimum persistence time.
 
-Choosing ``max_criticality``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Choosing ``alarm_reset_time_minutes``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``max_criticality`` caps the counter and therefore controls how long it takes for an active alarm to be reset
-after the system returns to normal behaviour. Once the counter has saturated at ``max_criticality``, it must be
-decremented back towards the threshold before the alarm is closed. Because the counter decreases by one per normal
+``alarm_reset_time_minutes`` controls how long it takes for an active alarm to be reset after the system returns to
+normal behaviour, by determining ``max_criticality``. Once the counter has saturated at ``max_criticality``, it must be
+decremented back below the threshold before the alarm is closed. Because the counter decreases by one per normal
 timestamp, the time to reset from saturation is at most:
 
 .. code-block:: text
 
    max_reset_time = (max_criticality - criticality_threshold) * time_frequency
+                  = alarm_reset_time_minutes
 
-Continuing the example above (``10 minutes`` resolution) with a threshold of ``6`` and ``max_criticality = 12``:
+Continuing the example above (``10 minutes`` resolution) with a threshold of ``6`` and
+``alarm_reset_time_minutes = 60``, ``max_criticality`` becomes ``6 + int(60 / 10) = 12``:
 
 .. math::
 
    (12 - 6) \times 10\,\text{min} = 60\,\text{min}
 
-so at most **one hour** of consecutive normal behaviour is needed for the counter to fall from saturation back below the
-threshold and for the alarm to close.
+so at most **one hour** of consecutive normal behaviour is needed for the counter to fall from saturation back below
+the threshold and for the alarm to close.
 
-Choose ``max_criticality`` relative to your threshold so that the time to reset matches what the application can
-tolerate. Setting it so that the reset time is at most **1 hour** or **1 day** is often a good default.
+Setting the reset time to at most **1 hour** or **1 day** is often a good default, depending on the application
+context and user preferences.
 
 .. list-table::
    :header-rows: 1
@@ -176,30 +203,27 @@ tolerate. Setting it so that the reset time is at most **1 hour** or **1 day** i
      - ~1 day normal (from saturation)
 
 .. note::
-   Both the threshold and ``max_criticality`` are expressed in *number of timestamps*, not in physical time. When you
+   The threshold and ``max_criticality`` are expressed in *number of timestamps*, not in physical time. When you
    change the time frequency of your data, recompute them so that the intended physical time windows are preserved.
+   ``calculate_alarms`` does this automatically for the defaults.
 
-Configuration
--------------
+Alarm event output
+^^^^^^^^^^^^^^^^^^
 
-When using the :class:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` framework, the maximum
-criticality can be set in the YAML configuration:
-
-.. code-block:: yaml
-
-   predict:
-     criticality:
-       max_criticality: 144   # default: one day at 10 min resolution
-
-The criticality *threshold* is not part of this configuration: it is an application decision that you apply to the
-returned criticality series, e.g.:
+Each alarm event contains the first and last timestamp at which the criticality was at or above the threshold:
 
 .. code-block:: python
 
-   criticality = results.criticality(normal_idx=test_status, max_criticality=config.max_criticality)
-   alarms = criticality >= 6
+   alarm_events, criticality = calculate_alarms(
+       anomalies, criticality_threshold=6, alarm_reset_time_minutes=60
+   )
+   print(alarm_events)
 
-See :ref:`configuration_guide` for the full configuration reference.
+   #                 start                 end        duration
+   # 0 2024-01-01 01:10:00 2024-01-01 03:10:00 0 days 02:00:00
+
+The ``duration`` is the difference between ``end`` and ``start``. For a ``MultiIndex`` input an additional
+``group`` column identifies the asset or device.
 
 Visualisation
 -------------
@@ -216,7 +240,8 @@ Criticality can be plotted together with the anomaly score using
        data=test_sensor_data,
        normal_index=test_status,
        show_criticality=True,
-       max_criticality=144,
+       criticality_threshold=6,
+       alarm_reset_time_minutes=60,
    )
 
 Relation to evaluation (CARE score)

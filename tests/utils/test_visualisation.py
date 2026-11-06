@@ -32,9 +32,12 @@ class DummyPredictions:
         )
         self.predicted_anomalies = pd.Series(False, index=idx)
 
-    def criticality(self, normal_idx=None, max_criticality=1000):
+    def criticality(self, normal_idx=None, init_criticality=0, criticality_threshold=None,
+                    alarm_reset_time_minutes=60):
         # trivial constant criticality, same index as anomaly_score
-        return pd.Series(0, index=self.anomaly_score.index, name="criticality")
+        criticality = pd.Series(0, index=self.anomaly_score.index, name="criticality")
+        alarm_events = pd.DataFrame(columns=["start", "end", "duration"])
+        return alarm_events, criticality
 
 
 class DummyFDWithDP:
@@ -86,6 +89,18 @@ class TestVisualisation(unittest.TestCase):
         axes = [ax] if not isinstance(ax, np.ndarray) else ax.flatten()
         # by default, plot all reconstruction columns -> 2 subplots
         self.assertEqual(len(axes), 2)
+        plt.close(fig)
+
+    def test_plot_score_with_threshold_show_criticality(self):
+        idx = pd.date_range("2025-01-01", periods=10, freq="h")
+        data = pd.DataFrame({"a": np.arange(10, dtype=float)}, index=idx)
+        fd = DummyFDWithDP(data)
+
+        fig, ax = viz.plot_score_with_threshold(
+            model=fd, data=data, show_threshold=False, show_criticality=True,
+            criticality_threshold=3, alarm_reset_time_minutes=60,
+        )
+        self.assertIsInstance(fig, plt.Figure)
         plt.close(fig)
 
     def test_plot_arcana_mean_importances(self):

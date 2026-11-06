@@ -186,7 +186,8 @@ def plot_reconstruction_with_model(model: FaultDetector, data: pd.DataFrame,
 def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_index: pd.Series = None,
                               ax: plt.Axes = None, figsize: Tuple[float, float] = (8, 3),
                               show_predicted_anomaly: bool = False, show_threshold: bool = True,
-                              show_criticality: bool = False, max_criticality: int = 144,
+                              show_criticality: bool = False, criticality_threshold: Optional[int] = None,
+                              alarm_reset_time_minutes: float = 60,
                               score_color: Optional[str] = None,
                               anomaly_color: Optional[str] = None,
                               criticality_color: Optional[str] = "C2",
@@ -208,8 +209,10 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
         show_predicted_anomaly (bool, optional): Whether to show the predicted anomaly scores. Defaults to False.
         show_threshold (bool, optional): Whether to show the threshold scores. Defaults to True.
         show_criticality (bool, optional): Whether to show the criticality counter. Defaults to False.
-        max_criticality (int optional): If show_criticality is True, the maximum value of the criticality counter can
-            be specified. Defaults to 144 (one day of 10 min timestamps).
+        criticality_threshold (Optional[int], optional): If show_criticality is True, the criticality value at which
+            an alarm is raised. If None, it is derived from the time frequency (one hour of anomalous behaviour).
+        alarm_reset_time_minutes (float, optional): If show_criticality is True, the time window in minutes after
+            which an alarm is reset once the system behaves normally again. Defaults to 60.
         score_color (Optional[str], optional): Color to use for the anomaly score.
         anomaly_color (Optional[str], optional): Color to use for the anomalous data points (using normal_index).
         criticality_color (Optional[str], optional): Color to use for the criticality counter if show_criticality is
@@ -265,7 +268,8 @@ def plot_score_with_threshold(model: FaultDetector, data: pd.DataFrame, normal_i
             ax.plot(threshold, linestyle='-', linewidth=.7, label='threshold', c=threshold_color)
 
     if show_criticality:
-        crit = predictions.criticality(normal_idx=normal_index, max_criticality=max_criticality)
+        crit = predictions.criticality(normal_idx=normal_index, criticality_threshold=criticality_threshold,
+                                       alarm_reset_time_minutes=alarm_reset_time_minutes)[1]
         ax2 = ax.twinx()
         ax2.plot(crit, label='criticality counter', color=criticality_color)
         ax2.set_ylabel('criticality')
