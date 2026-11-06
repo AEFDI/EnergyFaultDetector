@@ -67,6 +67,11 @@ class RMSEScore(AnomalyScore):
         """Standardization of the reconstruction error in x"""
 
         check_is_fitted(self)
+
+        if not hasattr(self, 'std_x_'):
+            # backward compat.
+            self.std_x_ = np.zeros(x.shape[1])
+
         x_ = x.copy()
         std_mask = self.std_x_ > 0
         if np.all(std_mask):

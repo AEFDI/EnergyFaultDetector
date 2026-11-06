@@ -3,8 +3,6 @@ import os
 import shutil
 import unittest
 
-import numpy as np
-
 from energy_fault_detector.config import Config, InvalidConfigFile
 
 PROJECT_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..')
@@ -20,10 +18,10 @@ class TestConfig(unittest.TestCase):
 
     def test_init(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config.yaml'))
-        self.assertDictEqual(conf.config_dict['train'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train'], {
             'anomaly_score': {'name': 'mahalanobis',
                               'params': {'pca': True, 'pca_min_var': 0.85}},
-            'data_preprocessor': None,  # unspecified, default pipeline
+            'data_preprocessor': {'steps': []},
             'autoencoder': {'name': 'MultilayerAutoencoder',
                             'verbose': 0,
                             'params': {'layers': [300],
@@ -35,13 +33,14 @@ class TestConfig(unittest.TestCase):
                                        'epochs': 10,
                                        'loss_name': 'mean_squared_error'}},
             'threshold_selector': {'name': 'FDR',
-                                   'params': {'target_false_discovery_rate': 0.8},
-                                   'fit_on_val': False},
-            'data_splitter': {'train_block_size': 7, 'val_block_size': 3, 'type': 'BlockDataSplitter'},
+                                    'params': {'target_false_discovery_rate': 0.8},
+                                    'fit_on_val': False},
+            'data_splitter': {'type': 'BlockDataSplitter',
+                              'train_block_size': 7, 'val_block_size': 3},
             'data_clipping': {'lower_percentile': 0.01, 'upper_percentile': 0.99},
             'protect_conditional_features': False,
         })
-        self.assertDictEqual(conf.config_dict['root_cause_analysis'],
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['root_cause_analysis'],
                              {'alpha': 0.8,
                               'init_x_bias': 'recon',
                               'num_iter': 200}
@@ -51,22 +50,16 @@ class TestConfig(unittest.TestCase):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config.yaml'))
         self.assertTrue(conf.root_cause_analysis)
         self.assertDictEqual(
-            conf.arcana_params,
+            conf.root_cause_analysis.params,
             {'alpha': 0.8, 'num_iter': 200, 'init_x_bias': 'recon'}
         )
 
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_no_rca.yaml'))
         self.assertFalse(conf.root_cause_analysis)
 
-    def test_criticality_config(self):
-        conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_criticality_config.yaml'))
-        self.assertDictEqual(conf.config_dict['predict'], {
-            'criticality': {'max_criticality': 144}
-        })
-
     def test_early_stopping_val_split_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_early_stopping_val_split_config.yaml'))
-        self.assertDictEqual(conf.config_dict['train']['autoencoder']['params'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['autoencoder']['params'], {
             'layers': [300],
             'code_size': 50,
             'learning_rate': 0.001,
@@ -79,7 +72,7 @@ class TestConfig(unittest.TestCase):
             'epochs': 100,
             'loss_name': 'mean_squared_error'
         })
-        self.assertDictEqual(conf.config_dict['train']['data_splitter'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['data_splitter'], {
             'type': 'sklearn',
             'shuffle': True,
             'validation_split': 0.25
@@ -87,7 +80,7 @@ class TestConfig(unittest.TestCase):
 
     def test_early_stopping_val_block_config(self):
         conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_early_stopping_val_block_config.yaml'))
-        self.assertDictEqual(conf.config_dict['train']['autoencoder']['params'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['autoencoder']['params'], {
             'layers': [300],
             'code_size': 50,
             'learning_rate': 0.001,
@@ -100,7 +93,7 @@ class TestConfig(unittest.TestCase):
             'epochs': 100,
             'loss_name': 'mean_squared_error'
         })
-        self.assertDictEqual(conf.config_dict['train']['data_splitter'], {
+        self.assertDictEqual(conf.model_dump(exclude_none=True)['train']['data_splitter'], {
             'type': 'DataSplitter',
             'train_block_size': 7,
             'val_block_size': 3
@@ -115,12 +108,12 @@ class TestConfig(unittest.TestCase):
         expected = {
             'sequence_length': 36,
             'stride': 1,
-            'ts_freq': np.timedelta64(30, 's'),      # parsed by _parse_timedelta into np.timedelta64(10, 'm')
+            'ts_freq': '30s',
             'pad_incomplete': False,
             'pad_value': 0.0,
         }
         self.assertDictEqual(
-            conf['train']['autoencoder']['params']['sequence_builder'], expected
+            conf.train.autoencoder.params['sequence_builder'], expected
         )
 
     def test_bidirectional_sequence_builder_conf(self):
@@ -128,32 +121,38 @@ class TestConfig(unittest.TestCase):
         expected = {
             'sequence_length': 36,
             'stride': 1,
-            'ts_freq': np.timedelta64(30, 's'),
+            'ts_freq': '30s',
             'pad_incomplete': False,
             'pad_value': 0.0,
         }
         self.assertEqual(
-            conf['train']['autoencoder']['name'],
+            conf.train.autoencoder.name,
             'BidirectionalLSTMSeq2OneAutoencoder'
         )
         self.assertEqual(
-            conf['train']['autoencoder']['params']['merge_mode'],
+            conf.train.autoencoder.params['merge_mode'],
             'sum'
         )
         self.assertDictEqual(
-            conf['train']['autoencoder']['params']['sequence_builder'],
+            conf.train.autoencoder.params['sequence_builder'],
             expected
         )
 
-    def test_sequence_builder_conf(self):
-        conf = Config(os.path.join(PROJECT_ROOT, './tests/test_data/test_config_ts_freq.yaml'))
-        expected = {
-            'sequence_length': 36,
-            'stride': 1,
-            'ts_freq': np.timedelta64(30, 's'),      # parsed by _parse_timedelta into np.timedelta64(10, 'm')
-            'pad_incomplete': False,
-            'pad_value': 0.0,
-        }
-        self.assertDictEqual(
-            conf['train']['autoencoder']['params']['sequence_builder'], expected
-        )
+    def test_defaults_only_autoencoder(self):
+        """Config with only autoencoder should get sensible defaults for everything else."""
+        conf = Config(config_dict={'train': {'autoencoder': {'name': 'MultilayerAutoencoder',
+                                                             'params': {'layers': [10]}}}})
+        self.assertEqual(conf.train.anomaly_score.name, 'rmse')
+        self.assertEqual(conf.train.threshold_selector.name, 'quantile')
+        self.assertIsNotNone(conf.train.data_preprocessor)
+        self.assertEqual(conf.train.data_splitter.type, 'BlockDataSplitter')
+        self.assertFalse(conf.train.protect_conditional_features)
+
+    def test_empty_config_defaults(self):
+        """Config() with no arguments should produce a ready-to-use configuration."""
+        conf = Config()
+        self.assertEqual(conf.train.autoencoder.name, 'default')
+        self.assertEqual(conf.train.anomaly_score.name, 'rmse')
+        self.assertEqual(conf.train.threshold_selector.name, 'quantile')
+        self.assertEqual(conf.train.data_splitter.type, 'BlockDataSplitter')
+        self.assertEqual(conf.dtype, 'float32')

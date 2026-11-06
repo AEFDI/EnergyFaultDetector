@@ -1,5 +1,5 @@
 
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from dataclasses import dataclass
 from pathlib import Path
 import json
@@ -7,7 +7,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from ..utils.analysis import calculate_criticality
+from ..utils.analysis import calculate_alarms, calculate_criticality
 
 _INDEX_META_FILE = "_index_meta.json"
 
@@ -51,6 +51,34 @@ class FaultDetectionResult:
 
         """
         return calculate_criticality(self.predicted_anomalies, normal_idx, init_criticality, max_criticality)
+
+    def criticality_alarms(self, normal_idx: pd.Series | None = None, init_criticality: int = 0,
+                           criticality_threshold: int | None = None, alarm_reset_time_minutes: float = 60
+                           ) -> Tuple[pd.DataFrame, pd.Series]:
+        """Derive alarm events and the criticality counter from the predicted anomalies.
+
+        The criticality increases for sustained anomalies during normal operation and decreases again during normal
+        behaviour. Timestamps at which the criticality reaches ``criticality_threshold`` are treated as alarms and
+        aggregated into contiguous alarm events.
+
+        Args:
+            normal_idx (pd.Series, optional): A pandas Series with boolean values indicating normal operation, indexed
+                by timestamp. Ignored if None.
+            init_criticality (int, optional): The initial criticality value. Defaults to 0.
+            criticality_threshold (int, optional): Criticality value at which an alarm is raised. If None, it defaults
+                to one hour of anomalous behaviour (``int(1 hour / time_frequency)``); if the time frequency exceeds
+                one hour, it defaults to ``1``.
+            alarm_reset_time_minutes (float, optional): Time window in minutes after which an alarm is reset once the
+                system behaves normally again. Used to derive ``max_criticality``. Defaults to 60.
+
+        Returns:
+            Tuple[pd.DataFrame, pd.Series]: A tuple containing:
+                - alarm_events (pd.DataFrame): Columns ``start``, ``end`` and ``duration`` and, for a MultiIndex,
+                  an additional ``group`` column.
+                - criticality (pd.Series): The criticality over time.
+        """
+        return calculate_alarms(self.predicted_anomalies, normal_idx, init_criticality, criticality_threshold,
+                                alarm_reset_time_minutes)
 
     def save(self, directory: str | Path, **kwargs) -> None:
         """Saves the results to CSV files in the specified directory.

@@ -24,11 +24,11 @@ Throughout this documentation we use the following objects and conventions.
     predicted anomalies.
 
 * Configuration: :class:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` behaviour
-  is controlled via a YAML configuration parsed by :class:`Config <energy_fault_detector.config.config.Config>`.
-  For most users, the easiest entry point is
-  :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`,
-  which returns a minimal, valid configuration. For more control, you can provide your own YAML file; see
-  :doc:`configuration` for examples.
+  is controlled via a :class:`Config <energy_fault_detector.config.config.Config>` object.
+  ``Config()`` with no arguments produces a ready-to-use default configuration; for custom
+  preprocessing (angle columns, scaler, etc.) use
+  :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`.
+  See :doc:`configuration` for details.
 
 * ``sensor_data``: a :class:`pandas.DataFrame` in **wide format**.
   Each row is a timestamp (or index entry), each column a sensor or feature.
@@ -61,7 +61,6 @@ create a configuration, train a model and predict.
 
     import pandas as pd
     from energy_fault_detector import FaultDetector, Config
-    from energy_fault_detector.config import generate_quickstart_config
 
     # 1. Load your data
     df = pd.read_csv("my_data.csv", parse_dates=["timestamp"], index_col="timestamp")
@@ -73,9 +72,8 @@ create a configuration, train a model and predict.
     # This is optional; if omitted, all data is treated as normal
     normal_index = df["status"] == "normal"
 
-    # 2. Generate and load a base config
-    generate_quickstart_config(output_path="base_config.yaml")
-    config = Config("base_config.yaml")
+    # 2. Create a default configuration
+    config = Config()  # MultilayerAutoencoder, RMSE score, quantile threshold, default preprocessing
 
     # 3. Train a normal-behavior model
     fault_detector = FaultDetector(config=config, model_directory="fault_detector_model")
@@ -149,14 +147,20 @@ with the following information:
 * arcana_losses: pandas DataFrame containing recorded values for all losses in ARCANA. None if ARCANA was not run.
 * tracked_bias: List of pandas DataFrames. None if ARCANA was not run.
 
-On top of the raw predictions, you can derive the *criticality* counter, which accumulates sustained anomalies and is
-used to raise alarms only after anomalous behaviour persists over time. See :ref:`criticality` for the interpretation
-and how to choose a threshold:
+On top of the raw predictions you can derive the *criticality* counter and alarm events, which raise alarms only after
+anomalous behaviour persists over time. See :ref:`criticality` for the interpretation and how to choose the settings:
 
 .. code-block:: python
 
+    alarm_events, criticality = results.criticality_alarms(
+        normal_idx=test_status,        # optional: True = normal operation
+        criticality_threshold=None,    # None -> one hour of anomalous behaviour
+        alarm_reset_time_minutes=60,   # reset window used to derive max_criticality
+    )
+    # alarm_events: DataFrame with columns start, end, duration (and group for MultiIndex data)
+
+    # Alternatively, only the criticality counter, with an explicit maximum
     criticality = results.criticality(normal_idx=test_status, max_criticality=144)
-    alarms = criticality >= 6   # threshold chosen based on time frequency and application context
 
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
 trained models using the :py:obj:`FaultDetector.load <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load>` class method.
@@ -195,7 +199,7 @@ Configuration
 ^^^^^^^^^^^^^
 
 The behaviour of the :py:class:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>`
-is controlled by a YAML configuration, parsed by :py:class:`Config <energy_fault_detector.config.config.Config>`.
+is controlled by a :py:class:`Config <energy_fault_detector.config.config.Config>` object (a Pydantic model).
 The config typically has:
 
 - a ``train`` section:
@@ -206,21 +210,23 @@ The config typically has:
   - ``data_splitter``: how training/validation sets are split,
   - optional ``data_clipping``: outlier clipping on training data only.
 - an optional ``root_cause_analysis`` section for ARCANA.
-- an optional ``predict`` section (e.g. criticality settings).
 
-For most users, the easiest way to create a valid configuration is via :func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
+``Config()`` with no arguments produces a ready-to-use default configuration.
+For custom preprocessing (angle columns, scaler, etc.) or to generate a YAML file, use
+:func:`generate_quickstart_config <energy_fault_detector.config.quickstart_config.generate_quickstart_config>`:
 
 .. code-block:: python
 
-   from energy_fault_detector.config.quickstart_config import generate_quickstart_config
+   from energy_fault_detector import FaultDetector
    from energy_fault_detector.config import Config
+   from energy_fault_detector.config import generate_quickstart_config
 
-   # Create a minimal, valid config file
-   generate_quickstart_config(output_path="base_config.yaml")
+   # Simplest: use defaults
+   config = Config()
+   fd = FaultDetector(config=config)
 
-   # Load and use it
-   cfg = Config("base_config.yaml")
-   fd = FaultDetector(config=cfg)
+   # Or generate a config with custom preprocessing and save to YAML:
+   config = generate_quickstart_config(angle_columns=["wind_dir"], output_path="base_config.yaml")
 
 If you prefer to write the YAML yourself or need more control, see the :ref:`Configuration guide <configuration_guide>`
 for a full reference and examples.
@@ -250,8 +256,8 @@ walkthrough of the evaluation workflow (event creation, criticality, CARE-Score
 on benchmark datasets such as CARE2Compare and PreDist). A higher-level
 evaluation helper/script may be added in a future version.
 
-See :ref:`criticality` for how criticality is computed and interpreted for both alarm raising and event-level
-evaluation.
+See :ref:`criticality` for how criticality and alarm events are computed and interpreted for both alarm raising and
+event-level evaluation.
 
 MultiIndex and sequence models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -88,6 +88,17 @@ class TestVisualisation(unittest.TestCase):
         self.assertEqual(len(axes), 2)
         plt.close(fig)
 
+    def test_plot_score_with_threshold_show_criticality(self):
+        idx = pd.date_range("2025-01-01", periods=10, freq="h")
+        data = pd.DataFrame({"a": np.arange(10, dtype=float)}, index=idx)
+        fd = DummyFDWithDP(data)
+
+        fig, ax = viz.plot_score_with_threshold(
+            model=fd, data=data, show_threshold=False, show_criticality=True, max_criticality=144,
+        )
+        self.assertIsInstance(fig, plt.Figure)
+        plt.close(fig)
+
     def test_plot_arcana_mean_importances(self):
         importances = pd.Series(
             {

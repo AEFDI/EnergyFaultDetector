@@ -27,17 +27,17 @@ class TestQuickstartConfig(TestCase):
         )
 
         # Basic structure checks
-        self.assertIn("train", cfg)
-        train = cfg["train"]
-        self.assertIn("data_preprocessor", train)
-        self.assertIn("steps", train["data_preprocessor"])
-        self.assertIn("autoencoder", train)
-        self.assertIn("params", train["autoencoder"])
-        self.assertIn("threshold_selector", train)
-        self.assertIn("params", train["threshold_selector"])
+        self.assertIsNotNone(cfg.train)
+        train = cfg.train
+        self.assertIsNotNone(train.data_preprocessor)
+        self.assertIsNotNone(train.data_preprocessor.steps)
+        self.assertIsNotNone(train.autoencoder)
+        self.assertIsNotNone(train.autoencoder.params)
+        self.assertIsNotNone(train.threshold_selector)
+        self.assertIsNotNone(train.threshold_selector.params)
 
         # Ensure certain steps exist
-        step_names = [s["name"] for s in train["data_preprocessor"]["steps"]]
+        step_names = [s["name"] for s in train.data_preprocessor.steps]
         self.assertIn("column_selector", step_names)
         self.assertIn("simple_imputer", step_names)
         self.assertIn("scaler", step_names)
@@ -65,5 +65,5 @@ class TestQuickstartConfig(TestCase):
         loaded_cfg = Config(config_path)
 
         # Compare dictionaries
-        self.assertEqual(cfg.config_dict, loaded_cfg.config_dict)
-        self.assertEqual(loaded_cfg["train"]["data_splitter"]["validation_split"], 0.25)
+        self.assertEqual(cfg.model_dump(exclude_none=True), loaded_cfg.model_dump(exclude_none=True))
+        self.assertEqual(loaded_cfg.train.data_splitter.validation_split, 0.25)
