@@ -15,8 +15,13 @@ The package provides two building blocks in :mod:`energy_fault_detector.utils.an
 - :func:`calculate_alarms <energy_fault_detector.utils.analysis.calculate_alarms>` builds on it to derive
   **alarm events** (start, end, duration) from the criticality.
 
-Both are exposed on a prediction result via
-:meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`.
+Both are exposed on a prediction result:
+
+- :meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`
+  returns only the criticality series (the basic counter, with an explicit ``max_criticality``).
+- :meth:`FaultDetectionResult.criticality_alarms <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality_alarms>`
+  returns both the alarm events and the criticality series, with the threshold and reset window derived from the
+  time frequency.
 
 How the criticality works
 -------------------------
@@ -94,12 +99,20 @@ On a prediction result you can call the method directly. It returns the same ``(
 
    results = fault_detector.predict(sensor_data=test_sensor_data)
 
-   alarm_events, criticality = results.criticality()   # defaults derived from the data
-   alarm_events, criticality = results.criticality(
+   alarm_events, criticality = results.criticality_alarms()   # defaults derived from the data
+   alarm_events, criticality = results.criticality_alarms(
        normal_idx=test_status,
        criticality_threshold=6,
        alarm_reset_time_minutes=60,
    )
+
+For the plain criticality counter (without alarm event detection) use the legacy
+:meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`
+method, which returns only the ``criticality`` series:
+
+.. code-block:: python
+
+   criticality = results.criticality(normal_idx=test_status, max_criticality=144)
 
 Interpreting criticality: raising alarms
 ----------------------------------------
