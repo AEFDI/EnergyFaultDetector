@@ -4,6 +4,9 @@ from typing import Tuple, List, Optional
 
 import numpy as np
 import pandas as pd
+import logging
+
+logger = logging.getLogger("energy_fault_detector")
 
 _ALARM_EVENT_COLUMNS = ["start", "end", "duration"]
 
@@ -143,6 +146,12 @@ def calculate_criticality(anomalies: pd.Series, normal_idx: pd.Series = None, in
     Raises:
         ValueError: If the lengths of the given pandas Series for anomalies and normal_idx do not match.
     """
+    if init_criticality < 0:
+        init_criticality = 0
+        logger.warning(f'init_criticality < 0, was set to 0.')
+    elif init_criticality > max_criticality:
+        init_criticality = max_criticality
+        logger.warning(f'init_criticality > max_criticality, was set to max_criticality ({max_criticality}).')
 
     # Ensure aligned and sorted indices
     anomalies = anomalies.sort_index()
