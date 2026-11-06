@@ -159,7 +159,7 @@ anomalous behaviour persists over time. See :ref:`criticality` for the interpret
     )
     # alarm_events: DataFrame with columns start, end, duration (and group for MultiIndex data)
 
-    # Legacy: only the criticality counter, with an explicit maximum
+    # Alternatively, only the criticality counter, with an explicit maximum
     criticality = results.criticality(normal_idx=test_status, max_criticality=144)
 
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
