@@ -9,13 +9,22 @@ For Keras 3 fixtures (``py312_efd071``) the full pipeline is exercised:
 the autoencoder cannot be loaded by Keras 3 (``keras.src.engine.functional``
 was renamed), so only the non-Keras components (config, data preprocessor,
 threshold selector, anomaly score) are loaded and applied individually.
+
+The ``py312_efd071`` fixtures were saved with Keras 3.14, which serializes a
+``quantization_config`` entry into every layer config. Keras only accepts that
+argument from 3.13.0 onwards, and 3.13.0 is also the first release requiring
+Python >= 3.11. Those tests are therefore skipped on Python 3.10, where the
+newest installable Keras (3.12.x) cannot deserialize the fixtures.
 """
 
 import os
+import sys
+import inspect
 import unittest
 
 import numpy as np
 import pandas as pd
+import keras
 
 from energy_fault_detector.anomaly_scores import RMSEScore
 from energy_fault_detector.autoencoders import LSTMSeq2OneAutoencoder, MultilayerAutoencoder
@@ -27,6 +36,29 @@ from energy_fault_detector.threshold_selectors import QuantileThresholdSelector
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OLD_MODELS_DIR = os.path.join(PROJECT_ROOT, 'tests', 'test_data', 'old_models')
+
+
+def _dense_supports_quantization_config() -> bool:
+    """Whether the installed Keras can deserialize a layer saved with ``quantization_config``.
+
+    The ``py312_efd071`` fixtures were saved with Keras 3.14, which serializes a
+    ``quantization_config`` entry into every layer config. Keras only accepts that
+    argument from 3.13.0 onwards - and 3.13.0 is also the first release requiring
+    Python >= 3.11. On Python 3.10 the newest installable Keras (3.12.x) therefore
+    rejects the fixtures with "Unrecognized keyword arguments passed to Dense".
+    """
+    try:
+        parameters = inspect.signature(keras.layers.Dense.__init__).parameters
+    except (TypeError, ValueError):  # pragma: no cover - defensive
+        return False
+    return 'quantization_config' in parameters
+
+
+KERAS_CAN_LOAD_KERAS3_FIXTURES = _dense_supports_quantization_config()
+SKIP_REASON = (
+    f'Fixtures were saved with Keras >= 3.13 (quantization_config), but the installed '
+    f'Keras {keras.__version__} cannot deserialize them (Python {sys.version.split()[0]}).'
+)
 
 
 def make_dense_data(n_rows: int = 80) -> pd.DataFrame:
@@ -156,6 +188,7 @@ class TestLegacyModelCompatibility(unittest.TestCase):
         predicted = threshold_selector.predict(scores)
         self.assertEqual(len(predicted), len(scores))
 
+    @unittest.skipUnless(KERAS_CAN_LOAD_KERAS3_FIXTURES, SKIP_REASON)
     def test_dense_py312_efd071(self) -> None:
         """Dense MultilayerAutoencoder saved with EFD 0.7.1 / Python 3.12 / Keras 3."""
         model_path = os.path.join(OLD_MODELS_DIR, 'py312_efd071', 'dense')
@@ -167,6 +200,7 @@ class TestLegacyModelCompatibility(unittest.TestCase):
         result = detector.predict(make_dense_data())
         self._assert_predict_results(result, expected_len=80)
 
+    @unittest.skipUnless(KERAS_CAN_LOAD_KERAS3_FIXTURES, SKIP_REASON)
     def test_sequence_py312_efd071(self) -> None:
         """LSTM seq2one autoencoder saved with EFD 0.7.1 / Python 3.12 / Keras 3."""
         model_path = os.path.join(OLD_MODELS_DIR, 'py312_efd071', 'sequence')
