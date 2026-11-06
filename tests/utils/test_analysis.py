@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from energy_fault_detector.utils import analysis
-from energy_fault_detector.utils.analysis import calculate_criticality, create_events
+from energy_fault_detector.utils.analysis import calculate_alarms, calculate_criticality, create_events
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -105,6 +105,139 @@ class TestCalculateCriticalityMultiIndex(unittest.TestCase):
         crit = calculate_criticality(anomalies)
         assert isinstance(crit.index, pd.MultiIndex)
         assert crit.index.equals(idx)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# calculate_alarms
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestCalculateAlarmsSingleIndex:
+    """Alarm derivation with a simple DatetimeIndex."""
+
+    def test_no_anomalies_returns_empty_events(self):
+        idx = pd.date_range("2024-01-01", periods=10, freq="10min")
+        anomalies = pd.Series(False, index=idx)
+        events, crit = calculate_alarms(anomalies)
+        assert list(events.columns) == ["start", "end", "duration"]
+        assert events.empty
+        assert (crit == 0).all()
+
+    def test_default_threshold_from_time_frequency(self):
+        """10 minute data -> default threshold of 6 (one hour), max = threshold + 6."""
+        idx = pd.date_range("2024-01-01", periods=40, freq="10min")
+        anomalies = pd.Series(False, index=idx)
+        anomalies.iloc[2:14] = True
+        events, crit = calculate_alarms(anomalies)
+
+        # 12 anomalies raise the criticality to 12 (threshold 6 + 6 reset steps)
+        assert crit.max() == 12
+        # The alarm window starts when criticality reaches 6, i.e. the 6th anomaly (iloc 7)
+        assert events.iloc[0]["start"] == idx[7]
+        # Alarm ends when the criticality drops below the threshold again (6 normal steps after iloc 13)
+        assert events.iloc[0]["end"] == idx[19]
+        assert events.iloc[0]["duration"] == idx[19] - idx[7]
+
+    def test_default_threshold_one_for_high_frequency_gap(self):
+        """Time frequency > 1 hour -> default threshold 1."""
+        idx = pd.date_range("2024-01-01", periods=6, freq="2h")
+        anomalies = pd.Series([False, True, True, False, False, False], index=idx)
+        events, crit = calculate_alarms(anomalies)
+
+        # threshold 1 and time frequency > reset window -> max_criticality = 2
+        assert list(crit) == [0, 1, 2, 1, 0, 0]
+        assert events.iloc[0]["start"] == idx[1]
+        assert events.iloc[0]["end"] == idx[3]
+
+    def test_explicit_threshold_and_reset_time(self):
+        idx = pd.date_range("2024-01-01", periods=10, freq="10min")
+        anomalies = pd.Series(True, index=idx)
+        events, crit = calculate_alarms(anomalies, criticality_threshold=3, alarm_reset_time_minutes=20)
+
+        # max criticality = 3 + int(20 / 10) = 5
+        assert crit.max() == 5
+        assert events.iloc[0]["start"] == idx[2]
+
+    def test_normal_idx_ignored_periods(self):
+        idx = pd.date_range("2024-01-01", periods=8, freq="10min")
+        anomalies = pd.Series(True, index=idx)
+        normal_idx = pd.Series([True, True, False, False, True, True, True, True], index=idx)
+        events, crit = calculate_alarms(anomalies, normal_idx=normal_idx,
+                                        criticality_threshold=2, alarm_reset_time_minutes=10)
+
+        # max criticality = 2 + int(10 / 10) = 3, so t4..t7 stay at 3
+        # t0,t1 -> 1,2 ; t2,t3 ignored ; t4..t7 -> 3,3,3,3
+        assert list(crit) == [1, 2, 2, 2, 3, 3, 3, 3]
+        assert events.iloc[0]["start"] == idx[1]
+
+    def test_init_criticality(self):
+        idx = pd.date_range("2024-01-01", periods=5, freq="10min")
+        anomalies = pd.Series(True, index=idx)
+        events, crit = calculate_alarms(anomalies, init_criticality=4,
+                                        criticality_threshold=5, alarm_reset_time_minutes=10)
+
+        assert list(crit) == [5, 6, 6, 6, 6]
+        # Already at/above the threshold on the first timestamp
+        assert events.iloc[0]["start"] == idx[0]
+
+    def test_no_time_frequency_uses_fallback(self):
+        """Without a datetime index the threshold falls back to 1 and max to threshold + 1."""
+        idx = pd.RangeIndex(8)
+        anomalies = pd.Series([False, True, True, True, False, False, False, False], index=idx)
+        events, crit = calculate_alarms(anomalies)
+
+        assert list(crit) == [0, 1, 2, 2, 1, 0, 0, 0]
+        assert events.iloc[0]["start"] == idx[1]
+        assert events.iloc[0]["end"] == idx[4]
+
+    def test_multiple_disjoint_alarms(self):
+        idx = pd.date_range("2024-01-01", periods=30, freq="10min")
+        anomalies = pd.Series(False, index=idx)
+        anomalies.iloc[0:8] = True    # criticality reaches 8, drops to 0 by iloc 16
+        anomalies.iloc[20:30] = True  # second alarm
+        events, _ = calculate_alarms(anomalies, alarm_reset_time_minutes=20)
+
+        assert len(events) == 2
+        assert events.iloc[0]["start"] == idx[5]
+        assert events.iloc[1]["start"] == idx[25]
+
+
+class TestCalculateAlarmsMultiIndex(unittest.TestCase):
+    """Alarm derivation with a MultiIndex (asset_id, timestamp)."""
+
+    def setUp(self):
+        self.times = pd.date_range("2024-01-01", periods=20, freq="10min")
+        self.idx = pd.MultiIndex.from_product([["asset_A", "asset_B"], self.times],
+                                              names=["asset_id", "timestamp"])
+
+    def test_alarms_are_grouped_per_asset(self):
+        anomalies = pd.Series(False, index=self.idx)
+        anomalies.loc["asset_A"] = [False] * 2 + [True] * 10 + [False] * 8
+        anomalies.loc["asset_B"] = [False] * 5 + [True] * 7 + [False] * 8
+
+        events, crit = calculate_alarms(anomalies)
+
+        assert set(events["group"]) == {"asset_A", "asset_B"}
+        assert "group" in events.columns
+        assert crit.groupby(level="asset_id").max().to_dict() == {"asset_A": 10, "asset_B": 7}
+
+    def test_time_frequency_from_datetime_level(self):
+        """Time frequency is inferred from the datetime level of the MultiIndex."""
+        anomalies = pd.Series(False, index=self.idx)
+        anomalies.loc["asset_A"] = [False] * 2 + [True] * 12 + [False] * 6
+
+        events, crit = calculate_alarms(anomalies)
+
+        # default threshold 6, max 12 as for a single DatetimeIndex with 10 min frequency
+        assert crit.loc["asset_A"].max() == 12
+        assert events.loc[events["group"] == "asset_A"].iloc[0]["start"] == self.times[7]
+
+    def test_empty_events_keep_group_column(self):
+        anomalies = pd.Series(False, index=self.idx)
+        events, crit = calculate_alarms(anomalies)
+
+        assert events.empty
+        assert list(events.columns) == ["start", "end", "duration", "group"]
+        assert (crit == 0).all()
 
 
 # ──────────────────────────────────────────────────────────────────────────────

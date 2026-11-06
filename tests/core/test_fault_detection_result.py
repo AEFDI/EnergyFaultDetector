@@ -204,5 +204,45 @@ class TestFaultDetectionResultSaveLoadMultiIndex(unittest.TestCase):
             self.assertIsNone(loaded.tracked_bias)
 
 
+class TestFaultDetectionResultCriticality(unittest.TestCase):
+    """Test the alarm/criticality derivation on FaultDetectionResult."""
+
+    def _make_result(self, anomalies):
+        return FaultDetectionResult(
+            predicted_anomalies=anomalies,
+            reconstruction=pd.DataFrame(index=anomalies.index),
+            recon_error=pd.DataFrame(index=anomalies.index),
+            anomaly_score=pd.Series(0.0, index=anomalies.index),
+        )
+
+    def test_criticality_returns_events_and_series(self):
+        idx = pd.date_range("2024-01-01", periods=20, freq="10min")
+        anomalies = pd.Series(False, index=idx)
+        anomalies.iloc[2:10] = True
+
+        result = self._make_result(anomalies)
+        alarm_events, criticality = result.criticality()
+
+        self.assertIsInstance(alarm_events, pd.DataFrame)
+        self.assertIsInstance(criticality, pd.Series)
+        self.assertEqual(list(alarm_events.columns), ["start", "end", "duration"])
+        self.assertEqual(criticality.index.equals(idx), True)
+        self.assertEqual(alarm_events.iloc[0]["start"], idx[7])
+
+    def test_criticality_uses_normal_idx_and_threshold(self):
+        idx = pd.date_range("2024-01-01", periods=10, freq="10min")
+        anomalies = pd.Series(True, index=idx)
+        normal_idx = pd.Series([True] * 5 + [False] * 5, index=idx)
+
+        result = self._make_result(anomalies)
+        alarm_events, criticality = result.criticality(
+            normal_idx=normal_idx, criticality_threshold=3, alarm_reset_time_minutes=20
+        )
+
+        # max criticality = 3 + int(20 / 10) = 5; non-normal timestamps keep the value frozen
+        self.assertEqual(list(criticality), [1, 2, 3, 4, 5, 5, 5, 5, 5, 5])
+        self.assertEqual(alarm_events.iloc[0]["start"], idx[2])
+
+
 if __name__ == "__main__":
     unittest.main()
