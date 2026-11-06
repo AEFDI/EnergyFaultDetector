@@ -1,30 +1,6 @@
 .. _criticality:
 
 Criticality and alarms
-======================
-
-The criticality is a cumulative counter derived from the point-wise anomaly predictions of a model. It is used to
-convert raw per-timestamp anomaly decisions into a *persistence-aware* signal, so that alarms are raised only when
-anomalous behaviour is sustained over time. This avoids raising unnecessary alarms for isolated anomalies caused by
-noise or by potential data-quality issues.
-
-The package provides two building blocks in :mod:`energy_fault_detector.utils.analysis`:
-
-- :func:`calculate_criticality <energy_fault_detector.utils.analysis.calculate_criticality>` computes the raw
-  criticality counter.
-- :func:`calculate_alarms <energy_fault_detector.utils.analysis.calculate_alarms>` builds on it to derive
-  **alarm events** (start, end, duration) from the criticality.
-
-Both are exposed on a prediction result:
-
-- :meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`
-  returns only the criticality series (the basic counter, with an explicit ``max_criticality``).
-- :meth:`FaultDetectionResult.criticality_alarms <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality_alarms>`
-  returns both the alarm events and the criticality series, with the threshold and reset window derived from the
-  time frequency.
-
-How the criticality works
--------------------------
 
 For every timestamp the counter is updated by one of three rules, depending on the predicted anomaly and on the
 operating status (``normal_idx``):

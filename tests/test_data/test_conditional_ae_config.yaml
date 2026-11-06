@@ -4,7 +4,11 @@ train:
     params:
       pca: true
       pca_min_var: 0.85
-  data_preprocessor:  # no further spec, so defaults are applied
+  data_preprocessor:
+    steps:
+      - name: timestamp_transform
+        params:
+          features: ['hour_of_day']
   autoencoder:
     name: 'ConditionalAE'
     verbose: 0
