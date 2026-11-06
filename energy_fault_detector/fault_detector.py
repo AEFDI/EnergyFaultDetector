@@ -138,29 +138,6 @@ class FaultDetector(FaultDetectionModel):
         # Resolve declared conditions against preprocessed data (may expand categorical names)
         self._resolve_conditional_features(x_prepped)
 
-        # Check conditionals: available conditions in original data and surviving conditions during preprocessing.
-        if self.autoencoder.is_conditional:
-            # Uses nested for loop in case categorical cols have been encoded already and contain the original
-            # conditional feature name as a substring.
-            available = [declared_condition for declared_condition in declared_conditions
-                         if any(declared_condition in col for col in sensor_data.columns)]
-            missing = [declared_condition for declared_condition in declared_conditions
-                       if declared_condition not in available]
-            if missing:
-                logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
-                               f"{sorted(missing)}. Using: {available or 'none'}")
-
-            if not self.config.train.protect_conditional_features:
-                # Uses nested for loop in case categorical cols have been encoded already and contain the original
-                # conditional feature name as a substring.
-                surviving = [declared_condition for declared_condition in available
-                             if any(declared_condition in col for col in x_prepped.columns)]
-                dropped_by_pipeline = set(available or []) - set(surviving)
-
-                if dropped_by_pipeline:
-                    logger.warning(f"Declared conditions dropped by preprocessing pipeline: "
-                                f"{sorted(dropped_by_pipeline)}. Remaining: {surviving or 'none'}")
-
         train_recon_error, val_recon_error = None, None
         x_train, x_val = self.train_val_split(x_prepped)
         logger.info('Train autoencoder.')
@@ -516,7 +493,7 @@ class FaultDetector(FaultDetectionModel):
                 logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
                                f"{sorted(missing)}. Using: {available or 'none'}")
 
-            if not self.config.protect_conditional_features:
+            if not self.config.train.protect_conditional_features:
                 # Uses nested for loop in case categorical cols have been encoded already and contain the original
                 # conditional feature name as a substring.
                 surviving = [declared_condition for declared_condition in available
