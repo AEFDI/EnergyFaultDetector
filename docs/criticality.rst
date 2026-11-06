@@ -106,7 +106,7 @@ On a prediction result you can call the method directly. It returns the same ``(
        alarm_reset_time_minutes=60,
    )
 
-For the plain criticality counter (without alarm event detection) use the legacy
+For the plain criticality counter (without alarm event detection) use the
 :meth:`FaultDetectionResult.criticality <energy_fault_detector.core.fault_detection_result.FaultDetectionResult.criticality>`
 method, which returns only the ``criticality`` series:
 
