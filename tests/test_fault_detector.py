@@ -713,8 +713,9 @@ class TestFaultDetectorProtectConditionalFeaturesFalse(unittest.TestCase):
     def test_conditional_features_can_be_dropped_when_unprotected(self):
         """When protect=False, pipeline can drop constant conditional features."""
         from energy_fault_detector.autoencoders import MultilayerAutoencoder
-        self.conf.config_dict['train']['protect_conditional_features'] = False
-        self.conf.config_dict['train']['data_preprocessor']['steps'].append({'name': 'low_unique_value_filter', 'params': {'min_unique_value_count': 2}})
+        self.conf.train.protect_conditional_features = False
+        self.conf.train.data_preprocessor.steps.append(
+            {'name': 'low_unique_value_filter', 'params': {'min_unique_value_count': 2}})
         fd = FaultDetector(config=self.conf, model_directory=self.test_dir)
         self.assertFalse(fd.config.train.protect_conditional_features)
 
