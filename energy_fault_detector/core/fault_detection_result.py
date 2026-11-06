@@ -7,7 +7,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from ..utils.analysis import calculate_alarms
+from ..utils.analysis import calculate_alarms, calculate_criticality
 
 _INDEX_META_FILE = "_index_meta.json"
 
@@ -39,9 +39,22 @@ class FaultDetectionResult:
     """List of DataFrames containing the ARCANA bias every 50th iteration. None if ARCANA was not run.
        Empty if bias was not tracked."""
 
-    def criticality(self, normal_idx: pd.Series | None = None, init_criticality: int = 0,
-                    criticality_threshold: int | None = None, alarm_reset_time_minutes: float = 60
-                    ) -> Tuple[pd.DataFrame, pd.Series]:
+    def criticality(self, normal_idx: pd.Series | None = None, init_criticality: int = 0, max_criticality: int = 1000
+                    ) -> pd.Series:
+        """Criticality based on the predicted anomalies.
+
+        Args:
+            normal_idx (pd.Series, optional): A pandas Series with boolean values indicating normal operation, indexed
+                by timestamp. Ignored if None.
+            init_criticality (int, optional): The initial criticality value. Defaults to 0.
+            max_criticality (int, optional): The maximum criticality value. Defaults to 1000.
+
+        """
+        return calculate_criticality(self.predicted_anomalies, normal_idx, init_criticality, max_criticality)
+
+    def criticality_alarms(self, normal_idx: pd.Series | None = None, init_criticality: int = 0,
+                           criticality_threshold: int | None = None, alarm_reset_time_minutes: float = 60
+                           ) -> Tuple[pd.DataFrame, pd.Series]:
         """Derive alarm events and the criticality counter from the predicted anomalies.
 
         The criticality increases for sustained anomalies during normal operation and decreases again during normal

@@ -32,12 +32,9 @@ class DummyPredictions:
         )
         self.predicted_anomalies = pd.Series(False, index=idx)
 
-    def criticality(self, normal_idx=None, init_criticality=0, criticality_threshold=None,
-                    alarm_reset_time_minutes=60):
+    def criticality(self, normal_idx=None, max_criticality=1000):
         # trivial constant criticality, same index as anomaly_score
-        criticality = pd.Series(0, index=self.anomaly_score.index, name="criticality")
-        alarm_events = pd.DataFrame(columns=["start", "end", "duration"])
-        return alarm_events, criticality
+        return pd.Series(0, index=self.anomaly_score.index, name="criticality")
 
 
 class DummyFDWithDP:
@@ -97,8 +94,7 @@ class TestVisualisation(unittest.TestCase):
         fd = DummyFDWithDP(data)
 
         fig, ax = viz.plot_score_with_threshold(
-            model=fd, data=data, show_threshold=False, show_criticality=True,
-            criticality_threshold=3, alarm_reset_time_minutes=60,
+            model=fd, data=data, show_threshold=False, show_criticality=True, max_criticality=144,
         )
         self.assertIsInstance(fig, plt.Figure)
         plt.close(fig)

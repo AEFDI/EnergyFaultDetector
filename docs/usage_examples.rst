@@ -152,12 +152,15 @@ anomalous behaviour persists over time. See :ref:`criticality` for the interpret
 
 .. code-block:: python
 
-    alarm_events, criticality = results.criticality(
+    alarm_events, criticality = results.criticality_alarms(
         normal_idx=test_status,        # optional: True = normal operation
         criticality_threshold=None,    # None -> one hour of anomalous behaviour
         alarm_reset_time_minutes=60,   # reset window used to derive max_criticality
     )
     # alarm_events: DataFrame with columns start, end, duration (and group for MultiIndex data)
+
+    # Legacy: only the criticality counter, with an explicit maximum
+    criticality = results.criticality(normal_idx=test_status, max_criticality=144)
 
 You can also create a :py:obj:`FaultDetector <energy_fault_detector.fault_detector.FaultDetector>` object and load
 trained models using the :py:obj:`FaultDetector.load <energy_fault_detector.core.fault_detection_model.FaultDetectionModel.load>` class method.
