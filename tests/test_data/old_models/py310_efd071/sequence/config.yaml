@@ -23,7 +23,9 @@ train:
         stride: 1
         ts_freq: 600s
     verbose: 0
-  data_preprocessor: null
+  data_preprocessor:
+    steps:
+    - name: standard_scaler
   data_splitter:
     shuffle: false
     type: sklearn
