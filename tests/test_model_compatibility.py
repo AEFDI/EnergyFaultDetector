@@ -4,11 +4,14 @@ The fixtures under ``tests/test_data/old_models/`` were created with older
 versions of ``energy-fault-detector`` (before the Pydantic config migration)
 using the script ``tests/test_data/old_models/create_legacy_model_fixtures.py``.
 
-For Keras 3 fixtures (``py312_efd071``) the full pipeline is exercised:
-``FaultDetector.load`` + ``predict``.  For Keras 2 fixtures (``py311_efd060``)
-the autoencoder cannot be loaded by Keras 3 (``keras.src.engine.functional``
-was renamed), so only the non-Keras components (config, data preprocessor,
-threshold selector, anomaly score) are loaded and applied individually.
+For Keras 3 fixtures (``py310_efd071``) the full pipeline is exercised:
+``FaultDetector.load`` + ``predict``.  These fixtures are created with the
+minimum supported Python version (3.10), which caps Keras at 3.12.4, so they
+load on every supported Python/Keras combination.  For Keras 2 fixtures
+(``py311_efd060``) the autoencoder cannot be loaded by Keras 3
+(``keras.src.engine.functional`` was renamed), so only the non-Keras components
+(config, data preprocessor, threshold selector, anomaly score) are loaded and
+applied individually.
 """
 
 import os
@@ -156,9 +159,9 @@ class TestLegacyModelCompatibility(unittest.TestCase):
         predicted = threshold_selector.predict(scores)
         self.assertEqual(len(predicted), len(scores))
 
-    def test_dense_py312_efd071(self) -> None:
-        """Dense MultilayerAutoencoder saved with EFD 0.7.1 / Python 3.12 / Keras 3."""
-        model_path = os.path.join(OLD_MODELS_DIR, 'py312_efd071', 'dense')
+    def test_dense_py310_efd071(self) -> None:
+        """Dense MultilayerAutoencoder saved with EFD 0.7.1 / Python 3.10 / Keras 3."""
+        model_path = os.path.join(OLD_MODELS_DIR, 'py310_efd071', 'dense')
         detector = FaultDetector.load(model_path=model_path)
         self._assert_loaded_components(detector)
         self.assertIsInstance(detector.autoencoder, MultilayerAutoencoder)
@@ -167,9 +170,9 @@ class TestLegacyModelCompatibility(unittest.TestCase):
         result = detector.predict(make_dense_data())
         self._assert_predict_results(result, expected_len=80)
 
-    def test_sequence_py312_efd071(self) -> None:
-        """LSTM seq2one autoencoder saved with EFD 0.7.1 / Python 3.12 / Keras 3."""
-        model_path = os.path.join(OLD_MODELS_DIR, 'py312_efd071', 'sequence')
+    def test_sequence_py310_efd071(self) -> None:
+        """LSTM seq2one autoencoder saved with EFD 0.7.1 / Python 3.10 / Keras 3."""
+        model_path = os.path.join(OLD_MODELS_DIR, 'py310_efd071', 'sequence')
         detector = FaultDetector.load(model_path=model_path)
         self._assert_loaded_components(detector)
         self.assertIsInstance(detector.autoencoder, LSTMSeq2OneAutoencoder)

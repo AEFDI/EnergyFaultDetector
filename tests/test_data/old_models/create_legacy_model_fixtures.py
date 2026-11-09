@@ -1,6 +1,9 @@
 """Create small saved-model fixtures for compatibility testing.
 
 1. Create a python environment with a previous version of energy-fault-detector.
+   Use the minimum supported Python version (3.10) so Keras is capped at 3.12.4;
+   newer Keras versions add config keys (e.g. ``quantization_config``) that older
+   Keras cannot deserialize, so fixtures created with newer Keras fail on 3.10.
 2. Run this script:
     python tests/test_data/old_models/create_legacy_model_fixtures.py \
         --output tests/test_data/old_models/py<version>_efd<version> \
