@@ -541,6 +541,7 @@ class TestComprehensivePipelineFlow(TestCase):
         """Create configuration matching updated advanced_config.yaml structure."""
         return {
             'train': {
+                'protect_conditional_features': protect_conditional_features,
                 'data_clipping': {
                     'lower_percentile': 0.001,
                     'upper_percentile': 0.999,
@@ -571,7 +572,6 @@ class TestComprehensivePipelineFlow(TestCase):
                         'verbose': 0
                     }
                 },
-                'protect_conditional_features': protect_conditional_features,
                 'anomaly_score': {'name': 'rmse'},
                 'threshold_selector': {'name': 'quantile'},
             }
