@@ -493,7 +493,7 @@ class FaultDetector(FaultDetectionModel):
                 logger.warning(f"Declared conditions not found in sensor_data will be ignored: "
                                f"{sorted(missing)}. Using: {available or 'none'}")
 
-            if not self.config.protect_conditional_features:
+            if not self.config.train.protect_conditional_features:
                 # Uses nested for loop in case categorical cols have been encoded already and contain the original
                 # conditional feature name as a substring.
                 surviving = [declared_condition for declared_condition in available
