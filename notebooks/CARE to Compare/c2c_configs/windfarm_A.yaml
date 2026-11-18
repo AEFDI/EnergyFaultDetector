@@ -36,6 +36,7 @@ train:
       learning_rate: 0.0018241002968897644
       loss_name: mean_squared_error
       noise: 0.06001298756870398
+      last_act: prelu
 
   anomaly_score:
     name: rmse
@@ -49,5 +50,6 @@ train:
       nn_learning_rate: 0.001
       nn_size: 23
       early_stopping: True
+      patience: 5
       validation_split: 0.25
       smoothing_parameter: 6

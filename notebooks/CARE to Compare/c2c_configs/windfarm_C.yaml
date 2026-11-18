@@ -34,6 +34,7 @@ train:
       - 83
       learning_rate: 0.0055788641569548
       loss_name: mean_squared_error
+      last_act: prelu
 
   anomaly_score:
     name: rmse
