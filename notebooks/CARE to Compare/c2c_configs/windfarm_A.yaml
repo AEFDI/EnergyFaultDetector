@@ -49,5 +49,6 @@ train:
       nn_learning_rate: 0.001
       nn_size: 23
       early_stopping: True
+      patience: 5
       validation_split: 0.25
       smoothing_parameter: 6
